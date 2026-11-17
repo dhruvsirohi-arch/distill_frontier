@@ -8,7 +8,7 @@
   "n_selected": 700,
   "n_train": 630,
   "n_val": 70,
-  "pairs_train": 6578,
+  "pairs_train": 6579,
   "pairs_val": 733,
   "reasons": {
     "not_success:failed_grasp": 10,
@@ -24,7 +24,7 @@
   "per_bin_med": 7,
   "per_bin_max": 7,
   "acts": {
-    "move_to": 4511,
+    "move_to": 4512,
     "open_gripper": 1400,
     "close_gripper": 700,
     "done": 700
@@ -34,7 +34,7 @@
     "pre-grasp": 700,
     "grasp": 700,
     "lift": 700,
-    "transport": 1011,
+    "transport": 1012,
     "place": 700,
     "release": 700,
     "retreat": 700,

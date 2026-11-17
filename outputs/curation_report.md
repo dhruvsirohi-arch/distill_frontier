@@ -11,7 +11,7 @@ Raw sources: raw_episodes.jsonl. Raw data is never modified; this report is rege
 | near-duplicates removed | 0 |
 | selected (stratified) | 700 |
 | → train / val episodes | 630 / 70 |
-| → train / val observation→action pairs | 6578 / 733 |
+| → train / val observation→action pairs | 6579 / 733 |
 
 ### Drop reasons (first failing filter per episode)
 
@@ -46,7 +46,7 @@ Selected per bin: min 7, median 7, max 7.
 
 | action type | steps | loss weight |
 |---|---|---|
-| move_to | 4511 | 1.0 |
+| move_to | 4512 | 1.0 |
 | open_gripper | 1400 | 1.5 |
 | close_gripper | 700 | 2.0 |
 | done | 700 | 2.0 |
@@ -57,7 +57,7 @@ Selected per bin: min 7, median 7, max 7.
 | pre-grasp | 700 |
 | grasp | 700 |
 | lift | 700 |
-| transport | 1011 |
+| transport | 1012 |
 | place | 700 |
 | release | 700 |
 | retreat | 700 |

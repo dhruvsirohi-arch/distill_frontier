@@ -29,11 +29,10 @@ git -C assets/menagerie sparse-checkout set robotstudio_so101
 
 ### Linux + NVIDIA (tested: Ubuntu 24.04, RTX 4090 24 GB, i9-14900K, Python 3.12.3, torch 2.15 cu132)
 
-Same packages; `uv` is faster than pip:
+Versions are pinned in `pyproject.toml` / `uv.lock`:
 
 ```bash
-uv venv -p python3.12 .venv
-uv pip install -p .venv/bin/python mujoco torch transformers peft trl accelerate datasets pyyaml matplotlib scipy imageio imageio-ffmpeg pytest
+uv sync --frozen          # creates .venv with the exact locked versions
 # then clone assets/menagerie as above
 ```
 

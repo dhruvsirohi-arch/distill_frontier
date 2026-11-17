@@ -45,8 +45,9 @@ def build_spec(cfg: dict) -> mujoco.MjSpec:
         act.set_to_position(kp=5000.0, kv=140.0)
 
     # closer scene camera than the video "front" camera: workspace fills the 224 px frame
-    sp, st = [0.47, -0.30, 0.40], [0.13, 0.04, 0.04]
-    wb.add_camera(name="scene", pos=sp, quat=_lookat_quat(sp, st), fovy=45)
+    sc = v.get("scene_camera", {})
+    sp, st = sc.get("pos", [0.47, -0.30, 0.40]), sc.get("target", [0.13, 0.04, 0.04])
+    wb.add_camera(name="scene", pos=sp, quat=_lookat_quat(sp, st), fovy=sc.get("fovy", 45))
     cam_pos, cam_tgt = np.array(WRIST_CAM_POS), np.array(WRIST_CAM_TARGET)
     spec.body("gripper").add_camera(name="wrist", pos=cam_pos, quat=_lookat_quat(cam_pos, cam_tgt), fovy=75)
     return spec

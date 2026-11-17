@@ -35,6 +35,8 @@ def main():
     ap.add_argument("--n", type=int, default=None)
     ap.add_argument("--start", type=int, default=None)
     ap.add_argument("--video", type=int, default=0)
+    ap.add_argument("--config", default=None, help="override yaml, e.g. configs/vla_m2.yaml")
+    ap.add_argument("--tag", default="expert")
     args = ap.parse_args()
     setup_gl("record")
     import mujoco
@@ -44,7 +46,7 @@ def main():
     from vla.env import TickEnv
     from vla.expert import TickExpert
 
-    cfg = load_vla_config()
+    cfg = load_vla_config(args.config)
     start, n = cfg["vla"]["seeds"]["expert_check"]
     start, n = (args.start if args.start is not None else start), (args.n or n)
     env = TickEnv(cfg, render=False)
@@ -62,13 +64,13 @@ def main():
             print(f"seed {seed}: FAIL {info['failure_type']} last_phase={phases[-1]} {env.stats.detail}", flush=True)
         if frames is not None:
             import imageio.v2 as iio2
-            (out / "videos" / "expert").mkdir(parents=True, exist_ok=True)
-            iio2.mimwrite(out / "videos" / "expert" / f"seed{seed:06d}.mp4", frames["list"],
+            (out / "videos" / args.tag).mkdir(parents=True, exist_ok=True)
+            iio2.mimwrite(out / "videos" / args.tag / f"seed{seed:06d}.mp4", frames["list"],
                           fps=cfg["vla"]["control_hz"], codec="libx264", macro_block_size=1, quality=6)
     res = {"n": n, "start": start, "successes": ok, "success_rate": ok / n, "failures": dict(fails),
            "mean_ticks": float(np.mean(ticks)), "wall_time_s": round(time.time() - t0, 1)}
     print(res)
-    write_json(out / "expert_check.json", res)
+    write_json(out / f"{args.tag}_check.json", res)
 
 
 if __name__ == "__main__":

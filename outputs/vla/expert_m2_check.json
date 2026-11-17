@@ -1,0 +1,9 @@
+{
+  "n": 200,
+  "start": 0,
+  "successes": 200,
+  "success_rate": 1.0,
+  "failures": {},
+  "mean_ticks": 130.995,
+  "wall_time_s": 24.8
+}

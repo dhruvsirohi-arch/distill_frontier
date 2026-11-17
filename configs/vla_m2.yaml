@@ -1,0 +1,35 @@
+# Milestone 2 overrides: two bowls, two moving pads, the instruction names which bowl goes where.
+bowls:
+  - name: red
+    rgba: [0.85, 0.12, 0.12, 1]
+    spawn: {x: [0.19, 0.26], y: [-0.09, 0.09]}
+  - name: green
+    rgba: [0.10, 0.70, 0.20, 1]
+    spawn: {x: [0.19, 0.26], y: [-0.09, 0.09]}
+
+pads:
+  - name: blue
+    rgba: [0.15, 0.30, 0.90, 1]
+    center: [0.10, 0.17]
+    size: [0.12, 0.12]
+    height: 0.040
+    axis: [1, 0]
+    travel: 0.04
+    speed: [0.01, 0.03]
+  - name: yellow
+    rgba: [0.95, 0.80, 0.10, 1]
+    center: [0.10, -0.17]
+    size: [0.12, 0.12]
+    height: 0.040
+    axis: [1, 0]
+    travel: 0.04
+    speed: [0.01, 0.03]
+
+scene_camera:               # both pads must be in view
+  pos: [0.56, 0.0, 0.46]
+  target: [0.12, 0.0, 0.03]
+  fovy: 50
+
+paths:
+  data: outputs/vla/data_m2
+  runs: outputs/vla/runs

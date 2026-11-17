@@ -37,7 +37,8 @@ def _lookat_quat(pos, target):
     return q
 
 
-def build_spec(cfg: dict) -> mujoco.MjSpec:
+def base_spec(cfg: dict) -> mujoco.MjSpec:
+    """Robot on its pedestal + floor, light, TCP site and cameras. Task geometry is added by callers."""
     ecfg = cfg["env"]
     spec = mujoco.MjSpec.from_file(str(REPO / cfg["paths"]["robot_xml"]))
     spec.modelname = "so101_bowl"
@@ -66,6 +67,50 @@ def build_spec(cfg: dict) -> mujoco.MjSpec:
                  type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL)
     wb.add_geom(name="floor", type=mujoco.mjtGeom.mjGEOM_PLANE, size=[1, 1, 0.05], material="grid")
 
+    # TCP site on the gripper body
+    spec.body("gripper").add_site(name="tcp", pos=TCP_IN_GRIPPER, size=[0.004, 0, 0],
+                                  rgba=[1, 0, 1, 1], group=4)
+
+    # cameras: front view and top-down view
+    front_pos, front_tgt = [0.60, -0.42, 0.50], [0.12, 0.02, 0.10]
+    wb.add_camera(name="front", pos=front_pos, quat=_lookat_quat(front_pos, front_tgt), fovy=48)
+    wb.add_camera(name="top", pos=[0.16, 0.02, 0.72], quat=[1, 0, 0, 0], fovy=45)
+    return spec
+
+
+def add_bowl(wb, b: dict, name="bowl", rgba=(0.92, 0.92, 0.95, 1), lug=True):
+    """Rimmed bowl body with a freejoint: base disc + ring of wall boxes (+ optional yaw lug)."""
+    R, wall, H, bt, N = b["radius"], b["wall"], b["height"], b["base_thickness"], b["segments"]
+    bowl = wb.add_body(name=name, pos=[0.2, 0.0, 0.0])
+    bowl.add_freejoint(name=f"{name}_free")
+    per = b["mass"] / (N + 2)
+    bowl_rgba = list(rgba)
+    bowl.add_geom(name=f"{name}_base", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=[0, 0, bt / 2],
+                  size=[R - wall * 0.5, bt / 2, 0], mass=per, rgba=bowl_rgba, friction=[1.0, 0.005, 0.0001])
+    rmid = R - wall / 2
+    seg_half = math.pi * rmid / N * 1.08
+    for i in range(N):
+        a = 2 * math.pi * i / N
+        q = np.zeros(4)
+        mujoco.mju_axisAngle2Quat(q, np.array([0.0, 0.0, 1.0]), a)
+        bowl.add_geom(name=f"{name}_wall{i}", type=mujoco.mjtGeom.mjGEOM_BOX,
+                      pos=[rmid * math.cos(a), rmid * math.sin(a), (H + 0.001) / 2],
+                      quat=q, size=[wall / 2, seg_half, (H - 0.001) / 2], mass=per, rgba=bowl_rgba,
+                      friction=[1.0, 0.005, 0.0001])
+    if lug:
+        L = b["lug_length"]
+        bowl.add_geom(name=f"{name}_lug", type=mujoco.mjtGeom.mjGEOM_BOX,
+                      pos=[R + L / 2, 0, H - 0.003], size=[L / 2, 0.008, 0.003], mass=per,
+                      rgba=[0.85, 0.25, 0.2, 1])
+    bowl.add_site(name=f"{name}_center", pos=[0, 0, 0], size=[0.003, 0, 0], group=4)
+    return bowl
+
+
+def build_spec(cfg: dict) -> mujoco.MjSpec:
+    ecfg = cfg["env"]
+    spec = base_spec(cfg)
+    wb = spec.worldbody
+
     # spawn region marker (visual only)
     sx, sy = ecfg["spawn"]["x"], ecfg["spawn"]["y"]
     wb.add_geom(name="spawn_marker", type=mujoco.mjtGeom.mjGEOM_BOX,
@@ -85,39 +130,7 @@ def build_spec(cfg: dict) -> mujoco.MjSpec:
                 size=[tg["size"][0] / 2, tg["size"][1] / 2, 0.0006],
                 rgba=[0.2, 0.85, 0.3, 0.55], contype=0, conaffinity=0, group=1)
 
-    # bowl: base disc + ring of wall boxes + a yaw-marking lug
-    b = ecfg["bowl"]
-    R, wall, H, bt, N = b["radius"], b["wall"], b["height"], b["base_thickness"], b["segments"]
-    bowl = wb.add_body(name="bowl", pos=[0.2, 0.0, 0.0])
-    bowl.add_freejoint(name="bowl_free")
-    per = b["mass"] / (N + 2)
-    bowl_rgba = [0.92, 0.92, 0.95, 1]
-    bowl.add_geom(name="bowl_base", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=[0, 0, bt / 2],
-                  size=[R - wall * 0.5, bt / 2, 0], mass=per, rgba=bowl_rgba, friction=[1.0, 0.005, 0.0001])
-    rmid = R - wall / 2
-    seg_half = math.pi * rmid / N * 1.08
-    for i in range(N):
-        a = 2 * math.pi * i / N
-        q = np.zeros(4)
-        mujoco.mju_axisAngle2Quat(q, np.array([0.0, 0.0, 1.0]), a)
-        bowl.add_geom(name=f"bowl_wall{i}", type=mujoco.mjtGeom.mjGEOM_BOX,
-                      pos=[rmid * math.cos(a), rmid * math.sin(a), (H + 0.001) / 2],
-                      quat=q, size=[wall / 2, seg_half, (H - 0.001) / 2], mass=per, rgba=bowl_rgba,
-                      friction=[1.0, 0.005, 0.0001])
-    L = b["lug_length"]
-    bowl.add_geom(name="bowl_lug", type=mujoco.mjtGeom.mjGEOM_BOX,
-                  pos=[R + L / 2, 0, H - 0.003], size=[L / 2, 0.008, 0.003], mass=per,
-                  rgba=[0.85, 0.25, 0.2, 1])
-    bowl.add_site(name="bowl_center", pos=[0, 0, 0], size=[0.003, 0, 0], group=4)
-
-    # TCP site on the gripper body
-    spec.body("gripper").add_site(name="tcp", pos=TCP_IN_GRIPPER, size=[0.004, 0, 0],
-                                  rgba=[1, 0, 1, 1], group=4)
-
-    # cameras: front view and top-down view
-    front_pos, front_tgt = [0.60, -0.42, 0.50], [0.12, 0.02, 0.10]
-    wb.add_camera(name="front", pos=front_pos, quat=_lookat_quat(front_pos, front_tgt), fovy=48)
-    wb.add_camera(name="top", pos=[0.16, 0.02, 0.72], quat=[1, 0, 0, 0], fovy=45)
+    add_bowl(wb, ecfg["bowl"])
     return spec
 
 

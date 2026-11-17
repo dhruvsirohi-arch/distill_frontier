@@ -1,0 +1,64 @@
+# VLA task: pick a named bowl, place it on a named moving pad. Merged over configs/config.yaml
+# under the key "vla" (see vla/common.py). Robot / IK / timestep settings come from config.yaml.
+control_hz: 25               # policy tick; physics runs at 1 / env.timestep
+max_ticks: 400               # 16 s episode cap
+image_size: 224
+cameras: [scene, wrist]
+
+bowl:                        # shared bowl geometry (no yaw lug: bowls are rotationally symmetric)
+  radius: 0.045
+  wall: 0.005
+  height: 0.040
+  base_thickness: 0.004
+  segments: 24
+  mass: 0.05
+
+bowls:
+  - name: red
+    rgba: [0.85, 0.12, 0.12, 1]
+    spawn: {x: [0.19, 0.26], y: [-0.10, 0.05]}
+
+pads:                        # each pad slides on a straight rail, reversing at the ends
+  - name: blue
+    rgba: [0.15, 0.30, 0.90, 1]
+    center: [0.10, 0.17]
+    size: [0.12, 0.12]
+    height: 0.040
+    axis: [1, 0]
+    travel: 0.04             # +- from center along axis
+    speed: [0.01, 0.03]      # m/s, sampled per episode
+
+gripper: {open: 0.50, closed: -0.17}
+
+success:
+  center_tol: 0.030          # bowl center within this of pad center (x and y)
+  hold_time: 2.0             # must stay placed and released this long
+  max_tilt_deg: 15
+  max_rel_speed: 0.02        # bowl speed relative to pad
+
+randomize:                   # visual randomization per episode
+  light: [0.5, 0.9]          # diffuse intensity
+  light_pos_jitter: 0.3
+  cam_pos_jitter: 0.008
+  floor_tint: 0.15
+
+expert:
+  pregrasp_height: [0.04, 0.07]
+  grasp_depth: [0.010, 0.014]
+  lift_height: [0.10, 0.13]
+  place_offset: 0.012        # |dx|, |dy| of intended placement from pad center
+  place_drop: [0.002, 0.005]
+  retreat_height: [0.11, 0.14]
+  max_speed: [0.10, 0.16]    # m/s Cartesian
+  lead_time: 0.08            # s of pad-velocity lead while tracking
+  rest_tcp: [0.16, -0.06, 0.15]
+
+seeds:
+  expert_check: [0, 200]     # [start, count]
+  train_start: 1000
+  val_start: 900000
+  eval_start: 1000000
+
+paths:
+  data: outputs/vla/data
+  runs: outputs/vla/runs

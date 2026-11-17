@@ -12,3 +12,6 @@ outputs/qwen_lora/
 outputs/logs/
 outputs/eval_episodes.jsonl
 outputs/eval_gallery.html
+outputs/vla/data/
+outputs/vla/runs/
+outputs/vla/videos/

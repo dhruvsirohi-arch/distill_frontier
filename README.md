@@ -27,6 +27,24 @@ git clone --depth 1 --filter=blob:none --sparse https://github.com/google-deepmi
 git -C assets/menagerie sparse-checkout set robotstudio_so101
 ```
 
+### Linux + NVIDIA (tested: Ubuntu 24.04, RTX 4090 24 GB, i9-14900K, Python 3.12.3, torch 2.15 cu132)
+
+Same packages; `uv` is faster than pip:
+
+```bash
+uv venv -p python3.12 .venv
+uv pip install -p .venv/bin/python mujoco torch transformers peft trl accelerate datasets pyyaml matplotlib scipy imageio imageio-ffmpeg pytest
+# then clone assets/menagerie as above
+```
+
+* Headless rendering uses **EGL** (needs `libEGL_nvidia`, shipped with the driver). Every stage that renders
+  selects it automatically before importing mujoco; `MUJOCO_GL` set in the environment wins.
+* Measured here: data generation 2000 eps ≈ 1.5 min (9 workers), SFT ≈ 9 min end to end, eval (100 Qwen + 100 expert eps, lowres videos) ≈ 13 min (0.11 s/step at
+  bs 4, 3296 steps = full 2 epochs, ~13 GB VRAM; well inside the 50-min budget), first run also downloads
+  Qwen3-1.7B (~3.4 GB).
+* If `nvidia-smi` says *Driver/library version mismatch* after a driver update, reboot; CUDA in torch kept
+  working in that state, but don't rely on it.
+
 ## Commands (each stage is standalone and rerunnable; `./run_all.sh` runs them all)
 
 | stage | command |

@@ -23,7 +23,7 @@ from pathlib import Path
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
-from viz.viz import add_viz_args, resolve_mode  # noqa: E402  (sets GL backend before mujoco import)
+from viz.viz import add_viz_args, resolve_mode, setup_gl  # noqa: E402  (sets GL backend before mujoco import)
 from env.common import REPO, get_logger, load_config, set_seeds, write_json  # noqa: E402
 
 
@@ -152,6 +152,7 @@ def main():
         mode = "record"  # checkpoints are always recorded (that is the point of them)
     if mode == "live":
         mode = "stream"  # the passive viewer would block training on macOS; use stream instead
+    setup_gl(mode)  # mode may have changed above; mujoco is not imported yet (EGL on headless Linux)
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer

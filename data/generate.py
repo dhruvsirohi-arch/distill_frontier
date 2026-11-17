@@ -102,6 +102,11 @@ def main():
     out = args.out or str(REPO / cfg["paths"]["raw_jsonl"])
     workers = args.workers or cfg["datagen"]["workers"]
     rec = cfg["datagen"]["record_every"] if args.record_every is None else args.record_every
+    # workers render MP4s when rec > 0: pick the GL backend (EGL on headless Linux) before they spawn,
+    # so they inherit MUJOCO_GL; otherwise mujoco defaults to GLFW and fails without a display
+    from viz.viz import setup_gl
+
+    setup_gl("record" if rec > 0 else "none")
     log.info(f"generating {len(seeds)} episodes with {workers} workers, recording every {rec}th -> {out}")
     summary = generate(cfg, seeds, out, workers, rec, stage="datagen", log=log)
     write_json(Path(out).with_suffix(".summary.json"), summary)

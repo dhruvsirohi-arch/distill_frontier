@@ -57,25 +57,25 @@ def run_expert(cfg, seeds, record, log):
     return eps
 
 
-def run_qwen(cfg, seeds, record, model_path, adapter, batch, log):
+def run_qwen(cfg, seeds, record, model_path, adapter, batch, log, name="qwen"):
     from env.rollout import run_episodes_lockstep
     from env.so101_env import BowlEnv
     from eval.qwen_policy import QwenPolicy
 
-    pol = QwenPolicy.load(model_path, adapter, cfg["eval"]["max_new_tokens"], name="qwen")
+    pol = QwenPolicy.load(model_path, adapter, cfg["eval"]["max_new_tokens"], name=name)
     eps = []
     for b0 in range(0, len(seeds), batch):
         chunk = seeds[b0:b0 + batch]
-        vizs = [make_recorder(cfg, record, "qwen", b0 + j) for j in range(len(chunk))]
+        vizs = [make_recorder(cfg, record, name, b0 + j) for j in range(len(chunk))]
         envs = [BowlEnv(cfg, viz=v) for v in vizs]
         t0 = time.time()
-        res = run_episodes_lockstep(envs, pol, chunk, [f"qwen_{s}" for s in chunk], cfg["train"]["history_len"])
+        res = run_episodes_lockstep(envs, pol, chunk, [f"{name}_{s}" for s in chunk], cfg["train"]["history_len"])
         for ep, v in zip(res, vizs):
             ep["video"] = v.last_path if v else None
             if v:
                 v.close()
         eps.extend(res)
-        log.info(f"qwen: episodes {b0 + len(chunk)}/{len(seeds)}, success so far "
+        log.info(f"{name}: episodes {b0 + len(chunk)}/{len(seeds)}, success so far "
                  f"{sum(e['success'] for e in eps)}/{len(eps)} ({time.time() - t0:.0f}s for this batch)")
     return eps
 
@@ -183,6 +183,9 @@ def main():
     ap.add_argument("--model", default=None, help="merged model dir (default: paths.merged_dir)")
     ap.add_argument("--adapter", default=None, help="optional: base model + this LoRA adapter instead of merged")
     ap.add_argument("--batch", type=int, default=25, help="episodes run in lockstep per batched generate")
+    ap.add_argument("--base", action="store_true",
+                    help="evaluate the UNTUNED base model (train.base_model) as policy 'qwen_base'; writes "
+                         "outputs/results_base.json and leaves results.json / the gallery untouched")
     args = ap.parse_args()
     cfg = load_config(args.config)
     record = args.record or cfg["eval"]["record"]
@@ -194,6 +197,8 @@ def main():
     assert n == 100 and min(seeds) >= 100000
     results, raw = {}, {}
     t0 = time.time()
+    if args.base:
+        args.policies, args.model, args.adapter = ["qwen_base"], cfg["train"]["base_model"], None
     for pol in args.policies:
         if pol == "expert":
             eps = run_expert(cfg, seeds, record, log)
@@ -201,10 +206,19 @@ def main():
             model = args.model or str(REPO / cfg["paths"]["merged_dir"])
             if args.adapter:
                 model = cfg["train"]["base_model"]
-            eps = run_qwen(cfg, seeds, record, model, args.adapter, args.batch, log)
+            eps = run_qwen(cfg, seeds, record, model, args.adapter, args.batch, log, name=pol)
         results[pol] = summarize(eps, cfg)
         raw[pol] = eps
     out = REPO / "outputs"
+    if args.base:
+        write_json(out / "results_base.json", {"seeds": [seeds[0], seeds[-1]], "wall_time_s": round(time.time() - t0, 1),
+                                               "model": cfg["train"]["base_model"], **results})
+        with open(out / "eval_episodes_base.jsonl", "w") as f:
+            for e in raw["qwen_base"]:
+                f.write(json.dumps(e) + "\n")
+        print_table(results, cfg)
+        log.info(f"base-model results -> {out / 'results_base.json'}")
+        return
     write_json(out / "results.json", {"seeds": [seeds[0], seeds[-1]], "wall_time_s": round(time.time() - t0, 1),
                                       **results})
     with open(out / "eval_episodes.jsonl", "w") as f:

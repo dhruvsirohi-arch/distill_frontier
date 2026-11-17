@@ -240,23 +240,25 @@ def render_progress(cfg, log, seed=100500):
     return meta
 
 
-def render_evalwall(cfg, log):
+def render_evalwall(cfg, log, base=False):
     """Replay the scored Qwen eval with identical batching (lockstep chunks of 25, same seeds and episode ids)
     and re-render it in the studio look. Outcomes are checked against outputs/results.json."""
     from env.rollout import run_episodes_lockstep
     from eval.qwen_policy import QwenPolicy
 
-    r = json.load(open(REPO / "outputs/results.json"))
-    ref = {e["seed"]: e for e in r["qwen"]["episodes"]}
+    key, pre = ("qwen_base", "b") if base else ("qwen", "q")
+    r = json.load(open(REPO / ("outputs/results_base.json" if base else "outputs/results.json")))
+    ref = {e["seed"]: e for e in r[key]["episodes"]}
     seeds = sorted(ref)
-    pol = QwenPolicy.load(str(REPO / cfg["paths"]["merged_dir"]), None, cfg["eval"]["max_new_tokens"], name="qwen")
+    model = cfg["train"]["base_model"] if base else str(REPO / cfg["paths"]["merged_dir"])
+    pol = QwenPolicy.load(model, None, cfg["eval"]["max_new_tokens"], name=key)
     meta, mismatch = [], []
     for b0 in range(0, len(seeds), 25):
         chunk = seeds[b0:b0 + 25]
-        recs = [CinemaRec(cfg, size=(480, 270), az=(228, 244), stream_to=OUT / "eval" / f"q{s}.mp4", crf=28)
+        recs = [CinemaRec(cfg, size=(480, 270), az=(228, 244), stream_to=OUT / "eval" / f"{pre}{s}.mp4", crf=28)
                 for s in chunk]
         envs = [BowlEnv(cfg, viz=rc) for rc in recs]
-        res = run_episodes_lockstep(envs, pol, chunk, [f"qwen_{s}" for s in chunk], cfg["train"]["history_len"])
+        res = run_episodes_lockstep(envs, pol, chunk, [f"{key}_{s}" for s in chunk], cfg["train"]["history_len"])
         for ep, rc in zip(res, recs):
             rc.close()
             e = ref[ep["seed"]]
@@ -281,7 +283,7 @@ def main():
     mpath = REPO / "docs" / "assets" / "media.json"
     media = json.loads(mpath.read_text()) if mpath.exists() else {}
     for k, fn in (("demos", render_demos), ("hero", render_hero), ("progress", render_progress),
-                  ("evalwall", render_evalwall)):
+                  ("evalwall", render_evalwall), ("basewall", lambda c, lg: render_evalwall(c, lg, base=True))):
         if k in args.only:
             media[k] = fn(cfg, log)
     mpath.parent.mkdir(parents=True, exist_ok=True)

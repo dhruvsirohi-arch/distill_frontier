@@ -75,12 +75,19 @@ def main():
         t, x = CKPT_STORY.get(p["step"], ("", ""))
         progress.append({**p, "epoch": epoch(p["step"]), "title": t, "text": x})
 
+    # untuned base model on the same 100 seeds (eval.evaluate --base)
+    rb = json.load(open(out / "results_base.json"))["qwen_base"]
+    b_eps = [json.loads(line) for line in open(out / "eval_episodes_base.jsonl")]
+    b_invalid = sum(e["metrics"]["n_invalid"] + e["metrics"]["n_rejected"] for e in b_eps)
+    b_fail = collections.Counter({k: v for k, v in rb["failure_breakdown"].items() if v})
+    fail_keys = ["dropped_bowl", "failed_grasp", "missed_target", "invalid_json", "step_limit"]
+    base_failures = [[k.replace("_", " "), rb["failure_breakdown"].get(k, 0)] for k in fail_keys]
     fails = [[k.replace("_", " "), q["failure_breakdown"].get(k, 0), FAIL_DESC[k], ex["failure_breakdown"].get(k, 0)]
              for k in ["dropped_bowl", "failed_grasp", "missed_target", "invalid_json", "step_limit"]]
     est_min = 1.83 * train["trained_steps"] / 60
     D = {
         "generated": dt.date.today().isoformat(),
-        "kpi": {"qwen_success": q["success"], "expert_success": ex["success"], "invalid": invalid,
+        "kpi": {"base_success": rb["success"], "qwen_success": q["success"], "expert_success": ex["success"], "invalid": invalid,
                 "decisions": decisions, "pairs": cur["pairs_train"], "curated": cur["n_selected"],
                 "raw": cur["n_raw"], "expert_check": f"{round(100 * expc['success_rate'])}%"},
         "pipeline": [
@@ -93,7 +100,7 @@ def main():
             ["Distill", "LoRA fine-tune of Qwen3-1.7B. Loss only on action tokens, weighted toward gripper and done.",
              f"{cur['pairs_train']:,} pairs · r=16 · {train['epochs_effective']:.2f} epochs"],
             ["Evaluate", "100 never-seen scenes, greedy decoding, strict schema checks, same success test as the expert.",
-             f"Qwen {q['success']}/100 · expert {ex['success']}/100"],
+             f"before {rb['success']} → after {q['success']} · expert {ex['success']} /100"],
         ],
         "example": {"user": user_text(row["observation"], row["history"]), "action": action_to_text(row["action"]),
                     "trace": trace},
@@ -121,11 +128,16 @@ def main():
         "trainnote": (f"Measured 1.8 s per step on the M5 GPU. Memory pressure from other apps stretched this run to "
                       f"{train['total_minutes']:.0f} min wall-clock. The trainer now enforces a hard time budget "
                       f"and saves at every checkpoint."),
-        "eval": {"qwen": {"success": q["success"], "mean_steps": q["mean_steps_to_success"], "invalid": invalid,
+        "eval": {"base": {"success": rb["success"], "mean_steps": rb["mean_steps_to_success"], "invalid": b_invalid,
+                          "failures": base_failures,
+                          "top": b_fail.most_common(1)[0][0].replace("_", " ") if b_fail else "none"},
+                 "qwen": {"success": q["success"], "mean_steps": q["mean_steps_to_success"], "invalid": invalid,
                           "failures": fails},
                  "expert": {"success": ex["success"], "mean_steps": ex["mean_steps_to_success"]},
                  "collisions": {"steps": coll, "episodes": len(coll_eps),
                                 "episodes_succeeded": sum(e["success"] for e in coll_eps), "expert": e_coll}},
+        "wall_base": [{**w, "file": f"assets/eval/b{w['seed']}.mp4", "thumb": f"assets/eval/b{w['seed']}.jpg"}
+                      for w in media["basewall"]],
         "wall": [{**w, "file": f"assets/eval/q{w['seed']}.mp4", "thumb": f"assets/eval/q{w['seed']}.jpg"}
                  for w in media["evalwall"]],
     }

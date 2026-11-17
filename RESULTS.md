@@ -2,17 +2,22 @@
 
 ## Headline
 
-| held-out seeds 100000–100099 (greedy, strict JSON) | Qwen3-1.7B + LoRA | scripted expert |
-|---|---|---|
-| **success / 100** | **90** | **100** |
-| mean steps to success | 10.02 | 10.52 |
-| fail: failed_grasp | 3 | 0 |
-| fail: dropped_bowl | 5 | 0 |
-| fail: missed_target | 2 | 0 |
-| fail: invalid_json | 0 | 0 |
-| fail: step_limit | 0 | 0 |
+| held-out seeds 100000–100099 (greedy, strict JSON) | Qwen3-1.7B base (before) | Qwen3-1.7B + LoRA (after) | scripted expert |
+|---|---|---|---|
+| **success / 100** | **0** | **90** | **100** |
+| mean steps to success | – | 10.02 | 10.52 |
+| fail: failed_grasp | 96 | 3 | 0 |
+| fail: dropped_bowl | 0 | 5 | 0 |
+| fail: missed_target | 0 | 2 | 0 |
+| fail: invalid_json | 4 | 0 | 0 |
+| fail: step_limit | 0 | 0 | 0 |
 
-Qwen produced **0 invalid JSON actions** over all 100 episodes. Per-cell success (5×5 spawn grid) is in
+**Baseline.** The untuned base model gets the same system prompt, the same seeds and the same greedy decoding
+(`python -m eval.evaluate --base` → `outputs/results_base.json`). It scores 0/100. In 66 of 100 scenes it moves
+the empty gripper to the target coordinates, opens and says `done` without ever touching the bowl. It also
+produced 13 invalid actions in 4 episodes.
+
+After fine-tuning, Qwen produced **0 invalid JSON actions** over all 100 episodes. Per-cell success (5×5 spawn grid) is in
 `outputs/results.json`; Qwen's failures are scattered across the workspace, with no single cell
 failing on every seed.
 

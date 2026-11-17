@@ -30,7 +30,9 @@ def setup_gl(mode: str) -> str:
     if mode == "live" and not display_available():
         print("[viz] no display detected -> falling back from 'live' to 'stream'", flush=True)
         mode = "stream"
-    if platform.system() == "Linux" and mode in ("stream", "record") and not display_available():
+    # Offscreen rendering on Linux always goes through EGL, even when a desktop session exists:
+    # via X/GLFW every process queues on the X server, which serializes parallel workers.
+    if platform.system() == "Linux" and mode in ("stream", "record"):
         os.environ.setdefault("MUJOCO_GL", "egl")
     return mode
 

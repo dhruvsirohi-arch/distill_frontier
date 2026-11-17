@@ -12,7 +12,7 @@ import datetime as dt
 import json
 
 from env.common import REPO, load_config
-from train.prompt import action_to_text, user_text
+from train.prompt import SYSTEM_PROMPT, action_to_text, user_text
 
 REPO_URL = "https://github.com/dhruvsirohi-arch/distill_frontier"
 
@@ -39,6 +39,12 @@ FAIL_DESC = {
     "invalid_json": "produced output that failed schema validation",
     "step_limit": "ran out of the 15-decision budget",
 }
+
+
+def first_prompt(eps, seed, history_len):
+    """The exact user message of decision 1 (step 0), rebuilt from that episode's own saved record."""
+    st = next(e for e in eps if e["seed"] == seed)["steps"][0]
+    return user_text(st["observation"], st["history"][-history_len:] if history_len else [])
 
 
 def latency_block(out):
@@ -95,6 +101,7 @@ def main():
     curated = json.load(open(out / "data" / "curated" / "episodes.json"))
 
     q, ex = res["qwen"], res["expert"]
+    hl = cfg["train"]["history_len"]
     decisions = sum(e["n_steps"] for e in q_eps)
     invalid = sum(e["metrics"]["n_invalid"] + e["metrics"]["n_rejected"] for e in q_eps)
     coll = collections.Counter(s["result"] for e in q_eps for s in e["steps"])["collision"]
@@ -176,9 +183,12 @@ def main():
                  "collisions": {"steps": coll, "episodes": len(coll_eps),
                                 "episodes_succeeded": sum(e["success"] for e in coll_eps), "expert": e_coll}},
         "latency": latency_block(out),
-        "wall_base": [{**w, "file": f"assets/eval/b{w['seed']}.mp4", "thumb": f"assets/eval/b{w['seed']}.jpg"}
+        "system_prompt": SYSTEM_PROMPT,
+        "wall_base": [{**w, "file": f"assets/eval/b{w['seed']}.mp4", "thumb": f"assets/eval/b{w['seed']}.jpg",
+                       "prompt": first_prompt(b_eps, w["seed"], hl)}
                       for w in media["basewall"]],
-        "wall": [{**w, "file": f"assets/eval/q{w['seed']}.mp4", "thumb": f"assets/eval/q{w['seed']}.jpg"}
+        "wall": [{**w, "file": f"assets/eval/q{w['seed']}.mp4", "thumb": f"assets/eval/q{w['seed']}.jpg",
+                  "prompt": first_prompt(q_eps, w["seed"], hl)}
                  for w in media["evalwall"]],
     }
     page = (REPO / "showcase" / "template.html").read_text()

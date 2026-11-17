@@ -224,7 +224,21 @@ details.data td:first-child,details.data th:first-child{text-align:left}
 .tile.dim{opacity:.12;pointer-events:none}
 dialog{border:1px solid var(--line2);border-radius:18px;background:#111318;color:var(--ink);padding:0;max-width:min(880px,94vw);width:100%}
 dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+dialog{max-height:94vh;overflow:auto}
 dialog video{width:100%;background:#000}
+dialog .ptop{padding:14px 18px 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(57,135,229,.07),transparent 80%)}
+dialog .ptop .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+dialog .ptop .lbl{display:flex;align-items:center;gap:10px;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+dialog .ptop .lbl b{font:600 11px var(--mono);letter-spacing:.06em;color:#0a0b0e;background:var(--accent);padding:3px 8px;border-radius:6px;text-transform:none}
+dialog .ptop .acts{display:flex;gap:6px}
+dialog .ptop .acts button{all:unset;cursor:pointer;font:500 12px var(--sans);color:var(--ink2);padding:5px 11px;border-radius:999px;border:1px solid var(--line2);transition:background .2s,color .2s}
+dialog .ptop .acts button:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+dialog .ptop .acts button[aria-expanded=true]{background:rgba(255,255,255,.1);color:var(--ink)}
+dialog .ptop .acts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+dialog .pcode{margin:10px 0 0;font:12.5px/1.7 var(--mono);color:#d7dae0;background:#0a0b0e;border:1px solid var(--line);border-radius:10px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;max-height:30vh;overflow:auto}
+dialog .pcode .tag{color:var(--ink3)} dialog .pcode .sys{color:var(--ink2)}
+dialog .pcode .sysblk{display:none;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--line2)}
+dialog .pcode.show-sys .sysblk{display:block}
 dialog .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
 dialog .meta b{color:var(--ink);font-weight:500}
 dialog button.close{all:unset;cursor:pointer;font:500 13px var(--sans);padding:7px 14px;border-radius:999px;border:1px solid var(--line2)}
@@ -422,7 +436,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <footer><div class="wrap"><span>distill_frontier · SO-101 pick-and-place in MuJoCo · Qwen3-1.7B LoRA</span><span id="foot-gen"></span></div></footer>
 
-<dialog id="dlg"><video id="dlg-v" controls autoplay muted playsinline loop></video><div class="meta"><span id="dlg-m"></span><button class="close" id="dlg-c">Close</button></div></dialog>
+<dialog id="dlg" aria-labelledby="dlg-pl"><div class="ptop"><div class="row"><div class="lbl" id="dlg-pl"><b>step 0</b>Initial prompt given to the model</div><div class="acts"><button id="dlg-sys" aria-expanded="false">System prompt</button><button id="dlg-copy">Copy</button></div></div><pre class="pcode" id="dlg-p"></pre></div><video id="dlg-v" controls autoplay muted playsinline loop></video><div class="meta"><span id="dlg-m"></span><button class="close" id="dlg-c">Close</button></div></dialog>
 <div class="tip" id="tip" role="status"></div>
 
 <script>
@@ -673,7 +687,18 @@ $("#trainfacts").innerHTML = D.trainfacts.map(([l, v]) => `<div class="frow"><di
 
 /* eval map + wall */
 workspace($("#map-eval"), D.wall, "eval");
-function openEp(p) { const d = $("#dlg"); $("#dlg-v").src = p.file; $("#dlg-m").innerHTML = `<span><b>${p.who || "Qwen fine-tuned"} · seed ${p.seed}</b> · ${p.steps} decisions · yaw ${p.yaw}°</span> <span class="pill ${p.success ? "ok" : "no"}">${p.success ? "✓ success" : "✕ " + p.failure.replace("_", " ")}</span>`; d.showModal(); }
+const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const hlj = t => esc(t).replace(/("[\w]+")(:)/g, '<span class="j-k">$1</span>$2').replace(/:(-?\d+)/g, ':<span class="j-n">$1</span>')
+  .replace(/:("[a-z_]+")/g, ':<span class="j-s">$1</span>').replace(/:(true|false)/g, ':<span class="j-b">$1</span>');
+function fillPrompt(p) {
+  const body = (p.prompt || "").split("\n").map((ln, i) => {
+    const [tag, ...rest] = ln.split(":"); const val = rest.join(":");
+    return `<span class="tag">${tag}</span> ${hlj(val)}`; }).join("\n");
+  $("#dlg-p").innerHTML = `<div class="sysblk"><span class="tag">system</span> <span class="sys">${esc(D.system_prompt)}</span></div>${body}`;
+  $("#dlg-copy").onclick = () => { navigator.clipboard?.writeText(`[system]\n${D.system_prompt}\n\n[user]\n${p.prompt}`).then(() => { const b = $("#dlg-copy"); b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1400); }).catch(() => {}); };
+}
+$("#dlg-sys").onclick = () => { const on = $("#dlg-p").classList.toggle("show-sys"); $("#dlg-sys").setAttribute("aria-expanded", on); };
+function openEp(p) { const d = $("#dlg"); fillPrompt(p); $("#dlg-v").src = p.file; $("#dlg-m").innerHTML = `<span><b>${p.who || "Qwen fine-tuned"} · seed ${p.seed}</b> · ${p.steps} decisions · yaw ${p.yaw}°</span> <span class="pill ${p.success ? "ok" : "no"}">${p.success ? "✓ success" : "✕ " + p.failure.replace("_", " ")}</span>`; d.showModal(); }
 $("#dlg-c").onclick = () => $("#dlg").close();
 $("#dlg").addEventListener("close", () => $("#dlg-v").pause());
 $("#dlg").addEventListener("click", e => { if (e.target.id === "dlg") e.target.close(); });

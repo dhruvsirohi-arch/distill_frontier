@@ -1,0 +1,43 @@
+{
+  "sources": [
+    "raw_episodes.jsonl"
+  ],
+  "n_raw": 2000,
+  "n_passed": 1969,
+  "n_dups": 0,
+  "n_selected": 700,
+  "n_train": 630,
+  "n_val": 70,
+  "pairs_train": 6578,
+  "pairs_val": 733,
+  "reasons": {
+    "not_success:failed_grasp": 10,
+    "collision": 8,
+    "low_place_margin": 12,
+    "not_success:step_limit": 1
+  },
+  "n_bins": 100,
+  "topup_rounds": 0,
+  "n_topup": 0,
+  "thin_bins": [],
+  "per_bin_min": 7,
+  "per_bin_med": 7,
+  "per_bin_max": 7,
+  "acts": {
+    "move_to": 4511,
+    "open_gripper": 1400,
+    "close_gripper": 700,
+    "done": 700
+  },
+  "phases": {
+    "approach": 1400,
+    "pre-grasp": 700,
+    "grasp": 700,
+    "lift": 700,
+    "transport": 1011,
+    "place": 700,
+    "release": 700,
+    "retreat": 700,
+    "done": 700
+  }
+}

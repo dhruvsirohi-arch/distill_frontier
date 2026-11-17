@@ -1,0 +1,148 @@
+# Single source of truth for every hyperparameter, seed, range and path.
+paths:
+  robot_xml: assets/menagerie/robotstudio_so101/so101.xml
+  outputs: outputs
+  raw_jsonl: outputs/data/raw_episodes.jsonl
+  topup_jsonl: outputs/data/raw_topup_episodes.jsonl
+  curated_dir: outputs/data/curated
+  adapter_dir: outputs/qwen_lora/adapter
+  merged_dir: outputs/qwen_lora/merged
+  logs: outputs/logs
+
+env:
+  timestep: 0.002
+  max_decision_steps: 15
+  # scene geometry (meters). Arm base above origin on a pedestal, facing +x.
+  base_height: 0.12
+  bowl:
+    radius: 0.045          # outer radius
+    wall: 0.005
+    height: 0.040
+    base_thickness: 0.004
+    segments: 24
+    mass: 0.05
+    lug_length: 0.014      # small tab on the rim that marks yaw (and blocks grasps there)
+  spawn:                   # bowl center spawn region on the floor
+    x: [0.19, 0.26]
+    y: [-0.13, 0.03]
+    yaw_deg: [-180, 180]
+  table:
+    center: [0.10, 0.17]
+    size: [0.14, 0.11]     # full extents x, y
+    height: 0.040
+  target:
+    center: [0.10, 0.17]
+    size: [0.10, 0.08]     # full extents of the marked target region
+  gripper:
+    open: 0.50
+    closed: -0.17
+  motion:
+    cart_speed: 0.25       # m/s along straight-line Cartesian path
+    min_move_time: 0.35
+    settle_time: 0.25
+    gripper_time: 0.5
+    waypoint_spacing: 0.01
+  ik:
+    pos_tol: 0.002
+    rot_tol: 0.05
+    max_iters: 150
+    damping: 0.01
+  reach:                   # hard workspace limits for move_to (rejected otherwise)
+    z: [0.005, 0.17]
+    r: [0.09, 0.27]        # radial distance from pan axis
+  success:
+    settle_time: 0.5
+    max_tilt_deg: 15
+    max_speed: 0.02
+
+expert:
+  pregrasp_height: [0.04, 0.08]      # above grasp point
+  approach_tangent_offset: [-0.012, 0.012]
+  grasp_depth: [0.010, 0.014]        # below rim top
+  grasp_offset_deg: [-15, 15]        # around the chosen rim side
+  lug_clearance_deg: 40
+  lift_height: [0.09, 0.13]          # TCP z after lift
+  waypoint_prob: 0.5
+  waypoint_jitter: [0.03, 0.03, 0.03]
+  place_margin: 0.012                # keep placement this far inside region (plus bowl radius slack)
+  place_drop: [0.002, 0.006]         # release height above resting height
+  retreat_height: [0.11, 0.14]
+  open_first_prob: 0.5
+  noise_std: 0.0015                  # gaussian noise on move_to (m)
+  noise_clip: 0.003
+  near_tol: 0.015
+
+seeds:
+  global: 1234
+  expert_check: [0, 50]              # [start, count]
+  train_range: [0, 10000]
+  num_train_episodes: 2000
+  topup_start: 20000                 # targeted top-up seeds come from [20000, 99999]
+  eval_start: 100000
+  eval_count: 100
+  ckpt_eval_seeds: [100500, 100501, 100502, 100503, 100504]  # held-out, not in eval set
+
+datagen:
+  workers: 9
+  record_every: 50
+
+curation:
+  grid_xy: [5, 5]
+  yaw_bins: 4
+  place_grid: [2, 2]
+  max_per_bin: 7         # K per (xy cell, yaw bin); 100 bins -> <=700 episodes
+  min_per_bin: 5
+  max_topup_rounds: 2
+  topup_per_thin_bin: 12
+  dup_dist: 0.004        # near-duplicate threshold on start state + action trajectory
+  redundant_move_dist: 0.004
+  min_place_margin: 0.010
+  step_pct: 90
+  val_fraction: 0.1
+  min_episodes: 300
+  score_weights:         # higher score is better (all terms normalized to ~[0,1])
+    steps: 1.0
+    path_length: 1.0
+    place_margin: 1.0
+    pregrasp_consistency: 0.5
+  loss_weights:          # per action type
+    move_to: 1.0
+    open_gripper: 1.5
+    close_gripper: 2.0
+    done: 2.0
+
+train:
+  base_model: Qwen/Qwen3-1.7B
+  fallback_model: Qwen/Qwen2.5-1.5B-Instruct
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  epochs: 2
+  lr: 2.0e-4
+  batch_size: 4
+  grad_checkpointing: false   # MPS: faster without; ~12 GB peak at bs 4
+  grad_accum: 1
+  max_seq_len: 512
+  warmup_ratio: 0.03
+  history_len: 2
+  budget_minutes: 50
+  probe_steps: 20
+  ckpt_fractions: [0.25, 0.5, 0.75, 1.0]
+  ckpt_episodes: 5
+  seed: 1234
+
+eval:
+  max_new_tokens: 48
+  record: lowres          # none | lowres | highres
+  highres_subset: 10
+
+viz:
+  mode: none              # none | live | stream | record
+  speed: 1.0
+  width: 480
+  height: 360
+  lowres: [240, 180]
+  fps: 25
+  stream_port: 8765
+  cameras: [front, top]

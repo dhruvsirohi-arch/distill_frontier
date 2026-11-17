@@ -1,0 +1,15 @@
+{
+  "n": 50,
+  "start": 0,
+  "successes": 49,
+  "success_rate": 0.98,
+  "failures": {
+    "failed_grasp": 1
+  },
+  "steps_hist": {
+    "10": 24,
+    "11": 25,
+    "15": 1
+  },
+  "wall_time_s": 4.9
+}

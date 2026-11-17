@@ -1,0 +1,14 @@
+# environment / third-party (recreated by README setup)
+.venv/
+assets/menagerie/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+# large generated artifacts (regenerate with run_all.sh)
+outputs/data/
+outputs/videos/
+outputs/qwen_lora/
+outputs/logs/
+outputs/eval_episodes.jsonl
+outputs/eval_gallery.html

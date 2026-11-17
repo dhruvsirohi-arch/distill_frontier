@@ -306,7 +306,7 @@ def main():
                "epochs_effective": total["steps"] / steps_per_epoch, "batch_size": bs,
                "train_loop_minutes": round(train_wall / 60, 2), "total_minutes": round(total_wall / 60, 2),
                "final_val_loss": history["val_loss"][-1]["val_loss"] if history["val_loss"] else None,
-               "adapter_dir": str(adir), "merged_dir": str(mdir), **history}
+               "adapter_dir": str(adir.relative_to(REPO)), "merged_dir": str(mdir.relative_to(REPO)), **history}
     write_json(REPO / "outputs" / "train_summary.json", summary)
     log.info(f"done: total wall-clock {total_wall/60:.1f} min (train loop {train_wall/60:.1f} min), "
              f"final val loss {summary['final_val_loss']:.4f}; adapter -> {adir}, merged -> {mdir}")

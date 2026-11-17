@@ -1,0 +1,2643 @@
+{
+  "seeds": [
+    100000,
+    100099
+  ],
+  "wall_time_s": 1378.4,
+  "qwen": {
+    "success": 90,
+    "n": 100,
+    "success_rate": 0.9,
+    "mean_steps_to_success": 10.02,
+    "failure_breakdown": {
+      "failed_grasp": 3,
+      "dropped_bowl": 5,
+      "missed_target": 2,
+      "invalid_json": 0,
+      "step_limit": 0
+    },
+    "invalid_steps": 0,
+    "per_bin": {
+      "x0y0": {
+        "success": 2,
+        "n": 2
+      },
+      "x0y1": {
+        "success": 1,
+        "n": 1
+      },
+      "x0y2": {
+        "success": 9,
+        "n": 10
+      },
+      "x0y3": {
+        "success": 6,
+        "n": 8
+      },
+      "x0y4": {
+        "success": 3,
+        "n": 4
+      },
+      "x1y0": {
+        "success": 4,
+        "n": 4
+      },
+      "x1y1": {
+        "success": 2,
+        "n": 3
+      },
+      "x1y2": {
+        "success": 1,
+        "n": 1
+      },
+      "x1y3": {
+        "success": 2,
+        "n": 2
+      },
+      "x1y4": {
+        "success": 3,
+        "n": 5
+      },
+      "x2y0": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y1": {
+        "success": 5,
+        "n": 6
+      },
+      "x2y2": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y3": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y4": {
+        "success": 8,
+        "n": 8
+      },
+      "x3y0": {
+        "success": 3,
+        "n": 3
+      },
+      "x3y1": {
+        "success": 3,
+        "n": 3
+      },
+      "x3y2": {
+        "success": 6,
+        "n": 6
+      },
+      "x3y3": {
+        "success": 1,
+        "n": 2
+      },
+      "x3y4": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y0": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y1": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y2": {
+        "success": 2,
+        "n": 2
+      },
+      "x4y3": {
+        "success": 3,
+        "n": 4
+      },
+      "x4y4": {
+        "success": 5,
+        "n": 5
+      }
+    },
+    "episodes": [
+      {
+        "seed": 100000,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.1988154322144442,
+          "y": -0.05503428122413464,
+          "yaw_deg": 179.11061268460892
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100000.mp4"
+      },
+      {
+        "seed": 100001,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24962951710239095,
+          "y": 0.010387944776855455,
+          "yaw_deg": -165.18554656363312
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100001.mp4"
+      },
+      {
+        "seed": 100002,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25608395295510944,
+          "y": -0.022388110191858105,
+          "yaw_deg": 46.4694076558075
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100002.mp4"
+      },
+      {
+        "seed": 100003,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19159961382005897,
+          "y": -0.012137640351684562,
+          "yaw_deg": 33.94210666820301
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100003.mp4"
+      },
+      {
+        "seed": 100004,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.1914135146957472,
+          "y": -0.028128074954121108,
+          "yaw_deg": -149.53699652929043
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100004.mp4"
+      },
+      {
+        "seed": 100005,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22519675614077955,
+          "y": 0.0009218977150570478,
+          "yaw_deg": -168.5803233432298
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100005.mp4"
+      },
+      {
+        "seed": 100006,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23420822942648473,
+          "y": -0.034805667918857,
+          "yaw_deg": -105.89808283795321
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100006.mp4"
+      },
+      {
+        "seed": 100007,
+        "success": false,
+        "failure": "dropped_bowl",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.20652686191774344,
+          "y": 0.018832252537473743,
+          "yaw_deg": -158.6162776538706
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100007.mp4"
+      },
+      {
+        "seed": 100008,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2582758670195949,
+          "y": -0.04995821698653954,
+          "yaw_deg": -49.55017157219464
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100008.mp4"
+      },
+      {
+        "seed": 100009,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22376448496173376,
+          "y": -0.038004725899196165,
+          "yaw_deg": -114.86260703819005
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100009.mp4"
+      },
+      {
+        "seed": 100010,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2582685841607541,
+          "y": -0.09569369906138478,
+          "yaw_deg": 122.71468004295264
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100010.mp4"
+      },
+      {
+        "seed": 100011,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19727027259110239,
+          "y": -0.046781529283180974,
+          "yaw_deg": -150.76906007086015
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100011.mp4"
+      },
+      {
+        "seed": 100012,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2076129952780407,
+          "y": -0.12943453019516302,
+          "yaw_deg": 48.252709085904556
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100012.mp4"
+      },
+      {
+        "seed": 100013,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25630533707118,
+          "y": -0.086849594739344,
+          "yaw_deg": -15.90200777065622
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100013.mp4"
+      },
+      {
+        "seed": 100014,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22487941159430566,
+          "y": -0.030647999710027157,
+          "yaw_deg": 135.5755094052421
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100014.mp4"
+      },
+      {
+        "seed": 100015,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2157446047127726,
+          "y": 0.004012672724549569,
+          "yaw_deg": -99.17390376387289
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100015.mp4"
+      },
+      {
+        "seed": 100016,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2288431341785867,
+          "y": 0.0014467682827706324,
+          "yaw_deg": -160.590360541768
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100016.mp4"
+      },
+      {
+        "seed": 100017,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23198224805815548,
+          "y": -0.053261488702082756,
+          "yaw_deg": 139.35756541174214
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100017.mp4"
+      },
+      {
+        "seed": 100018,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20260401911581827,
+          "y": -0.02028780866020828,
+          "yaw_deg": 65.24191364059888
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100018.mp4"
+      },
+      {
+        "seed": 100019,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21130757999777708,
+          "y": -0.08027281831468004,
+          "yaw_deg": 70.75892260534505
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100019.mp4"
+      },
+      {
+        "seed": 100020,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21970940785252435,
+          "y": -0.07826089931875542,
+          "yaw_deg": -51.511623464649276
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100020.mp4"
+      },
+      {
+        "seed": 100021,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24275293081806248,
+          "y": -0.05647771464407477,
+          "yaw_deg": -98.13699028370354
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100021.mp4"
+      },
+      {
+        "seed": 100022,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21490521741105498,
+          "y": -0.049682371495238284,
+          "yaw_deg": 146.49597134361855
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100022.mp4"
+      },
+      {
+        "seed": 100023,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19673286106289195,
+          "y": -0.05416583699980958,
+          "yaw_deg": -7.314898794373681
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100023.mp4"
+      },
+      {
+        "seed": 100024,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21325168132988392,
+          "y": -0.023085842556865386,
+          "yaw_deg": -94.20514555901816
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100024.mp4"
+      },
+      {
+        "seed": 100025,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20361175710253546,
+          "y": -0.11670797281543747,
+          "yaw_deg": -138.0441751774112
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100025.mp4"
+      },
+      {
+        "seed": 100026,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21715135589718948,
+          "y": -0.1073566639449006,
+          "yaw_deg": 21.746943602272854
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100026.mp4"
+      },
+      {
+        "seed": 100027,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21599219728515323,
+          "y": -0.08912065324129305,
+          "yaw_deg": -114.05687541979974
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100027.mp4"
+      },
+      {
+        "seed": 100028,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21962436063192148,
+          "y": -0.08207630975536408,
+          "yaw_deg": -109.15027250777798
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100028.mp4"
+      },
+      {
+        "seed": 100029,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19574829576315428,
+          "y": -0.033432166619457304,
+          "yaw_deg": -145.01511003105023
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100029.mp4"
+      },
+      {
+        "seed": 100030,
+        "success": false,
+        "failure": "dropped_bowl",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.19494222563946575,
+          "y": -0.03162667002486148,
+          "yaw_deg": 176.5263326452238
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100030.mp4"
+      },
+      {
+        "seed": 100031,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24576343026924183,
+          "y": -0.09945456671344786,
+          "yaw_deg": -63.437392728713796
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100031.mp4"
+      },
+      {
+        "seed": 100032,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2030632924584561,
+          "y": -0.02629023457579555,
+          "yaw_deg": 109.44145539260342
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100032.mp4"
+      },
+      {
+        "seed": 100033,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2004630562985896,
+          "y": -0.0487645923465505,
+          "yaw_deg": 91.61734091315682
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100033.mp4"
+      },
+      {
+        "seed": 100034,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2468982885319204,
+          "y": -0.04197803951664009,
+          "yaw_deg": 82.80917651074816
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100034.mp4"
+      },
+      {
+        "seed": 100035,
+        "success": false,
+        "failure": "failed_grasp",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.1924303511181564,
+          "y": -0.03137233707442498,
+          "yaw_deg": 173.12509209750638
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100035.mp4"
+      },
+      {
+        "seed": 100036,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24222677522855474,
+          "y": -0.12439250331082892,
+          "yaw_deg": 39.83682955505039
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100036.mp4"
+      },
+      {
+        "seed": 100037,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22140696757507503,
+          "y": -0.110477629977475,
+          "yaw_deg": 106.42187870433888
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100037.mp4"
+      },
+      {
+        "seed": 100038,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19388709915205796,
+          "y": 0.01513204057827167,
+          "yaw_deg": -62.47152223849488
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100038.mp4"
+      },
+      {
+        "seed": 100039,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19988183503979054,
+          "y": -0.06303591193840344,
+          "yaw_deg": -8.621901406847329
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100039.mp4"
+      },
+      {
+        "seed": 100040,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19697088220790523,
+          "y": 0.020343024074867468,
+          "yaw_deg": 95.98926359998443
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100040.mp4"
+      },
+      {
+        "seed": 100041,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24779842325576862,
+          "y": -0.09711823848838132,
+          "yaw_deg": 50.73934938269025
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100041.mp4"
+      },
+      {
+        "seed": 100042,
+        "success": false,
+        "failure": "dropped_bowl",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.21741841579526108,
+          "y": -0.0703545070479102,
+          "yaw_deg": 154.48100168252483
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100042.mp4"
+      },
+      {
+        "seed": 100043,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2591004181447484,
+          "y": -0.09584993270688437,
+          "yaw_deg": -99.43019368342333
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100043.mp4"
+      },
+      {
+        "seed": 100044,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22496148350559797,
+          "y": -0.1218819421740362,
+          "yaw_deg": -99.1152287113645
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100044.mp4"
+      },
+      {
+        "seed": 100045,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23389694989193438,
+          "y": -0.11966914815504018,
+          "yaw_deg": -101.97174179015963
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100045.mp4"
+      },
+      {
+        "seed": 100046,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25905746753573367,
+          "y": 0.003666739978717553,
+          "yaw_deg": -74.83413994171778
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100046.mp4"
+      },
+      {
+        "seed": 100047,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19527496640943096,
+          "y": -0.02293072587919424,
+          "yaw_deg": 10.41148651145578
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100047.mp4"
+      },
+      {
+        "seed": 100048,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20112966306008256,
+          "y": -0.08125549981050725,
+          "yaw_deg": -124.1261801419777
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100048.mp4"
+      },
+      {
+        "seed": 100049,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24549109320872886,
+          "y": -0.05755600674003047,
+          "yaw_deg": -61.240588188842146
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100049.mp4"
+      },
+      {
+        "seed": 100050,
+        "success": false,
+        "failure": "missed_target",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24393060980897116,
+          "y": -0.016203951477219453,
+          "yaw_deg": 158.14478277727366
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100050.mp4"
+      },
+      {
+        "seed": 100051,
+        "success": false,
+        "failure": "dropped_bowl",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.19488742893174507,
+          "y": 0.002554870630105624,
+          "yaw_deg": 162.1002415411919
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100051.mp4"
+      },
+      {
+        "seed": 100052,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22709117327197445,
+          "y": -0.024720056040411793,
+          "yaw_deg": -59.57173006784687
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100052.mp4"
+      },
+      {
+        "seed": 100053,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21872872496078852,
+          "y": -0.08537659418596703,
+          "yaw_deg": 104.88436827507147
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100053.mp4"
+      },
+      {
+        "seed": 100054,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22463730905740442,
+          "y": 0.01854023968622174,
+          "yaw_deg": 117.01533373194236
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100054.mp4"
+      },
+      {
+        "seed": 100055,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21362545768505958,
+          "y": 0.026401606852799818,
+          "yaw_deg": -74.91721428490557
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100055.mp4"
+      },
+      {
+        "seed": 100056,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20270022790197925,
+          "y": -0.05023975849025546,
+          "yaw_deg": -78.31925959571842
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100056.mp4"
+      },
+      {
+        "seed": 100057,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24885961052042796,
+          "y": 0.016674246096098667,
+          "yaw_deg": 98.5023161134359
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100057.mp4"
+      },
+      {
+        "seed": 100058,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24562400980689686,
+          "y": -0.06773218407057346,
+          "yaw_deg": -95.38157530265491
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100058.mp4"
+      },
+      {
+        "seed": 100059,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2532368448178444,
+          "y": 0.005893338717443707,
+          "yaw_deg": 70.76398073979331
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100059.mp4"
+      },
+      {
+        "seed": 100060,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2454961579203967,
+          "y": 0.028961235511272373,
+          "yaw_deg": 115.49586037874137
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100060.mp4"
+      },
+      {
+        "seed": 100061,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22156860569099213,
+          "y": 0.019760589373688457,
+          "yaw_deg": -1.0640985093629232
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100061.mp4"
+      },
+      {
+        "seed": 100062,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23621777704232583,
+          "y": -0.08209210059343823,
+          "yaw_deg": 13.712556416175918
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100062.mp4"
+      },
+      {
+        "seed": 100063,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25665501769962845,
+          "y": 0.02130948616069405,
+          "yaw_deg": -120.37104853212983
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100063.mp4"
+      },
+      {
+        "seed": 100064,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24437882483061066,
+          "y": 0.014339675687002324,
+          "yaw_deg": -101.57705851444427
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100064.mp4"
+      },
+      {
+        "seed": 100065,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24104894605502472,
+          "y": -0.03920243153950935,
+          "yaw_deg": -10.487666496995192
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100065.mp4"
+      },
+      {
+        "seed": 100066,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20571689094620313,
+          "y": -0.0055041635779745435,
+          "yaw_deg": -93.09806261592375
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100066.mp4"
+      },
+      {
+        "seed": 100067,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22885552469107942,
+          "y": -0.07341021474348129,
+          "yaw_deg": 83.00187589653382
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100067.mp4"
+      },
+      {
+        "seed": 100068,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24710363824449194,
+          "y": -0.1274791114746582,
+          "yaw_deg": -56.02974610596628
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100068.mp4"
+      },
+      {
+        "seed": 100069,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25032099253273615,
+          "y": -0.01006312965234516,
+          "yaw_deg": -41.263188666770624
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100069.mp4"
+      },
+      {
+        "seed": 100070,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23399013973754798,
+          "y": -0.01444871910677474,
+          "yaw_deg": 8.286087872063192
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100070.mp4"
+      },
+      {
+        "seed": 100071,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22128634601423675,
+          "y": -0.045575802431758725,
+          "yaw_deg": -53.5952370586027
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100071.mp4"
+      },
+      {
+        "seed": 100072,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2213053430404736,
+          "y": 0.003709709953377496,
+          "yaw_deg": 57.28812621030653
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100072.mp4"
+      },
+      {
+        "seed": 100073,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21429726366925977,
+          "y": 0.026749710848823688,
+          "yaw_deg": 35.11942162438674
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100073.mp4"
+      },
+      {
+        "seed": 100074,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21855132352969395,
+          "y": 0.021973865733568177,
+          "yaw_deg": -29.060686671812302
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100074.mp4"
+      },
+      {
+        "seed": 100075,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2249850523001991,
+          "y": -0.09360801754412607,
+          "yaw_deg": -153.7433703029742
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100075.mp4"
+      },
+      {
+        "seed": 100076,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2561766197915707,
+          "y": -0.12158868708436668,
+          "yaw_deg": -75.33947665146222
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100076.mp4"
+      },
+      {
+        "seed": 100077,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24530248023270929,
+          "y": -0.03707059809254577,
+          "yaw_deg": 143.13853345378067
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100077.mp4"
+      },
+      {
+        "seed": 100078,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2303642908262282,
+          "y": -0.11122245645048491,
+          "yaw_deg": -94.27057557526153
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100078.mp4"
+      },
+      {
+        "seed": 100079,
+        "success": false,
+        "failure": "failed_grasp",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.22745220881434203,
+          "y": -0.09002525591085246,
+          "yaw_deg": 156.0724894701249
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100079.mp4"
+      },
+      {
+        "seed": 100080,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.1996823142474124,
+          "y": -0.05980428031999848,
+          "yaw_deg": 90.39405648674746
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100080.mp4"
+      },
+      {
+        "seed": 100081,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2192073689743872,
+          "y": 0.011579135829124476,
+          "yaw_deg": -115.43833152979228
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100081.mp4"
+      },
+      {
+        "seed": 100082,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19604583796862882,
+          "y": -0.10641569301670452,
+          "yaw_deg": 60.34355117287402
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100082.mp4"
+      },
+      {
+        "seed": 100083,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21584901128871614,
+          "y": -0.11496335428240548,
+          "yaw_deg": -141.409178893952
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100083.mp4"
+      },
+      {
+        "seed": 100084,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23556845473597993,
+          "y": 0.028684582080862987,
+          "yaw_deg": -48.681570089158534
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100084.mp4"
+      },
+      {
+        "seed": 100085,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19932548277971418,
+          "y": 0.0027453097328334216,
+          "yaw_deg": 49.65293081457216
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100085.mp4"
+      },
+      {
+        "seed": 100086,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23309477718349328,
+          "y": -0.05294790933123507,
+          "yaw_deg": -68.83731279387972
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100086.mp4"
+      },
+      {
+        "seed": 100087,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23959528743059544,
+          "y": 0.020568112003182096,
+          "yaw_deg": 92.5547643183346
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100087.mp4"
+      },
+      {
+        "seed": 100088,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2146998387637945,
+          "y": -0.10558712976816527,
+          "yaw_deg": -27.123218735596506
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100088.mp4"
+      },
+      {
+        "seed": 100089,
+        "success": false,
+        "failure": "dropped_bowl",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.20139430662523505,
+          "y": -0.049714919034211415,
+          "yaw_deg": 154.98653099743663
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100089.mp4"
+      },
+      {
+        "seed": 100090,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19758335469857058,
+          "y": -0.0464933011328211,
+          "yaw_deg": -151.1548897490646
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100090.mp4"
+      },
+      {
+        "seed": 100091,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25424838948829503,
+          "y": -0.1074441905430581,
+          "yaw_deg": 119.76893434884846
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100091.mp4"
+      },
+      {
+        "seed": 100092,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20157881009965023,
+          "y": -0.057068075448455644,
+          "yaw_deg": -54.662402754065496
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100092.mp4"
+      },
+      {
+        "seed": 100093,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22637568701866898,
+          "y": -0.012117463623117023,
+          "yaw_deg": 76.9589506895013
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100093.mp4"
+      },
+      {
+        "seed": 100094,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2397776508934084,
+          "y": -0.08002000768312204,
+          "yaw_deg": -105.98093394040295
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100094.mp4"
+      },
+      {
+        "seed": 100095,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2502510992437571,
+          "y": -0.124331407576645,
+          "yaw_deg": -78.70497978651505
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100095.mp4"
+      },
+      {
+        "seed": 100096,
+        "success": false,
+        "failure": "missed_target",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24771961208012683,
+          "y": -0.022219872804694438,
+          "yaw_deg": 163.13550232797053
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100096.mp4"
+      },
+      {
+        "seed": 100097,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22072984475352386,
+          "y": 0.007836964549246959,
+          "yaw_deg": -70.98872949249643
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100097.mp4"
+      },
+      {
+        "seed": 100098,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2516908784051934,
+          "y": -0.01507887297136316,
+          "yaw_deg": -18.831259298275636
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100098.mp4"
+      },
+      {
+        "seed": 100099,
+        "success": false,
+        "failure": "failed_grasp",
+        "n_steps": 15,
+        "spawn": {
+          "x": 0.21664697857925802,
+          "y": 0.00035107621082454627,
+          "yaw_deg": 176.19126267805018
+        },
+        "video": "outputs/videos/eval/qwen/qwen_100099.mp4"
+      }
+    ]
+  },
+  "expert": {
+    "success": 100,
+    "n": 100,
+    "success_rate": 1.0,
+    "mean_steps_to_success": 10.52,
+    "failure_breakdown": {
+      "failed_grasp": 0,
+      "dropped_bowl": 0,
+      "missed_target": 0,
+      "invalid_json": 0,
+      "step_limit": 0
+    },
+    "invalid_steps": 0,
+    "per_bin": {
+      "x0y0": {
+        "success": 2,
+        "n": 2
+      },
+      "x0y1": {
+        "success": 1,
+        "n": 1
+      },
+      "x0y2": {
+        "success": 10,
+        "n": 10
+      },
+      "x0y3": {
+        "success": 8,
+        "n": 8
+      },
+      "x0y4": {
+        "success": 4,
+        "n": 4
+      },
+      "x1y0": {
+        "success": 4,
+        "n": 4
+      },
+      "x1y1": {
+        "success": 3,
+        "n": 3
+      },
+      "x1y2": {
+        "success": 1,
+        "n": 1
+      },
+      "x1y3": {
+        "success": 2,
+        "n": 2
+      },
+      "x1y4": {
+        "success": 5,
+        "n": 5
+      },
+      "x2y0": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y1": {
+        "success": 6,
+        "n": 6
+      },
+      "x2y2": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y3": {
+        "success": 3,
+        "n": 3
+      },
+      "x2y4": {
+        "success": 8,
+        "n": 8
+      },
+      "x3y0": {
+        "success": 3,
+        "n": 3
+      },
+      "x3y1": {
+        "success": 3,
+        "n": 3
+      },
+      "x3y2": {
+        "success": 6,
+        "n": 6
+      },
+      "x3y3": {
+        "success": 2,
+        "n": 2
+      },
+      "x3y4": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y0": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y1": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y2": {
+        "success": 2,
+        "n": 2
+      },
+      "x4y3": {
+        "success": 4,
+        "n": 4
+      },
+      "x4y4": {
+        "success": 5,
+        "n": 5
+      }
+    },
+    "episodes": [
+      {
+        "seed": 100000,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.1988154322144442,
+          "y": -0.05503428122413464,
+          "yaw_deg": 179.11061268460892
+        },
+        "video": "outputs/videos/eval/expert/expert_100000.mp4"
+      },
+      {
+        "seed": 100001,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24962951710239095,
+          "y": 0.010387944776855455,
+          "yaw_deg": -165.18554656363312
+        },
+        "video": "outputs/videos/eval/expert/expert_100001.mp4"
+      },
+      {
+        "seed": 100002,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25608395295510944,
+          "y": -0.022388110191858105,
+          "yaw_deg": 46.4694076558075
+        },
+        "video": "outputs/videos/eval/expert/expert_100002.mp4"
+      },
+      {
+        "seed": 100003,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19159961382005897,
+          "y": -0.012137640351684562,
+          "yaw_deg": 33.94210666820301
+        },
+        "video": "outputs/videos/eval/expert/expert_100003.mp4"
+      },
+      {
+        "seed": 100004,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.1914135146957472,
+          "y": -0.028128074954121108,
+          "yaw_deg": -149.53699652929043
+        },
+        "video": "outputs/videos/eval/expert/expert_100004.mp4"
+      },
+      {
+        "seed": 100005,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22519675614077955,
+          "y": 0.0009218977150570478,
+          "yaw_deg": -168.5803233432298
+        },
+        "video": "outputs/videos/eval/expert/expert_100005.mp4"
+      },
+      {
+        "seed": 100006,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.23420822942648473,
+          "y": -0.034805667918857,
+          "yaw_deg": -105.89808283795321
+        },
+        "video": "outputs/videos/eval/expert/expert_100006.mp4"
+      },
+      {
+        "seed": 100007,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.20652686191774344,
+          "y": 0.018832252537473743,
+          "yaw_deg": -158.6162776538706
+        },
+        "video": "outputs/videos/eval/expert/expert_100007.mp4"
+      },
+      {
+        "seed": 100008,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2582758670195949,
+          "y": -0.04995821698653954,
+          "yaw_deg": -49.55017157219464
+        },
+        "video": "outputs/videos/eval/expert/expert_100008.mp4"
+      },
+      {
+        "seed": 100009,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22376448496173376,
+          "y": -0.038004725899196165,
+          "yaw_deg": -114.86260703819005
+        },
+        "video": "outputs/videos/eval/expert/expert_100009.mp4"
+      },
+      {
+        "seed": 100010,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2582685841607541,
+          "y": -0.09569369906138478,
+          "yaw_deg": 122.71468004295264
+        },
+        "video": "outputs/videos/eval/expert/expert_100010.mp4"
+      },
+      {
+        "seed": 100011,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19727027259110239,
+          "y": -0.046781529283180974,
+          "yaw_deg": -150.76906007086015
+        },
+        "video": "outputs/videos/eval/expert/expert_100011.mp4"
+      },
+      {
+        "seed": 100012,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2076129952780407,
+          "y": -0.12943453019516302,
+          "yaw_deg": 48.252709085904556
+        },
+        "video": "outputs/videos/eval/expert/expert_100012.mp4"
+      },
+      {
+        "seed": 100013,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25630533707118,
+          "y": -0.086849594739344,
+          "yaw_deg": -15.90200777065622
+        },
+        "video": "outputs/videos/eval/expert/expert_100013.mp4"
+      },
+      {
+        "seed": 100014,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22487941159430566,
+          "y": -0.030647999710027157,
+          "yaw_deg": 135.5755094052421
+        },
+        "video": "outputs/videos/eval/expert/expert_100014.mp4"
+      },
+      {
+        "seed": 100015,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2157446047127726,
+          "y": 0.004012672724549569,
+          "yaw_deg": -99.17390376387289
+        },
+        "video": "outputs/videos/eval/expert/expert_100015.mp4"
+      },
+      {
+        "seed": 100016,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2288431341785867,
+          "y": 0.0014467682827706324,
+          "yaw_deg": -160.590360541768
+        },
+        "video": "outputs/videos/eval/expert/expert_100016.mp4"
+      },
+      {
+        "seed": 100017,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23198224805815548,
+          "y": -0.053261488702082756,
+          "yaw_deg": 139.35756541174214
+        },
+        "video": "outputs/videos/eval/expert/expert_100017.mp4"
+      },
+      {
+        "seed": 100018,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20260401911581827,
+          "y": -0.02028780866020828,
+          "yaw_deg": 65.24191364059888
+        },
+        "video": "outputs/videos/eval/expert/expert_100018.mp4"
+      },
+      {
+        "seed": 100019,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21130757999777708,
+          "y": -0.08027281831468004,
+          "yaw_deg": 70.75892260534505
+        },
+        "video": "outputs/videos/eval/expert/expert_100019.mp4"
+      },
+      {
+        "seed": 100020,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21970940785252435,
+          "y": -0.07826089931875542,
+          "yaw_deg": -51.511623464649276
+        },
+        "video": "outputs/videos/eval/expert/expert_100020.mp4"
+      },
+      {
+        "seed": 100021,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.24275293081806248,
+          "y": -0.05647771464407477,
+          "yaw_deg": -98.13699028370354
+        },
+        "video": "outputs/videos/eval/expert/expert_100021.mp4"
+      },
+      {
+        "seed": 100022,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21490521741105498,
+          "y": -0.049682371495238284,
+          "yaw_deg": 146.49597134361855
+        },
+        "video": "outputs/videos/eval/expert/expert_100022.mp4"
+      },
+      {
+        "seed": 100023,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19673286106289195,
+          "y": -0.05416583699980958,
+          "yaw_deg": -7.314898794373681
+        },
+        "video": "outputs/videos/eval/expert/expert_100023.mp4"
+      },
+      {
+        "seed": 100024,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21325168132988392,
+          "y": -0.023085842556865386,
+          "yaw_deg": -94.20514555901816
+        },
+        "video": "outputs/videos/eval/expert/expert_100024.mp4"
+      },
+      {
+        "seed": 100025,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20361175710253546,
+          "y": -0.11670797281543747,
+          "yaw_deg": -138.0441751774112
+        },
+        "video": "outputs/videos/eval/expert/expert_100025.mp4"
+      },
+      {
+        "seed": 100026,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21715135589718948,
+          "y": -0.1073566639449006,
+          "yaw_deg": 21.746943602272854
+        },
+        "video": "outputs/videos/eval/expert/expert_100026.mp4"
+      },
+      {
+        "seed": 100027,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21599219728515323,
+          "y": -0.08912065324129305,
+          "yaw_deg": -114.05687541979974
+        },
+        "video": "outputs/videos/eval/expert/expert_100027.mp4"
+      },
+      {
+        "seed": 100028,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21962436063192148,
+          "y": -0.08207630975536408,
+          "yaw_deg": -109.15027250777798
+        },
+        "video": "outputs/videos/eval/expert/expert_100028.mp4"
+      },
+      {
+        "seed": 100029,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19574829576315428,
+          "y": -0.033432166619457304,
+          "yaw_deg": -145.01511003105023
+        },
+        "video": "outputs/videos/eval/expert/expert_100029.mp4"
+      },
+      {
+        "seed": 100030,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19494222563946575,
+          "y": -0.03162667002486148,
+          "yaw_deg": 176.5263326452238
+        },
+        "video": "outputs/videos/eval/expert/expert_100030.mp4"
+      },
+      {
+        "seed": 100031,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24576343026924183,
+          "y": -0.09945456671344786,
+          "yaw_deg": -63.437392728713796
+        },
+        "video": "outputs/videos/eval/expert/expert_100031.mp4"
+      },
+      {
+        "seed": 100032,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2030632924584561,
+          "y": -0.02629023457579555,
+          "yaw_deg": 109.44145539260342
+        },
+        "video": "outputs/videos/eval/expert/expert_100032.mp4"
+      },
+      {
+        "seed": 100033,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2004630562985896,
+          "y": -0.0487645923465505,
+          "yaw_deg": 91.61734091315682
+        },
+        "video": "outputs/videos/eval/expert/expert_100033.mp4"
+      },
+      {
+        "seed": 100034,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2468982885319204,
+          "y": -0.04197803951664009,
+          "yaw_deg": 82.80917651074816
+        },
+        "video": "outputs/videos/eval/expert/expert_100034.mp4"
+      },
+      {
+        "seed": 100035,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.1924303511181564,
+          "y": -0.03137233707442498,
+          "yaw_deg": 173.12509209750638
+        },
+        "video": "outputs/videos/eval/expert/expert_100035.mp4"
+      },
+      {
+        "seed": 100036,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24222677522855474,
+          "y": -0.12439250331082892,
+          "yaw_deg": 39.83682955505039
+        },
+        "video": "outputs/videos/eval/expert/expert_100036.mp4"
+      },
+      {
+        "seed": 100037,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22140696757507503,
+          "y": -0.110477629977475,
+          "yaw_deg": 106.42187870433888
+        },
+        "video": "outputs/videos/eval/expert/expert_100037.mp4"
+      },
+      {
+        "seed": 100038,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19388709915205796,
+          "y": 0.01513204057827167,
+          "yaw_deg": -62.47152223849488
+        },
+        "video": "outputs/videos/eval/expert/expert_100038.mp4"
+      },
+      {
+        "seed": 100039,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19988183503979054,
+          "y": -0.06303591193840344,
+          "yaw_deg": -8.621901406847329
+        },
+        "video": "outputs/videos/eval/expert/expert_100039.mp4"
+      },
+      {
+        "seed": 100040,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19697088220790523,
+          "y": 0.020343024074867468,
+          "yaw_deg": 95.98926359998443
+        },
+        "video": "outputs/videos/eval/expert/expert_100040.mp4"
+      },
+      {
+        "seed": 100041,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24779842325576862,
+          "y": -0.09711823848838132,
+          "yaw_deg": 50.73934938269025
+        },
+        "video": "outputs/videos/eval/expert/expert_100041.mp4"
+      },
+      {
+        "seed": 100042,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21741841579526108,
+          "y": -0.0703545070479102,
+          "yaw_deg": 154.48100168252483
+        },
+        "video": "outputs/videos/eval/expert/expert_100042.mp4"
+      },
+      {
+        "seed": 100043,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2591004181447484,
+          "y": -0.09584993270688437,
+          "yaw_deg": -99.43019368342333
+        },
+        "video": "outputs/videos/eval/expert/expert_100043.mp4"
+      },
+      {
+        "seed": 100044,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22496148350559797,
+          "y": -0.1218819421740362,
+          "yaw_deg": -99.1152287113645
+        },
+        "video": "outputs/videos/eval/expert/expert_100044.mp4"
+      },
+      {
+        "seed": 100045,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.23389694989193438,
+          "y": -0.11966914815504018,
+          "yaw_deg": -101.97174179015963
+        },
+        "video": "outputs/videos/eval/expert/expert_100045.mp4"
+      },
+      {
+        "seed": 100046,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25905746753573367,
+          "y": 0.003666739978717553,
+          "yaw_deg": -74.83413994171778
+        },
+        "video": "outputs/videos/eval/expert/expert_100046.mp4"
+      },
+      {
+        "seed": 100047,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19527496640943096,
+          "y": -0.02293072587919424,
+          "yaw_deg": 10.41148651145578
+        },
+        "video": "outputs/videos/eval/expert/expert_100047.mp4"
+      },
+      {
+        "seed": 100048,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20112966306008256,
+          "y": -0.08125549981050725,
+          "yaw_deg": -124.1261801419777
+        },
+        "video": "outputs/videos/eval/expert/expert_100048.mp4"
+      },
+      {
+        "seed": 100049,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.24549109320872886,
+          "y": -0.05755600674003047,
+          "yaw_deg": -61.240588188842146
+        },
+        "video": "outputs/videos/eval/expert/expert_100049.mp4"
+      },
+      {
+        "seed": 100050,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24393060980897116,
+          "y": -0.016203951477219453,
+          "yaw_deg": 158.14478277727366
+        },
+        "video": "outputs/videos/eval/expert/expert_100050.mp4"
+      },
+      {
+        "seed": 100051,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19488742893174507,
+          "y": 0.002554870630105624,
+          "yaw_deg": 162.1002415411919
+        },
+        "video": "outputs/videos/eval/expert/expert_100051.mp4"
+      },
+      {
+        "seed": 100052,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22709117327197445,
+          "y": -0.024720056040411793,
+          "yaw_deg": -59.57173006784687
+        },
+        "video": "outputs/videos/eval/expert/expert_100052.mp4"
+      },
+      {
+        "seed": 100053,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21872872496078852,
+          "y": -0.08537659418596703,
+          "yaw_deg": 104.88436827507147
+        },
+        "video": "outputs/videos/eval/expert/expert_100053.mp4"
+      },
+      {
+        "seed": 100054,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.22463730905740442,
+          "y": 0.01854023968622174,
+          "yaw_deg": 117.01533373194236
+        },
+        "video": "outputs/videos/eval/expert/expert_100054.mp4"
+      },
+      {
+        "seed": 100055,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21362545768505958,
+          "y": 0.026401606852799818,
+          "yaw_deg": -74.91721428490557
+        },
+        "video": "outputs/videos/eval/expert/expert_100055.mp4"
+      },
+      {
+        "seed": 100056,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20270022790197925,
+          "y": -0.05023975849025546,
+          "yaw_deg": -78.31925959571842
+        },
+        "video": "outputs/videos/eval/expert/expert_100056.mp4"
+      },
+      {
+        "seed": 100057,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24885961052042796,
+          "y": 0.016674246096098667,
+          "yaw_deg": 98.5023161134359
+        },
+        "video": "outputs/videos/eval/expert/expert_100057.mp4"
+      },
+      {
+        "seed": 100058,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.24562400980689686,
+          "y": -0.06773218407057346,
+          "yaw_deg": -95.38157530265491
+        },
+        "video": "outputs/videos/eval/expert/expert_100058.mp4"
+      },
+      {
+        "seed": 100059,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2532368448178444,
+          "y": 0.005893338717443707,
+          "yaw_deg": 70.76398073979331
+        },
+        "video": "outputs/videos/eval/expert/expert_100059.mp4"
+      },
+      {
+        "seed": 100060,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2454961579203967,
+          "y": 0.028961235511272373,
+          "yaw_deg": 115.49586037874137
+        },
+        "video": "outputs/videos/eval/expert/expert_100060.mp4"
+      },
+      {
+        "seed": 100061,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22156860569099213,
+          "y": 0.019760589373688457,
+          "yaw_deg": -1.0640985093629232
+        },
+        "video": "outputs/videos/eval/expert/expert_100061.mp4"
+      },
+      {
+        "seed": 100062,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.23621777704232583,
+          "y": -0.08209210059343823,
+          "yaw_deg": 13.712556416175918
+        },
+        "video": "outputs/videos/eval/expert/expert_100062.mp4"
+      },
+      {
+        "seed": 100063,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.25665501769962845,
+          "y": 0.02130948616069405,
+          "yaw_deg": -120.37104853212983
+        },
+        "video": "outputs/videos/eval/expert/expert_100063.mp4"
+      },
+      {
+        "seed": 100064,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24437882483061066,
+          "y": 0.014339675687002324,
+          "yaw_deg": -101.57705851444427
+        },
+        "video": "outputs/videos/eval/expert/expert_100064.mp4"
+      },
+      {
+        "seed": 100065,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24104894605502472,
+          "y": -0.03920243153950935,
+          "yaw_deg": -10.487666496995192
+        },
+        "video": "outputs/videos/eval/expert/expert_100065.mp4"
+      },
+      {
+        "seed": 100066,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20571689094620313,
+          "y": -0.0055041635779745435,
+          "yaw_deg": -93.09806261592375
+        },
+        "video": "outputs/videos/eval/expert/expert_100066.mp4"
+      },
+      {
+        "seed": 100067,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22885552469107942,
+          "y": -0.07341021474348129,
+          "yaw_deg": 83.00187589653382
+        },
+        "video": "outputs/videos/eval/expert/expert_100067.mp4"
+      },
+      {
+        "seed": 100068,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24710363824449194,
+          "y": -0.1274791114746582,
+          "yaw_deg": -56.02974610596628
+        },
+        "video": "outputs/videos/eval/expert/expert_100068.mp4"
+      },
+      {
+        "seed": 100069,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.25032099253273615,
+          "y": -0.01006312965234516,
+          "yaw_deg": -41.263188666770624
+        },
+        "video": "outputs/videos/eval/expert/expert_100069.mp4"
+      },
+      {
+        "seed": 100070,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.23399013973754798,
+          "y": -0.01444871910677474,
+          "yaw_deg": 8.286087872063192
+        },
+        "video": "outputs/videos/eval/expert/expert_100070.mp4"
+      },
+      {
+        "seed": 100071,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22128634601423675,
+          "y": -0.045575802431758725,
+          "yaw_deg": -53.5952370586027
+        },
+        "video": "outputs/videos/eval/expert/expert_100071.mp4"
+      },
+      {
+        "seed": 100072,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2213053430404736,
+          "y": 0.003709709953377496,
+          "yaw_deg": 57.28812621030653
+        },
+        "video": "outputs/videos/eval/expert/expert_100072.mp4"
+      },
+      {
+        "seed": 100073,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21429726366925977,
+          "y": 0.026749710848823688,
+          "yaw_deg": 35.11942162438674
+        },
+        "video": "outputs/videos/eval/expert/expert_100073.mp4"
+      },
+      {
+        "seed": 100074,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21855132352969395,
+          "y": 0.021973865733568177,
+          "yaw_deg": -29.060686671812302
+        },
+        "video": "outputs/videos/eval/expert/expert_100074.mp4"
+      },
+      {
+        "seed": 100075,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2249850523001991,
+          "y": -0.09360801754412607,
+          "yaw_deg": -153.7433703029742
+        },
+        "video": "outputs/videos/eval/expert/expert_100075.mp4"
+      },
+      {
+        "seed": 100076,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2561766197915707,
+          "y": -0.12158868708436668,
+          "yaw_deg": -75.33947665146222
+        },
+        "video": "outputs/videos/eval/expert/expert_100076.mp4"
+      },
+      {
+        "seed": 100077,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.24530248023270929,
+          "y": -0.03707059809254577,
+          "yaw_deg": 143.13853345378067
+        },
+        "video": "outputs/videos/eval/expert/expert_100077.mp4"
+      },
+      {
+        "seed": 100078,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2303642908262282,
+          "y": -0.11122245645048491,
+          "yaw_deg": -94.27057557526153
+        },
+        "video": "outputs/videos/eval/expert/expert_100078.mp4"
+      },
+      {
+        "seed": 100079,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22745220881434203,
+          "y": -0.09002525591085246,
+          "yaw_deg": 156.0724894701249
+        },
+        "video": "outputs/videos/eval/expert/expert_100079.mp4"
+      },
+      {
+        "seed": 100080,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.1996823142474124,
+          "y": -0.05980428031999848,
+          "yaw_deg": 90.39405648674746
+        },
+        "video": "outputs/videos/eval/expert/expert_100080.mp4"
+      },
+      {
+        "seed": 100081,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2192073689743872,
+          "y": 0.011579135829124476,
+          "yaw_deg": -115.43833152979228
+        },
+        "video": "outputs/videos/eval/expert/expert_100081.mp4"
+      },
+      {
+        "seed": 100082,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.19604583796862882,
+          "y": -0.10641569301670452,
+          "yaw_deg": 60.34355117287402
+        },
+        "video": "outputs/videos/eval/expert/expert_100082.mp4"
+      },
+      {
+        "seed": 100083,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.21584901128871614,
+          "y": -0.11496335428240548,
+          "yaw_deg": -141.409178893952
+        },
+        "video": "outputs/videos/eval/expert/expert_100083.mp4"
+      },
+      {
+        "seed": 100084,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.23556845473597993,
+          "y": 0.028684582080862987,
+          "yaw_deg": -48.681570089158534
+        },
+        "video": "outputs/videos/eval/expert/expert_100084.mp4"
+      },
+      {
+        "seed": 100085,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19932548277971418,
+          "y": 0.0027453097328334216,
+          "yaw_deg": 49.65293081457216
+        },
+        "video": "outputs/videos/eval/expert/expert_100085.mp4"
+      },
+      {
+        "seed": 100086,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23309477718349328,
+          "y": -0.05294790933123507,
+          "yaw_deg": -68.83731279387972
+        },
+        "video": "outputs/videos/eval/expert/expert_100086.mp4"
+      },
+      {
+        "seed": 100087,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.23959528743059544,
+          "y": 0.020568112003182096,
+          "yaw_deg": 92.5547643183346
+        },
+        "video": "outputs/videos/eval/expert/expert_100087.mp4"
+      },
+      {
+        "seed": 100088,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2146998387637945,
+          "y": -0.10558712976816527,
+          "yaw_deg": -27.123218735596506
+        },
+        "video": "outputs/videos/eval/expert/expert_100088.mp4"
+      },
+      {
+        "seed": 100089,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.20139430662523505,
+          "y": -0.049714919034211415,
+          "yaw_deg": 154.98653099743663
+        },
+        "video": "outputs/videos/eval/expert/expert_100089.mp4"
+      },
+      {
+        "seed": 100090,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.19758335469857058,
+          "y": -0.0464933011328211,
+          "yaw_deg": -151.1548897490646
+        },
+        "video": "outputs/videos/eval/expert/expert_100090.mp4"
+      },
+      {
+        "seed": 100091,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.25424838948829503,
+          "y": -0.1074441905430581,
+          "yaw_deg": 119.76893434884846
+        },
+        "video": "outputs/videos/eval/expert/expert_100091.mp4"
+      },
+      {
+        "seed": 100092,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.20157881009965023,
+          "y": -0.057068075448455644,
+          "yaw_deg": -54.662402754065496
+        },
+        "video": "outputs/videos/eval/expert/expert_100092.mp4"
+      },
+      {
+        "seed": 100093,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22637568701866898,
+          "y": -0.012117463623117023,
+          "yaw_deg": 76.9589506895013
+        },
+        "video": "outputs/videos/eval/expert/expert_100093.mp4"
+      },
+      {
+        "seed": 100094,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.2397776508934084,
+          "y": -0.08002000768312204,
+          "yaw_deg": -105.98093394040295
+        },
+        "video": "outputs/videos/eval/expert/expert_100094.mp4"
+      },
+      {
+        "seed": 100095,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2502510992437571,
+          "y": -0.124331407576645,
+          "yaw_deg": -78.70497978651505
+        },
+        "video": "outputs/videos/eval/expert/expert_100095.mp4"
+      },
+      {
+        "seed": 100096,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.24771961208012683,
+          "y": -0.022219872804694438,
+          "yaw_deg": 163.13550232797053
+        },
+        "video": "outputs/videos/eval/expert/expert_100096.mp4"
+      },
+      {
+        "seed": 100097,
+        "success": true,
+        "failure": "",
+        "n_steps": 11,
+        "spawn": {
+          "x": 0.22072984475352386,
+          "y": 0.007836964549246959,
+          "yaw_deg": -70.98872949249643
+        },
+        "video": "outputs/videos/eval/expert/expert_100097.mp4"
+      },
+      {
+        "seed": 100098,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.2516908784051934,
+          "y": -0.01507887297136316,
+          "yaw_deg": -18.831259298275636
+        },
+        "video": "outputs/videos/eval/expert/expert_100098.mp4"
+      },
+      {
+        "seed": 100099,
+        "success": true,
+        "failure": "",
+        "n_steps": 10,
+        "spawn": {
+          "x": 0.21664697857925802,
+          "y": 0.00035107621082454627,
+          "yaw_deg": 176.19126267805018
+        },
+        "video": "outputs/videos/eval/expert/expert_100099.mp4"
+      }
+    ]
+  }
+}

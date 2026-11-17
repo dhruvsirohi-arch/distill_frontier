@@ -80,6 +80,11 @@ def run_qwen(cfg, seeds, record, model_path, adapter, batch, log):
     return eps
 
 
+def _rel(p):
+    """Repo-relative path (results are committed; never leak the local home directory)."""
+    return Path(p).resolve().relative_to(REPO).as_posix() if p else None
+
+
 def summarize(eps, cfg):
     from data.curate import xy_cell
 
@@ -98,7 +103,7 @@ def summarize(eps, cfg):
         "invalid_steps": sum(e["metrics"]["n_invalid"] for e in eps),
         "per_bin": {k: {"success": v[0], "n": v[1]} for k, v in sorted(per_bin.items())},
         "episodes": [{"seed": e["seed"], "success": e["success"], "failure": classify(e), "n_steps": e["n_steps"],
-                      "spawn": e["spawn"], "video": e.get("video")} for e in eps],
+                      "spawn": e["spawn"], "video": _rel(e.get("video"))} for e in eps],
     }
 
 
@@ -131,7 +136,7 @@ def gallery(results, path):
         for e in r["episodes"]:
             if not e["video"]:
                 continue
-            rel = Path(e["video"]).resolve().relative_to(path.parent.resolve()).as_posix()
+            rel = (REPO / e["video"]).resolve().relative_to(path.parent.resolve()).as_posix()
             ok = e["success"]
             label = "success" if ok else e["failure"]
             cards.append(

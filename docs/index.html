@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>distill_frontier: a language model that drives a robot arm</title>
+<meta name="description" content="Qwen3-1.7B distilled from a scripted expert controls an SO-101 arm in MuJoCo. 90/100 on never-seen scenes, zero malformed actions, trained on one laptop.">
+<meta property="og:title" content="distill_frontier: a language model that drives a robot arm">
+<meta property="og:description" content="90/100 on never-seen scenes. Zero malformed actions. One laptop.">
+<meta property="og:image" content="assets/video/hero.jpg">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0e; --bg2:#0f1115; --card:#13151a; --card2:#181b21;
+  --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
+  --ink:#f2f1ee; --ink2:#b4b7bf; --ink3:#7c818c;
+  --accent:#f2c230;               /* brand accent (UI only, never data) */
+  --qwen:#3987e5; --expert:#d95926; --val:#199e70;   /* data series: dark-mode slots 1,2,3 */
+  --good:#0ca30c; --goodtx:#6fdc8c; --bad:#d03b3b; --badtx:#f2a49b;
+  --grid:rgba(255,255,255,.06); --axis:rgba(255,255,255,.22);
+  --r:16px; --maxw:1160px;
+  --sans:"Inter Tight",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --serif:"Instrument Serif",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video,svg{display:block;max-width:100%}
+a{color:inherit}
+::selection{background:rgba(242,194,48,.35)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+@media (max-width:640px){.wrap{padding:0 16px}}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto 0;z-index:50;backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  background:rgba(10,11,14,.62);border-bottom:1px solid transparent;transition:border-color .3s}
+.nav.scrolled{border-bottom-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:60px}
+.logo{font:500 14px var(--mono);letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo i{width:9px;height:9px;border-radius:2px;background:var(--accent);box-shadow:0 0 14px rgba(242,194,48,.7)}
+.nav ul{display:flex;gap:22px;list-style:none;margin:0 0 0 auto;padding:0}
+.nav ul a{font-size:14px;color:var(--ink2);text-decoration:none;transition:color .2s}
+.nav ul a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:500 14px var(--sans);text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);color:var(--ink);background:rgba(255,255,255,.03);transition:background .2s,border-color .2s,transform .2s}
+.btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
+.btn.primary{background:var(--ink);color:#0a0b0e;border-color:var(--ink)}
+.btn.primary:hover{background:#fff;transform:translateY(-1px)}
+.btn svg{width:16px;height:16px}
+@media (max-width:860px){.nav ul{display:none}.nav .btn{margin-left:auto}}
+
+/* hero */
+.hero{position:relative;padding:150px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto -10%;height:900px;pointer-events:none;
+  background:radial-gradient(600px 340px at 22% 18%,rgba(57,135,229,.18),transparent 70%),radial-gradient(520px 300px at 82% 8%,rgba(242,194,48,.10),transparent 70%)}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.7}
+h1{font:600 clamp(40px,6.4vw,84px)/1.0 var(--sans);letter-spacing:-.035em;margin:22px 0 0;max-width:15ch}
+h1 em,h2 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em;color:#fff}
+.lede{font-size:clamp(17px,1.6vw,20px);color:var(--ink2);max-width:60ch;margin:26px 0 0}
+.lede b{color:var(--ink);font-weight:500}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:34px}
+.screen{position:relative;margin-top:64px;border-radius:20px;overflow:hidden;border:1px solid var(--line2);background:#0d0e11;
+  box-shadow:0 40px 120px -30px rgba(57,135,229,.35),0 0 0 1px rgba(0,0,0,.6) inset;aspect-ratio:16/9}
+.screen video{width:100%;height:100%;object-fit:cover}
+.screen .chip{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;font:500 12px var(--mono);letter-spacing:.04em;
+  padding:7px 12px;border-radius:999px;background:rgba(10,11,14,.66);border:1px solid var(--line2);backdrop-filter:blur(8px)}
+.dot-live{width:7px;height:7px;border-radius:50%;background:#e34948;box-shadow:0 0 0 0 rgba(227,73,72,.7);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(227,73,72,.6)}70%{box-shadow:0 0 0 9px rgba(227,73,72,0)}100%{box-shadow:0 0 0 0 rgba(227,73,72,0)}}
+.screen .term{position:absolute;right:16px;bottom:16px;width:min(420px,calc(100% - 32px));font:12px/1.55 var(--mono);color:#d7dae0;
+  background:rgba(10,11,14,.72);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;backdrop-filter:blur(10px)}
+.term .k{color:var(--ink3)} .term .a{color:#8cc2ff} .term .cur{display:inline-block;width:7px;height:13px;background:#8cc2ff;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (max-width:720px){.screen .term{display:none}}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:28px}
+.kpi{background:var(--bg2);padding:26px 24px 24px}
+.kpi .v{font:600 clamp(34px,4vw,48px)/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:.5em;color:var(--ink3);font-weight:500;letter-spacing:-.01em}
+.kpi .l{margin-top:10px;font-size:14px;color:var(--ink2);line-height:1.45}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* sections */
+section{padding:130px 0 0}
+@media (max-width:640px){section{padding-top:96px}}
+h2{font:600 clamp(32px,4.4vw,56px)/1.04 var(--sans);letter-spacing:-.03em;margin:18px 0 0;max-width:20ch}
+.sub{color:var(--ink2);max-width:62ch;margin:20px 0 0;font-size:18px}
+.sub b{color:var(--ink);font-weight:500}
+.head{margin-bottom:48px}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;position:relative}
+.pipe::before{content:"";position:absolute;left:3%;right:3%;top:31px;height:1px;background:linear-gradient(90deg,transparent,var(--line2) 8%,var(--line2) 92%,transparent)}
+.step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 18px 20px;transition:border-color .3s,transform .3s}
+.step:hover{border-color:var(--line2);transform:translateY(-3px)}
+.step .n{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font:500 11px var(--mono);background:#0a0b0e;border:1px solid var(--line2);color:var(--accent);margin-bottom:18px;position:relative}
+.step h3{margin:0;font:600 18px var(--sans);letter-spacing:-.01em}
+.step p{margin:8px 0 0;font-size:14px;color:var(--ink2);line-height:1.5}
+.step .m{margin-top:14px;font:500 12px var(--mono);color:var(--ink);padding-top:12px;border-top:1px solid var(--line)}
+@media (max-width:980px){.pipe{grid-template-columns:repeat(2,1fr)}.pipe::before{display:none}}
+@media (max-width:520px){.pipe{grid-template-columns:1fr}}
+
+/* io panel */
+.io{display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-top:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;min-width:0}
+.panel .t{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;gap:10px}
+pre{margin:12px 0 0;font:13px/1.65 var(--mono);color:#d7dae0;white-space:pre-wrap;word-break:break-word}
+.j-k{color:#8b93a3}.j-n{color:#f2c230}.j-s{color:#7fd6a0}.j-b{color:#e87ba4}
+.out{font:500 15px/1.6 var(--mono);color:#8cc2ff}
+@media (max-width:820px){.io{grid-template-columns:1fr}}
+
+/* video grids */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.vgrid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:540px){.vgrid{grid-template-columns:1fr}}
+.vcard{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.vcard video{width:100%;aspect-ratio:16/9;object-fit:cover;background:#0d0e11}
+.vcard figcaption{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;font-size:13px;color:var(--ink2)}
+.vcard figcaption b{color:var(--ink);font-weight:500}
+.mono{font-family:var(--mono);font-size:12px}
+
+/* funnel + map */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.funnel{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.frow .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--ink2)}
+.frow .top b{font:600 22px var(--sans);color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:0 4px 4px 0;background:var(--qwen);margin-top:7px;transform-origin:left;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.frow.alt .bar{background:linear-gradient(90deg,var(--qwen),#86b6ef)}
+.note{font-size:13px;color:var(--ink3);margin-top:14px;line-height:1.5}
+
+/* learning */
+.player{display:grid;grid-template-columns:1.35fr .65fr;gap:14px}
+@media (max-width:900px){.player{grid-template-columns:1fr}}
+.stage{position:relative;background:#0d0e11;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;aspect-ratio:4/3}
+.stage video{width:100%;height:100%;object-fit:cover}
+.stage .badge{position:absolute;left:14px;bottom:14px;font:500 12px var(--mono);padding:7px 11px;border-radius:999px;background:rgba(10,11,14,.75);border:1px solid var(--line2);display:flex;gap:8px;align-items:center}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.seg button{all:unset;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--card);padding:10px 10px 11px;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+.seg button:hover{border-color:var(--line2)}
+.seg button[aria-pressed=true]{border-color:rgba(57,135,229,.7);background:#141b26}
+.seg .s{font:500 11px var(--mono);color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.seg .r{font:600 18px var(--sans);margin-top:3px;letter-spacing:-.02em}
+.seg .r small{font-size:12px;color:var(--ink3);font-weight:500}
+.seg .prog{position:absolute;left:0;bottom:0;height:2px;background:var(--qwen);width:0}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.story{display:flex;flex-direction:column;gap:14px}
+.story .panel p{margin:8px 0 0;color:var(--ink2);font-size:15px}
+.story .panel h3{margin:6px 0 0;font:600 22px/1.2 var(--sans);letter-spacing:-.02em}
+.charts2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:900px){.charts2{grid-template-columns:1fr}}
+
+/* charts */
+.chart{position:relative}
+.chart svg{width:100%;height:auto;overflow:visible}
+.chart text{font:12px var(--sans);fill:var(--ink3)}
+.chart .lab{fill:var(--ink2);font-size:12px}
+.chart .val{fill:var(--ink);font-weight:600;font-size:13px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.legend i.x{width:10px;height:10px;background:none;position:relative}
+.legend i.x::before,.legend i.x::after{content:"";position:absolute;left:4px;top:-1px;width:2px;height:12px;background:var(--bad);transform:rotate(45deg)}
+.legend i.x::after{transform:rotate(-45deg)}
+.tip{position:fixed;z-index:80;pointer-events:none;background:#1b1e25;border:1px solid var(--line2);border-radius:10px;padding:8px 11px;font-size:13px;color:var(--ink);
+  box-shadow:0 12px 30px rgba(0,0,0,.45);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;max-width:240px}
+.tip.on{opacity:1;transform:none}
+.tip .h{font:500 11px var(--mono);color:var(--ink3);letter-spacing:.04em;margin-bottom:3px}
+.tip .row{display:flex;align-items:center;gap:7px}
+.tip .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+details.data{margin-top:12px;font-size:13px;color:var(--ink3)}
+details.data summary{cursor:pointer;list-style:none;display:inline-flex;gap:6px;align-items:center}
+details.data summary::-webkit-details-marker{display:none}
+details.data summary::before{content:"+";font-family:var(--mono)}
+details.data[open] summary::before{content:"–"}
+details.data table{width:100%;border-collapse:collapse;margin-top:10px;font:12px var(--mono);color:var(--ink2)}
+details.data td,details.data th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+details.data th{color:var(--ink3);font-weight:500}
+details.data td:first-child,details.data th:first-child{text-align:left}
+
+/* results */
+.duel{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:820px){.duel{grid-template-columns:1fr}}
+.big{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 26px 24px;position:relative;overflow:hidden}
+.big .who{display:flex;align-items:center;gap:10px;font:500 13px var(--mono);color:var(--ink2);letter-spacing:.02em}
+.big .who i{width:10px;height:10px;border-radius:3px}
+.big .num{font:600 clamp(72px,9vw,120px)/.95 var(--sans);letter-spacing:-.05em;margin-top:16px;font-variant-numeric:tabular-nums}
+.big .num small{font-size:.32em;color:var(--ink3);letter-spacing:-.01em;font-weight:500;margin-left:6px}
+.big .meter{height:8px;border-radius:0 4px 4px 0;margin-top:18px;background:rgba(255,255,255,.06);overflow:hidden}
+.big .meter b{display:block;height:100%;border-radius:0 4px 4px 0;transform-origin:left;transform:scaleX(0);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+.big .facts{display:flex;gap:24px;flex-wrap:wrap;margin-top:18px;font-size:14px;color:var(--ink2)}
+.big .facts b{display:block;font:600 20px var(--sans);color:var(--ink);letter-spacing:-.02em}
+.big.q{background:radial-gradient(500px 220px at 0% 0%,rgba(57,135,229,.16),transparent 70%),var(--card)}
+.res3{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:900px){.res3{grid-template-columns:1fr}}
+
+/* wall */
+.wallbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:44px 0 16px}
+.wallbar h3{margin:0;font:600 24px var(--sans);letter-spacing:-.02em}
+.filters{display:inline-flex;padding:4px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.filters button{all:unset;cursor:pointer;font:500 13px var(--sans);color:var(--ink2);padding:7px 14px;border-radius:999px;transition:background .2s,color .2s}
+.filters button[aria-pressed=true]{background:var(--ink);color:#0a0b0e}
+.filters button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wall{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+@media (max-width:900px){.wall{grid-template-columns:repeat(6,1fr)}}
+@media (max-width:520px){.wall{grid-template-columns:repeat(4,1fr)}}
+.tile{all:unset;cursor:pointer;position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#0d0e11;outline:1px solid var(--line);transition:transform .2s,outline-color .2s,opacity .3s}
+.tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile:hover{transform:scale(1.06);z-index:2;outline-color:var(--line2)}
+.tile:focus-visible{outline:2px solid var(--accent)}
+.tile .st{position:absolute;right:4px;top:4px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font:700 10px var(--sans);color:#fff}
+.tile.ok .st{background:var(--good)} .tile.no .st{background:var(--bad)}
+.tile.no{outline:1px solid rgba(208,59,59,.65)}
+.tile.dim{opacity:.12;pointer-events:none}
+dialog{border:1px solid var(--line2);border-radius:18px;background:#111318;color:var(--ink);padding:0;max-width:min(880px,94vw);width:100%}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+dialog video{width:100%;background:#000}
+dialog .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;font-size:14px;color:var(--ink2);flex-wrap:wrap}
+dialog .meta b{color:var(--ink);font-weight:500}
+dialog button.close{all:unset;cursor:pointer;font:500 13px var(--sans);padding:7px 14px;border-radius:999px;border:1px solid var(--line2)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--sans);padding:3px 10px;border-radius:999px}
+.pill.ok{color:var(--goodtx);background:rgba(12,163,12,.14)} .pill.no{color:var(--badtx);background:rgba(208,59,59,.16)}
+
+/* next */
+.fail{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.fail{grid-template-columns:1fr}}
+.road{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+@media (max-width:980px){.road{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.road{grid-template-columns:1fr}}
+.road .panel h3{margin:10px 0 0;font:600 18px var(--sans);letter-spacing:-.01em}
+.road .panel p{margin:8px 0 0;font-size:14px;color:var(--ink2)}
+.tag{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.stack span{font:500 13px var(--mono);padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);background:var(--card)}
+
+/* closing */
+.close-cta{margin:130px 0 0;padding:64px 40px;border-radius:24px;border:1px solid var(--line2);text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(600px 300px at 50% 0%,rgba(57,135,229,.22),transparent 70%),radial-gradient(500px 260px at 50% 120%,rgba(242,194,48,.12),transparent 70%),var(--bg2)}
+.close-cta h2{margin:0 auto;max-width:18ch}
+.close-cta p{color:var(--ink2);max-width:56ch;margin:18px auto 0}
+.close-cta .cta{justify-content:center}
+.code{display:inline-block;margin-top:26px;font:13px var(--mono);color:#d7dae0;background:#0a0b0e;border:1px solid var(--line2);border-radius:10px;padding:12px 16px;text-align:left}
+.code .k{color:var(--ink3)}
+footer{padding:60px 0 50px;color:var(--ink3);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:26px}
+
+/* motion */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.dot-live,.term .cur{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav class="nav" id="nav"><div class="wrap">
+  <a class="logo" href="#top"><i></i>distill_frontier</a>
+  <ul><li><a href="#how">How it works</a></li><li><a href="#data">Data</a></li><li><a href="#learn">Learning</a></li><li><a href="#results">Results</a></li><li><a href="#next">What's next</a></li></ul>
+  <a class="btn" href="https://github.com/dhruvsirohi-arch/distill_frontier" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div class="eyebrow rv">Sim-to-policy distillation · SO-101 arm</div>
+  <h1 class="rv">A language model that <em>learned</em> to move a robot.</h1>
+  <p class="lede rv">We taught <b>Qwen3-1.7B</b> to pick up a bowl and place it on a table by watching a scripted expert in simulation. It reads the scene as JSON and writes the next motor command. On <b>100 scenes it had never seen</b>, it succeeded <b id="hero-n">90</b> times and never produced a malformed command.</p>
+  <div class="cta rv"><a class="btn primary" href="#learn">Watch it learn
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/></svg></a>
+    <a class="btn" href="#results">See the results</a></div>
+  <div class="screen rv">
+    <video id="hero-video" src="assets/video/hero.mp4" poster="assets/video/hero.jpg" autoplay muted loop playsinline preload="auto" aria-label="Qwen policy controlling the SO-101 arm on held-out scenes"></video>
+    <div class="chip"><span class="dot-live"></span>Qwen3-1.7B driving · unseen scenes · sim time</div>
+    <div class="term" aria-hidden="true"><div class="k">// model output, one action per decision</div><div id="term-lines"></div></div>
+  </div>
+  <div class="kpis rv" id="kpis"></div>
+</div></header>
+
+<section id="how"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">How it works</div>
+  <h2 class="rv">Five stages, <em>one laptop</em>, zero cloud.</h2>
+  <p class="sub rv">Every stage is a single command, fully seeded and reproducible. The language model never sees pixels or a custom action head. Robot control becomes <b>a chat turn</b>: an observation goes in, a JSON action comes out.</p></div>
+  <div class="pipe" id="pipe"></div>
+  <div class="io">
+    <div class="panel rv"><div class="t"><span>Prompt: what the model sees</span><span>mm · deg</span></div><pre id="io-in"></pre></div>
+    <div class="panel rv"><div class="t"><span>Completion: what it writes</span><span>greedy</span></div><pre class="out" id="io-out"></pre>
+      <p class="note">One decision is a straight-line Cartesian move, a gripper command or <span class="mono">done</span>. An IK controller executes it in MuJoCo. Anything unreachable or off-schema is rejected, never executed.</p></div>
+  </div>
+</div></section>
+
+<section id="data"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">Training data</div>
+  <h2 class="rv">Taught by example: <em>2,000</em> demonstrations, curated to 700.</h2>
+  <p class="sub rv">A scripted expert sees exactly what the model sees and solves the task in roughly ten decisions. We vary approach side, grasp point, lift height, waypoints and release point, so the model learns the task rather than one trajectory. Then we keep only the cleanest, most diverse episodes.</p></div>
+  <div class="vgrid" id="demos"></div>
+  <div class="split">
+    <div class="panel rv"><div class="t"><span>Curation funnel</span><span>quality → diversity</span></div><div class="funnel" id="funnel"></div>
+      <div id="drops"></div>
+      <p class="note">Filters drop collisions, missed grasps, tight placements and redundant moves. Selection fills a 5×5 position grid × 4 bowl orientations evenly and removes near-duplicates. The split is by episode, so validation never leaks into training.</p></div>
+    <div class="panel rv"><div class="t"><span>Where the bowl starts (700 curated episodes)</span><span>top view</span></div>
+      <div class="chart" id="map-train"></div>
+      <div class="legend"><span><i class="dot" style="background:var(--qwen)"></i>bowl start · tick = orientation</span><span><i style="background:rgba(25,158,112,.8);height:9px;width:12px"></i>target region</span></div></div>
+  </div>
+</div></section>
+
+<section id="learn"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">Learning</div>
+  <h2 class="rv">From copying numbers to <em>picking and placing</em>, in under one epoch.</h2>
+  <p class="sub rv">Real recordings from training checkpoints on the same unseen scene. The model's own actions are printed on screen. Pick a checkpoint, or let it play through.</p></div>
+  <div class="player">
+    <div><div class="stage rv"><video id="ck-video" muted playsinline preload="auto"></video><div class="badge" id="ck-badge"></div></div>
+      <div class="seg" id="ck-seg" role="group" aria-label="Training checkpoint"></div></div>
+    <div class="story">
+      <div class="panel rv"><div class="t"><span id="ck-tag">Step 0</span><span id="ck-score"></span></div><h3 id="ck-title"></h3><p id="ck-text"></p></div>
+      <div class="panel rv"><div class="t"><span>Checkpoint success</span><span>5 held-out scenes</span></div><div class="chart" id="ck-bars"></div></div>
+    </div>
+  </div>
+  <div class="charts2">
+    <div class="panel rv"><div class="t"><span>Loss on action tokens</span><span>log scale</span></div><div class="chart" id="loss"></div>
+      <div class="legend"><span><i style="background:var(--qwen)"></i>train (10-step mean)</span><span><i style="background:var(--val)"></i>validation (held-out episodes)</span></div>
+      <details class="data"><summary>Show data</summary><table id="loss-table"></table></details></div>
+    <div class="panel rv"><div class="t"><span>Training run</span><span>Apple M5 · 24 GB</span></div><div id="trainfacts" class="funnel"></div></div>
+  </div>
+</div></section>
+
+<section id="results"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">Results</div>
+  <h2 class="rv">Tested on <em>100 scenes</em> it never saw.</h2>
+  <p class="sub rv">Seeds 100000–100099, untouched by training, curation and checkpointing. Greedy decoding, strict JSON validation, same physics and success check as the teacher. The student reaches <b><span data-k="q_succ"></span>% of its teacher</b> and finishes in slightly fewer decisions.</p></div>
+  <div class="duel">
+    <div class="big q rv"><div class="who"><i style="background:var(--qwen)"></i>Student · Qwen3-1.7B + LoRA</div>
+      <div class="num"><span class="count" data-to="90" id="q-num">0</span><small>/ 100</small></div>
+      <div class="meter"><b id="q-meter" style="background:var(--qwen)"></b></div>
+      <div class="facts" id="q-facts"></div></div>
+    <div class="big rv"><div class="who"><i style="background:var(--expert)"></i>Teacher · scripted expert</div>
+      <div class="num"><span class="count" data-to="100" id="e-num">0</span><small>/ 100</small></div>
+      <div class="meter"><b id="e-meter" style="background:var(--expert)"></b></div>
+      <div class="facts" id="e-facts"></div></div>
+  </div>
+  <div class="res3">
+    <div class="panel rv"><div class="t"><span>Every outcome on the workspace</span><span>top view</span></div><div class="chart" id="map-eval"></div>
+      <div class="legend"><span><i class="dot" style="background:var(--qwen)"></i>success</span><span><i class="x"></i>failure</span><span><i style="background:rgba(25,158,112,.8);height:9px;width:12px"></i>target region</span></div></div>
+    <div class="panel rv"><div class="t"><span>Why the 10 failures failed</span><span>Qwen · of 100</span></div><div class="chart" id="fails"></div>
+      <p class="note">Every failure is physical. There were zero malformed outputs and zero rejected commands across <span data-k="decisions"></span> model decisions, and the failures are scattered rather than clustered in a blind spot. Less polished than the teacher: the collision guard stopped <span data-k="coll"></span> of Qwen's moves, against <span data-k="ecoll"></span> for the expert. <span data-k="collok"></span> of those episodes still succeeded.</p>
+      <details class="data"><summary>Show data</summary><table id="fail-table"></table></details></div>
+  </div>
+  <div class="wallbar rv"><h3>All 100 episodes</h3><div class="filters" role="group" aria-label="Filter episodes">
+    <button aria-pressed="true" data-f="all">All 100</button><button aria-pressed="false" data-f="ok">Successes</button><button aria-pressed="false" data-f="no">Failures</button></div></div>
+  <div class="wall rv" id="wall"></div>
+  <p class="note">Hover to preview, click to watch. Each clip is a re-render of the scored run: same seeds, same batching, and every outcome checked identical to the reported results. The thumbnail is the final frame.</p>
+</div></section>
+
+<section id="next"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">Honest limits · what's next</div>
+  <h2 class="rv">It imitates brilliantly. Next, it learns to <em>recover</em>.</h2>
+  <p class="sub rv">The teacher almost never fails, so the student almost never saw a missed grasp. When one happens, it carries on as if holding the bowl. That's the classic imitation-learning gap, and there's a well-known fix.</p></div>
+  <div class="fail">
+    <div class="vcard rv"><video style="aspect-ratio:4/3" src="assets/video/fail_1498.mp4" poster="assets/video/fail_1498.jpg" muted loop playsinline preload="none" data-autoplay></video>
+      <figcaption><span><b>Failure mode</b> · grasp slips, model keeps going</span><span class="pill no">✕ failed grasp</span></figcaption></div>
+    <div class="panel rv"><div class="t"><span>The plan</span><span>in order of cost</span></div>
+      <h3 style="margin:10px 0 0;font:600 22px/1.25 var(--sans);letter-spacing:-.02em">Let the student drive, and let the teacher correct it.</h3>
+      <p style="color:var(--ink2);font-size:15px">DAgger: roll out Qwen, have the expert label the states Qwen actually reaches (missed grasps included), and retrain. Combined with perturbed demos and a full 2-epoch run (this one stopped at 0.91 epochs to fit a time budget), that targets the remaining ten points.</p>
+      <div class="stack"><span>MuJoCo 4</span><span>Menagerie SO-101</span><span>Qwen3-1.7B</span><span>PEFT LoRA r16</span><span>PyTorch MPS</span><span>no paid services</span></div></div>
+  </div>
+  <div class="road">
+    <div class="panel rv"><div class="tag">01 · next</div><h3>Recovery data</h3><p>DAgger and perturbation demos close the gap to the teacher.</p></div>
+    <div class="panel rv"><div class="tag">02</div><h3>Pixels in</h3><p>Swap the JSON scene for camera frames with a vision-language backbone, using the same chat-turn interface.</p></div>
+    <div class="panel rv"><div class="tag">03</div><h3>Real hardware</h3><p>The SO-101 is a low-cost open-source arm, and the sim uses its official model. Next is sim-to-real on the bench.</p></div>
+    <div class="panel rv"><div class="tag">04</div><h3>Language tasks</h3><p>Many objects and goals, instructed in plain language. Frontier-model reasoning distilled into a small on-device policy.</p></div>
+  </div>
+  <div class="close-cta rv">
+    <div class="eyebrow">Open source · reproducible</div>
+    <h2 style="margin-top:16px">One command from <em>empty folder</em> to trained policy.</h2>
+    <p>Simulation, expert, curation, fine-tuning and evaluation, all seeded and logged. Every number on this page is generated from the run's own output files.</p>
+    <div class="code"><span class="k">$</span> git clone https://github.com/dhruvsirohi-arch/distill_frontier<br><span class="k">$</span> ./run_all.sh</div>
+    <div class="cta"><a class="btn primary" href="https://github.com/dhruvsirohi-arch/distill_frontier" target="_blank" rel="noopener">View on GitHub</a><a class="btn" href="https://github.com/dhruvsirohi-arch/distill_frontier/blob/main/RESULTS.md" target="_blank" rel="noopener">Read the full results</a></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><span>distill_frontier · SO-101 pick-and-place in MuJoCo · Qwen3-1.7B LoRA</span><span id="foot-gen"></span></div></footer>
+
+<dialog id="dlg"><video id="dlg-v" controls autoplay muted playsinline loop></video><div class="meta"><span id="dlg-m"></span><button class="close" id="dlg-c">Close</button></div></dialog>
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+const D = {"generated":"2026-11-17","kpi":{"qwen_success":90,"expert_success":100,"invalid":0,"decisions":1042,"pairs":6578,"curated":700,"raw":2000,"expert_check":"98%"},"pipeline":[["Simulate","MuJoCo with the official SO-101 arm model, a bowl with a yaw-marking lug, and a table.","15 decisions max \u00b7 IK executor"],["Demonstrate","A scripted expert that sees only the model's JSON observation, with randomized style.","2,000 episodes in 111 s \u00b7 99.5% success"],["Curate","Quality filters, a score, and stratified selection across 100 position \u00d7 orientation bins.","2,000 \u2192 700 episodes"],["Distill","LoRA fine-tune of Qwen3-1.7B. Loss only on action tokens, weighted toward gripper and done.","6,578 pairs \u00b7 r=16 \u00b7 0.91 epochs"],["Evaluate","100 never-seen scenes, greedy decoding, strict schema checks, same success test as the expert.","Qwen 90/100 \u00b7 expert 100/100"]],"example":{"user":"obs:{\"step\":2,\"bowl\":{\"x\":195,\"y\":-126,\"z\":0,\"yaw\":-127},\"target\":{\"x\":100,\"y\":170,\"z\":40,\"sx\":100,\"sy\":80},\"ee\":{\"x\":153,\"y\":-109,\"z\":104},\"gripper\":\"open\",\"grasped\":false,\"last_result\":\"success\"}\nlast:[{\"action\":\"move_to\",\"x\":153,\"y\":-109,\"z\":104},{\"action\":\"open_gripper\"}]","action":"{\"action\":\"move_to\",\"x\":161,\"y\":-101,\"z\":26}","trace":["{\"action\":\"open_gripper\"}","{\"action\":\"move_to\",\"x\":157,\"y\":-47,\"z\":87}","{\"action\":\"move_to\",\"x\":157,\"y\":-47,\"z\":28}","{\"action\":\"close_gripper\"}","{\"action\":\"move_to\",\"x\":155,\"y\":-46,\"z\":100}","{\"action\":\"move_to\",\"x\":100,\"y\":130,\"z\":100}","{\"action\":\"move_to\",\"x\":100,\"y\":130,\"z\":70}","{\"action\":\"open_gripper\"}","{\"action\":\"move_to\",\"x\":100,\"y\":129,\"z\":120}","{\"action\":\"done\"}"]},"demos":[{"file":"assets/video/demo_0.mp4","seed":7074,"success":true,"steps":10,"yaw":56,"grasp_side":"near","waypoints":0},{"file":"assets/video/demo_1.mp4","seed":3808,"success":true,"steps":10,"yaw":145,"grasp_side":"far","waypoints":0},{"file":"assets/video/demo_2.mp4","seed":724,"success":true,"steps":11,"yaw":52,"grasp_side":"near","waypoints":1},{"file":"assets/video/demo_3.mp4","seed":5249,"success":true,"steps":10,"yaw":172,"grasp_side":"near","waypoints":0},{"file":"assets/video/demo_4.mp4","seed":946,"success":true,"steps":10,"yaw":-160,"grasp_side":"far","waypoints":0},{"file":"assets/video/demo_5.mp4","seed":8336,"success":true,"steps":11,"yaw":-16,"grasp_side":"near","waypoints":1}],"funnel":[["Generated by the expert",2000],["Pass quality filters",1969],["Selected for diversity",700],["State \u2192 action training pairs (train split)",6578,true]],"drops":[["placed too close to the edge",12],["missed the grasp",10],["arm collided",8],["ran out of decisions",1]],"spawn":[{"x":0.2032,"y":-0.1229,"yaw":-169,"seed":3252,"split":"train"},{"x":0.2009,"y":-0.1126,"yaw":-177,"seed":4683,"split":"train"},{"x":0.1949,"y":-0.1059,"yaw":-128,"seed":113,"split":"train"},{"x":0.1915,"y":-0.0989,"yaw":-167,"seed":5513,"split":"train"},{"x":0.1955,"y":-0.1257,"yaw":-127,"seed":2736,"split":"val"},{"x":0.1922,"y":-0.107,"yaw":-114,"seed":692,"split":"train"},{"x":0.1971,"y":-0.1033,"yaw":-124,"seed":4761,"split":"train"},{"x":0.1909,"y":-0.1237,"yaw":-79,"seed":9181,"split":"train"},{"x":0.2017,"y":-0.1248,"yaw":-47,"seed":1717,"split":"train"},{"x":0.1936,"y":-0.1063,"yaw":-24,"seed":6749,"split":"train"},{"x":0.1998,"y":-0.1273,"yaw":-18,"seed":9326,"split":"train"},{"x":0.1923,"y":-0.1122,"yaw":-23,"seed":448,"split":"train"},{"x":0.2019,"y":-0.1,"yaw":-48,"seed":5729,"split":"train"},{"x":0.1944,"y":-0.1215,"yaw":-73,"seed":5291,"split":"train"},{"x":0.1909,"y":-0.1052,"yaw":26,"seed":6226,"split":"train"},{"x":0.2022,"y":-0.1172,"yaw":19,"seed":1183,"split":"val"},{"x":0.1969,"y":-0.1093,"yaw":2,"seed":5049,"split":"train"},{"x":0.2037,"y":-0.1157,"yaw":51,"seed":6746,"split":"train"},{"x":0.1961,"y":-0.109,"yaw":74,"seed":9209,"split":"train"},{"x":0.2007,"y":-0.1218,"yaw":66,"seed":7683,"split":"train"},{"x":0.2031,"y":-0.1069,"yaw":47,"seed":6605,"split":"train"},{"x":0.2007,"y":-0.109,"yaw":96,"seed":2504,"split":"train"},{"x":0.1935,"y":-0.1248,"yaw":123,"seed":8333,"split":"train"},{"x":0.1937,"y":-0.1037,"yaw":146,"seed":6941,"split":"train"},{"x":0.2026,"y":-0.0992,"yaw":107,"seed":5570,"split":"val"},{"x":0.2033,"y":-0.112,"yaw":126,"seed":8488,"split":"train"},{"x":0.1907,"y":-0.1078,"yaw":97,"seed":5736,"split":"train"},{"x":0.1958,"y":-0.1277,"yaw":177,"seed":9183,"split":"train"},{"x":0.2025,"y":-0.0768,"yaw":-92,"seed":3816,"split":"train"},{"x":0.198,"y":-0.077,"yaw":-119,"seed":2119,"split":"val"},{"x":0.1964,"y":-0.0834,"yaw":-180,"seed":5975,"split":"train"},{"x":0.1911,"y":-0.0886,"yaw":-122,"seed":7832,"split":"train"},{"x":0.203,"y":-0.0874,"yaw":-178,"seed":3012,"split":"train"},{"x":0.1907,"y":-0.0947,"yaw":-171,"seed":4345,"split":"train"},{"x":0.2003,"y":-0.0713,"yaw":-137,"seed":4923,"split":"train"},{"x":0.1929,"y":-0.0842,"yaw":-27,"seed":2767,"split":"train"},{"x":0.2016,"y":-0.079,"yaw":-9,"seed":182,"split":"train"},{"x":0.1936,"y":-0.079,"yaw":-20,"seed":6783,"split":"train"},{"x":0.2011,"y":-0.079,"yaw":-32,"seed":1723,"split":"train"},{"x":0.2015,"y":-0.0824,"yaw":-7,"seed":2491,"split":"train"},{"x":0.1925,"y":-0.0973,"yaw":-16,"seed":7199,"split":"train"},{"x":0.1977,"y":-0.0889,"yaw":-80,"seed":7344,"split":"train"},{"x":0.1921,"y":-0.0937,"yaw":74,"seed":5322,"split":"val"},{"x":0.1921,"y":-0.0689,"yaw":76,"seed":5411,"split":"train"},{"x":0.2025,"y":-0.0815,"yaw":68,"seed":8826,"split":"train"},{"x":0.1921,"y":-0.0691,"yaw":76,"seed":5783,"split":"train"},{"x":0.1994,"y":-0.0909,"yaw":57,"seed":1639,"split":"train"},{"x":0.1968,"y":-0.0709,"yaw":81,"seed":6937,"split":"train"},{"x":0.1911,"y":-0.0911,"yaw":77,"seed":239,"split":"train"},{"x":0.2013,"y":-0.0884,"yaw":112,"seed":8538,"split":"train"},{"x":0.1951,"y":-0.0895,"yaw":163,"seed":3015,"split":"train"},{"x":0.1968,"y":-0.0857,"yaw":108,"seed":5795,"split":"train"},{"x":0.1937,"y":-0.075,"yaw":129,"seed":7729,"split":"train"},{"x":0.1914,"y":-0.0942,"yaw":132,"seed":7636,"split":"val"},{"x":0.1921,"y":-0.0755,"yaw":107,"seed":5427,"split":"train"},{"x":0.2033,"y":-0.0736,"yaw":170,"seed":4352,"split":"train"},{"x":0.2006,"y":-0.0634,"yaw":-96,"seed":4075,"split":"train"},{"x":0.2036,"y":-0.0529,"yaw":-144,"seed":6477,"split":"train"},{"x":0.2011,"y":-0.0499,"yaw":-168,"seed":6702,"split":"train"},{"x":0.1998,"y":-0.0485,"yaw":-138,"seed":6947,"split":"train"},{"x":0.2031,"y":-0.042,"yaw":-138,"seed":2311,"split":"train"},{"x":0.2022,"y":-0.0434,"yaw":-141,"seed":2091,"split":"train"},{"x":0.2002,"y":-0.0384,"yaw":-143,"seed":5519,"split":"train"},{"x":0.1952,"y":-0.0596,"yaw":-14,"seed":5573,"split":"val"},{"x":0.1983,"y":-0.0371,"yaw":-37,"seed":2694,"split":"train"},{"x":0.1933,"y":-0.0471,"yaw":-45,"seed":65,"split":"train"},{"x":0.203,"y":-0.0585,"yaw":-16,"seed":453,"split":"train"},{"x":0.1992,"y":-0.041,"yaw":-28,"seed":2286,"split":"train"},{"x":0.1948,"y":-0.0443,"yaw":-85,"seed":5192,"split":"train"},{"x":0.1979,"y":-0.051,"yaw":-80,"seed":454,"split":"train"},{"x":0.1946,"y":-0.0593,"yaw":67,"seed":443,"split":"train"},{"x":0.192,"y":-0.0401,"yaw":23,"seed":1027,"split":"train"},{"x":0.1988,"y":-0.0431,"yaw":60,"seed":3476,"split":"val"},{"x":0.1901,"y":-0.0651,"yaw":87,"seed":7740,"split":"train"},{"x":0.1911,"y":-0.0575,"yaw":88,"seed":6751,"split":"train"},{"x":0.1927,"y":-0.0527,"yaw":27,"seed":7499,"split":"train"},{"x":0.1918,"y":-0.053,"yaw":12,"seed":6261,"split":"train"},{"x":0.2006,"y":-0.0516,"yaw":145,"seed":3808,"split":"train"},{"x":0.1993,"y":-0.053,"yaw":121,"seed":9644,"split":"train"},{"x":0.1976,"y":-0.0436,"yaw":124,"seed":9375,"split":"train"},{"x":0.2013,"y":-0.0511,"yaw":170,"seed":9672,"split":"train"},{"x":0.1954,"y":-0.0368,"yaw":97,"seed":5711,"split":"train"},{"x":0.1972,"y":-0.0588,"yaw":173,"seed":1820,"split":"train"},{"x":0.2022,"y":-0.0493,"yaw":143,"seed":4886,"split":"train"},{"x":0.1936,"y":-0.0282,"yaw":-128,"seed":1447,"split":"train"},{"x":0.202,"y":-0.0191,"yaw":-174,"seed":9489,"split":"train"},{"x":0.193,"y":-0.0091,"yaw":-110,"seed":9740,"split":"val"},{"x":0.1901,"y":-0.0043,"yaw":-160,"seed":7806,"split":"train"},{"x":0.1972,"y":-0.0281,"yaw":-97,"seed":2097,"split":"train"},{"x":0.1919,"y":-0.0108,"yaw":-132,"seed":5111,"split":"train"},{"x":0.2035,"y":-0.0276,"yaw":-162,"seed":1508,"split":"train"},{"x":0.1989,"y":-0.0192,"yaw":-52,"seed":6699,"split":"train"},{"x":0.2034,"y":-0.0132,"yaw":-72,"seed":8126,"split":"train"},{"x":0.1946,"y":-0.0331,"yaw":-86,"seed":5197,"split":"val"},{"x":0.202,"y":-0.027,"yaw":-90,"seed":9776,"split":"train"},{"x":0.1909,"y":-0.0223,"yaw":-52,"seed":8472,"split":"train"},{"x":0.1916,"y":-0.0132,"yaw":-23,"seed":3679,"split":"train"},{"x":0.2013,"y":-0.0081,"yaw":-77,"seed":2305,"split":"train"},{"x":0.1931,"y":-0.0209,"yaw":70,"seed":7378,"split":"train"},{"x":0.1989,"y":-0.0197,"yaw":30,"seed":903,"split":"train"},{"x":0.1907,"y":-0.0132,"yaw":2,"seed":2619,"split":"train"},{"x":0.1942,"y":-0.0337,"yaw":4,"seed":1203,"split":"val"},{"x":0.1995,"y":-0.0227,"yaw":33,"seed":3750,"split":"train"},{"x":0.1943,"y":-0.0206,"yaw":72,"seed":6220,"split":"train"},{"x":0.192,"y":-0.0075,"yaw":79,"seed":4279,"split":"train"},{"x":0.1953,"y":-0.0277,"yaw":162,"seed":4258,"split":"train"},{"x":0.1989,"y":-0.03,"yaw":115,"seed":6998,"split":"train"},{"x":0.1947,"y":-0.0108,"yaw":109,"seed":6932,"split":"train"},{"x":0.2017,"y":-0.0238,"yaw":172,"seed":3790,"split":"train"},{"x":0.1993,"y":-0.0102,"yaw":107,"seed":9882,"split":"train"},{"x":0.1956,"y":-0.0133,"yaw":154,"seed":1868,"split":"train"},{"x":0.1986,"y":-0.0077,"yaw":153,"seed":7550,"split":"train"},{"x":0.2036,"y":0.023,"yaw":-117,"seed":7685,"split":"train"},{"x":0.1939,"y":0.0115,"yaw":-172,"seed":8541,"split":"train"},{"x":0.2014,"y":0.0121,"yaw":-154,"seed":5458,"split":"val"},{"x":0.1968,"y":0.0133,"yaw":-140,"seed":4715,"split":"train"},{"x":0.1976,"y":0.0017,"yaw":-155,"seed":9527,"split":"train"},{"x":0.1977,"y":0.007,"yaw":-120,"seed":8159,"split":"train"},{"x":0.2,"y":0.0055,"yaw":-99,"seed":1309,"split":"train"},{"x":0.2022,"y":0.0016,"yaw":-33,"seed":8686,"split":"train"},{"x":0.1988,"y":-0.0004,"yaw":-61,"seed":5874,"split":"train"},{"x":0.2038,"y":0.0129,"yaw":-87,"seed":6241,"split":"val"},{"x":0.1902,"y":0.0279,"yaw":-61,"seed":5344,"split":"train"},{"x":0.1957,"y":0.0299,"yaw":-66,"seed":4968,"split":"train"},{"x":0.2007,"y":0.0297,"yaw":-55,"seed":2745,"split":"train"},{"x":0.1972,"y":0.0255,"yaw":-57,"seed":3163,"split":"train"},{"x":0.2019,"y":-0.0,"yaw":70,"seed":2035,"split":"train"},{"x":0.1964,"y":0.0098,"yaw":52,"seed":724,"split":"train"},{"x":0.2029,"y":0.0109,"yaw":28,"seed":3196,"split":"train"},{"x":0.195,"y":0.0006,"yaw":51,"seed":1007,"split":"train"},{"x":0.2029,"y":0.0077,"yaw":10,"seed":5112,"split":"train"},{"x":0.1946,"y":0.0007,"yaw":73,"seed":7026,"split":"train"},{"x":0.2007,"y":0.0251,"yaw":61,"seed":9147,"split":"train"},{"x":0.1939,"y":0.0166,"yaw":135,"seed":484,"split":"train"},{"x":0.1966,"y":0.0259,"yaw":180,"seed":4905,"split":"val"},{"x":0.2034,"y":0.0,"yaw":118,"seed":9385,"split":"train"},{"x":0.1983,"y":0.0115,"yaw":106,"seed":7946,"split":"train"},{"x":0.2018,"y":0.0017,"yaw":110,"seed":1591,"split":"train"},{"x":0.1957,"y":0.0112,"yaw":133,"seed":4246,"split":"train"},{"x":0.1989,"y":0.0111,"yaw":98,"seed":7948,"split":"train"},{"x":0.2157,"y":-0.1276,"yaw":-126,"seed":7158,"split":"val"},{"x":0.2073,"y":-0.1063,"yaw":-162,"seed":5743,"split":"train"},{"x":0.2165,"y":-0.123,"yaw":-141,"seed":1785,"split":"train"},{"x":0.2174,"y":-0.1254,"yaw":-139,"seed":9048,"split":"train"},{"x":0.2128,"y":-0.1163,"yaw":-166,"seed":7567,"split":"train"},{"x":0.2072,"y":-0.1064,"yaw":-157,"seed":2559,"split":"train"},{"x":0.207,"y":-0.0983,"yaw":-137,"seed":3689,"split":"train"},{"x":0.2076,"y":-0.1229,"yaw":-27,"seed":9031,"split":"train"},{"x":0.209,"y":-0.1201,"yaw":-55,"seed":3464,"split":"train"},{"x":0.2077,"y":-0.1101,"yaw":-52,"seed":1357,"split":"train"},{"x":0.2065,"y":-0.106,"yaw":-28,"seed":5921,"split":"train"},{"x":0.2053,"y":-0.1054,"yaw":-37,"seed":2608,"split":"train"},{"x":0.2161,"y":-0.1148,"yaw":-21,"seed":9912,"split":"train"},{"x":0.2118,"y":-0.1037,"yaw":-77,"seed":7225,"split":"train"},{"x":0.216,"y":-0.1238,"yaw":75,"seed":7336,"split":"train"},{"x":0.2178,"y":-0.102,"yaw":49,"seed":2704,"split":"train"},{"x":0.2097,"y":-0.1001,"yaw":30,"seed":9026,"split":"val"},{"x":0.2092,"y":-0.1138,"yaw":31,"seed":9843,"split":"train"},{"x":0.2103,"y":-0.1175,"yaw":31,"seed":8284,"split":"train"},{"x":0.2079,"y":-0.1159,"yaw":2,"seed":3248,"split":"train"},{"x":0.2088,"y":-0.1228,"yaw":3,"seed":2993,"split":"train"},{"x":0.2085,"y":-0.1169,"yaw":95,"seed":3704,"split":"val"},{"x":0.2066,"y":-0.126,"yaw":113,"seed":1030,"split":"train"},{"x":0.2131,"y":-0.1259,"yaw":134,"seed":3740,"split":"train"},{"x":0.2067,"y":-0.1153,"yaw":96,"seed":5855,"split":"train"},{"x":0.2061,"y":-0.099,"yaw":137,"seed":3204,"split":"train"},{"x":0.2113,"y":-0.1006,"yaw":92,"seed":5594,"split":"train"},{"x":0.2102,"y":-0.1002,"yaw":141,"seed":8160,"split":"train"},{"x":0.216,"y":-0.073,"yaw":-120,"seed":1450,"split":"train"},{"x":0.2144,"y":-0.0672,"yaw":-164,"seed":4009,"split":"train"},{"x":0.209,"y":-0.0881,"yaw":-109,"seed":2013,"split":"train"},{"x":0.2152,"y":-0.0869,"yaw":-176,"seed":8963,"split":"train"},{"x":0.2093,"y":-0.0822,"yaw":-143,"seed":5299,"split":"val"},{"x":0.2062,"y":-0.0779,"yaw":-143,"seed":3162,"split":"train"},{"x":0.206,"y":-0.0854,"yaw":-111,"seed":4590,"split":"train"},{"x":0.2158,"y":-0.0869,"yaw":-7,"seed":2943,"split":"train"},{"x":0.2086,"y":-0.0842,"yaw":-86,"seed":2191,"split":"train"},{"x":0.2157,"y":-0.0697,"yaw":-70,"seed":2186,"split":"train"},{"x":0.2052,"y":-0.0666,"yaw":-12,"seed":1019,"split":"train"},{"x":0.2043,"y":-0.0913,"yaw":-43,"seed":6004,"split":"train"},{"x":0.2154,"y":-0.0665,"yaw":-8,"seed":5983,"split":"train"},{"x":0.2174,"y":-0.0715,"yaw":-32,"seed":2243,"split":"train"},{"x":0.2075,"y":-0.0733,"yaw":63,"seed":953,"split":"train"},{"x":0.21,"y":-0.0807,"yaw":15,"seed":3302,"split":"train"},{"x":0.2046,"y":-0.074,"yaw":64,"seed":5419,"split":"train"},{"x":0.2152,"y":-0.0795,"yaw":59,"seed":6088,"split":"val"},{"x":0.2041,"y":-0.0875,"yaw":54,"seed":2349,"split":"train"},{"x":0.2082,"y":-0.0878,"yaw":14,"seed":2772,"split":"train"},{"x":0.2127,"y":-0.0772,"yaw":21,"seed":1210,"split":"train"},{"x":0.2158,"y":-0.0898,"yaw":118,"seed":6510,"split":"train"},{"x":0.2169,"y":-0.0688,"yaw":178,"seed":5132,"split":"train"},{"x":0.2159,"y":-0.0668,"yaw":109,"seed":784,"split":"train"},{"x":0.2131,"y":-0.0929,"yaw":151,"seed":5177,"split":"val"},{"x":0.2107,"y":-0.0789,"yaw":109,"seed":490,"split":"train"},{"x":0.206,"y":-0.0969,"yaw":157,"seed":2109,"split":"train"},{"x":0.2168,"y":-0.0963,"yaw":106,"seed":396,"split":"train"},{"x":0.2042,"y":-0.0513,"yaw":-145,"seed":8084,"split":"train"},{"x":0.2083,"y":-0.0518,"yaw":-177,"seed":1653,"split":"train"},{"x":0.2072,"y":-0.0547,"yaw":-109,"seed":4324,"split":"train"},{"x":0.2103,"y":-0.0445,"yaw":-158,"seed":5992,"split":"train"},{"x":0.2075,"y":-0.0583,"yaw":-93,"seed":8118,"split":"train"},{"x":0.2073,"y":-0.0445,"yaw":-179,"seed":586,"split":"train"},{"x":0.2094,"y":-0.0445,"yaw":-93,"seed":7872,"split":"train"},{"x":0.2172,"y":-0.0515,"yaw":-3,"seed":7814,"split":"train"},{"x":0.2081,"y":-0.0398,"yaw":-16,"seed":8336,"split":"train"},{"x":0.2066,"y":-0.0369,"yaw":-71,"seed":7019,"split":"val"},{"x":0.2156,"y":-0.046,"yaw":-76,"seed":5058,"split":"train"},{"x":0.2103,"y":-0.0414,"yaw":-67,"seed":4869,"split":"train"},{"x":0.2128,"y":-0.0439,"yaw":-34,"seed":6628,"split":"train"},{"x":0.2144,"y":-0.0391,"yaw":-62,"seed":7900,"split":"train"},{"x":0.2059,"y":-0.048,"yaw":86,"seed":4120,"split":"train"},{"x":0.2071,"y":-0.0586,"yaw":46,"seed":8539,"split":"train"},{"x":0.2086,"y":-0.0349,"yaw":60,"seed":9306,"split":"val"},{"x":0.2098,"y":-0.0547,"yaw":14,"seed":9972,"split":"train"},{"x":0.2103,"y":-0.0431,"yaw":60,"seed":3962,"split":"train"},{"x":0.2178,"y":-0.0523,"yaw":29,"seed":5583,"split":"train"},{"x":0.2058,"y":-0.044,"yaw":65,"seed":5288,"split":"train"},{"x":0.2059,"y":-0.0395,"yaw":102,"seed":9968,"split":"train"},{"x":0.2147,"y":-0.0545,"yaw":152,"seed":7206,"split":"train"},{"x":0.2148,"y":-0.0486,"yaw":121,"seed":8183,"split":"train"},{"x":0.2043,"y":-0.0588,"yaw":164,"seed":8959,"split":"train"},{"x":0.205,"y":-0.0634,"yaw":137,"seed":9205,"split":"train"},{"x":0.2077,"y":-0.0456,"yaw":94,"seed":71,"split":"train"},{"x":0.2059,"y":-0.0517,"yaw":162,"seed":8025,"split":"train"},{"x":0.2148,"y":-0.0254,"yaw":-130,"seed":1661,"split":"train"},{"x":0.2176,"y":-0.0089,"yaw":-161,"seed":9286,"split":"train"},{"x":0.2167,"y":-0.014,"yaw":-121,"seed":1708,"split":"train"},{"x":0.2094,"y":-0.0318,"yaw":-169,"seed":877,"split":"train"},{"x":0.2154,"y":-0.032,"yaw":-111,"seed":7672,"split":"val"},{"x":0.2153,"y":-0.0297,"yaw":-131,"seed":8845,"split":"train"},{"x":0.2062,"y":-0.0066,"yaw":-156,"seed":5001,"split":"train"},{"x":0.2059,"y":-0.0199,"yaw":-7,"seed":7091,"split":"train"},{"x":0.2179,"y":-0.0316,"yaw":-19,"seed":1951,"split":"train"},{"x":0.2162,"y":-0.0117,"yaw":-3,"seed":8137,"split":"val"},{"x":0.2084,"y":-0.0256,"yaw":-18,"seed":9550,"split":"train"},{"x":0.2093,"y":-0.0205,"yaw":-23,"seed":9095,"split":"train"},{"x":0.2127,"y":-0.0318,"yaw":-47,"seed":4137,"split":"train"},{"x":0.2078,"y":-0.0027,"yaw":-74,"seed":1452,"split":"train"},{"x":0.2064,"y":-0.0215,"yaw":13,"seed":4424,"split":"train"},{"x":0.207,"y":-0.0263,"yaw":65,"seed":2626,"split":"train"},{"x":0.2155,"y":-0.0076,"yaw":12,"seed":3145,"split":"train"},{"x":0.2115,"y":-0.0166,"yaw":61,"seed":7974,"split":"train"},{"x":0.2041,"y":-0.0027,"yaw":64,"seed":4323,"split":"train"},{"x":0.2046,"y":-0.0111,"yaw":13,"seed":7355,"split":"val"},{"x":0.2114,"y":-0.0033,"yaw":81,"seed":7261,"split":"train"},{"x":0.2051,"y":-0.01,"yaw":111,"seed":3789,"split":"train"},{"x":0.2106,"y":-0.0085,"yaw":173,"seed":2088,"split":"train"},{"x":0.2123,"y":-0.0228,"yaw":115,"seed":2118,"split":"train"},{"x":0.2059,"y":-0.0294,"yaw":109,"seed":5346,"split":"train"},{"x":0.2072,"y":-0.0094,"yaw":160,"seed":3650,"split":"train"},{"x":0.2162,"y":-0.0308,"yaw":166,"seed":4770,"split":"train"},{"x":0.2049,"y":-0.0047,"yaw":94,"seed":7174,"split":"train"},{"x":0.2085,"y":0.0199,"yaw":-121,"seed":1456,"split":"train"},{"x":0.2056,"y":0.0188,"yaw":-173,"seed":3413,"split":"val"},{"x":0.2154,"y":0.0217,"yaw":-117,"seed":2677,"split":"train"},{"x":0.2163,"y":0.0024,"yaw":-176,"seed":5691,"split":"train"},{"x":0.2056,"y":-0.0017,"yaw":-113,"seed":2808,"split":"train"},{"x":0.2137,"y":0.0085,"yaw":-177,"seed":3919,"split":"train"},{"x":0.2092,"y":0.0128,"yaw":-160,"seed":946,"split":"train"},{"x":0.2091,"y":0.0053,"yaw":-47,"seed":9068,"split":"train"},{"x":0.2047,"y":0.0123,"yaw":-90,"seed":6278,"split":"val"},{"x":0.2065,"y":0.0101,"yaw":-84,"seed":9211,"split":"train"},{"x":0.2136,"y":0.0053,"yaw":-68,"seed":8821,"split":"train"},{"x":0.2178,"y":-0.0003,"yaw":-65,"seed":890,"split":"train"},{"x":0.2086,"y":0.0215,"yaw":-76,"seed":6997,"split":"train"},{"x":0.2051,"y":0.0179,"yaw":-21,"seed":518,"split":"train"},{"x":0.2073,"y":0.0213,"yaw":8,"seed":9061,"split":"train"},{"x":0.2111,"y":0.0289,"yaw":32,"seed":3227,"split":"train"},{"x":0.2099,"y":0.0223,"yaw":56,"seed":4421,"split":"train"},{"x":0.208,"y":0.0024,"yaw":49,"seed":4622,"split":"train"},{"x":0.2136,"y":0.0004,"yaw":12,"seed":6649,"split":"train"},{"x":0.2165,"y":0.0094,"yaw":3,"seed":2397,"split":"train"},{"x":0.2116,"y":0.03,"yaw":80,"seed":8202,"split":"train"},{"x":0.2172,"y":0.0035,"yaw":138,"seed":3852,"split":"train"},{"x":0.2165,"y":0.0298,"yaw":170,"seed":731,"split":"val"},{"x":0.217,"y":0.0262,"yaw":141,"seed":7414,"split":"train"},{"x":0.2161,"y":0.0191,"yaw":141,"seed":3651,"split":"train"},{"x":0.2165,"y":0.0135,"yaw":174,"seed":3637,"split":"train"},{"x":0.2111,"y":0.0112,"yaw":179,"seed":5084,"split":"train"},{"x":0.2078,"y":0.0295,"yaw":111,"seed":8346,"split":"train"},{"x":0.2261,"y":-0.0987,"yaw":-136,"seed":8950,"split":"train"},{"x":0.2304,"y":-0.1125,"yaw":-170,"seed":3214,"split":"train"},{"x":0.2291,"y":-0.128,"yaw":-101,"seed":1399,"split":"val"},{"x":0.2295,"y":-0.1089,"yaw":-128,"seed":378,"split":"train"},{"x":0.2306,"y":-0.1051,"yaw":-96,"seed":6111,"split":"train"},{"x":0.2251,"y":-0.1033,"yaw":-133,"seed":3564,"split":"train"},{"x":0.2229,"y":-0.1037,"yaw":-110,"seed":4320,"split":"train"},{"x":0.2183,"y":-0.1226,"yaw":-6,"seed":9930,"split":"train"},{"x":0.2253,"y":-0.1106,"yaw":-67,"seed":6764,"split":"train"},{"x":0.225,"y":-0.1226,"yaw":-22,"seed":5499,"split":"train"},{"x":0.2316,"y":-0.1263,"yaw":-45,"seed":3014,"split":"train"},{"x":0.2196,"y":-0.0994,"yaw":-34,"seed":4589,"split":"train"},{"x":0.2195,"y":-0.1005,"yaw":-10,"seed":6433,"split":"train"},{"x":0.2184,"y":-0.1003,"yaw":-87,"seed":8557,"split":"train"},{"x":0.219,"y":-0.1097,"yaw":5,"seed":67,"split":"train"},{"x":0.2202,"y":-0.1252,"yaw":70,"seed":6373,"split":"train"},{"x":0.218,"y":-0.1023,"yaw":8,"seed":3799,"split":"train"},{"x":0.2296,"y":-0.129,"yaw":26,"seed":5942,"split":"train"},{"x":0.2247,"y":-0.1124,"yaw":77,"seed":7268,"split":"train"},{"x":0.2286,"y":-0.123,"yaw":69,"seed":429,"split":"val"},{"x":0.2294,"y":-0.1025,"yaw":55,"seed":5165,"split":"train"},{"x":0.2241,"y":-0.1262,"yaw":109,"seed":6398,"split":"train"},{"x":0.2184,"y":-0.1188,"yaw":152,"seed":4259,"split":"train"},{"x":0.2196,"y":-0.1194,"yaw":113,"seed":2636,"split":"train"},{"x":0.2267,"y":-0.1062,"yaw":128,"seed":3529,"split":"train"},{"x":0.2185,"y":-0.1131,"yaw":170,"seed":3132,"split":"val"},{"x":0.2241,"y":-0.1013,"yaw":148,"seed":2018,"split":"train"},{"x":0.2219,"y":-0.1157,"yaw":159,"seed":3159,"split":"train"},{"x":0.2239,"y":-0.0671,"yaw":-140,"seed":878,"split":"train"},{"x":0.2273,"y":-0.0913,"yaw":-131,"seed":8226,"split":"train"},{"x":0.226,"y":-0.0736,"yaw":-173,"seed":6735,"split":"train"},{"x":0.2246,"y":-0.0863,"yaw":-137,"seed":4438,"split":"train"},{"x":0.2295,"y":-0.0899,"yaw":-177,"seed":2860,"split":"train"},{"x":0.2251,"y":-0.0839,"yaw":-111,"seed":6081,"split":"val"},{"x":0.2193,"y":-0.0894,"yaw":-137,"seed":1871,"split":"train"},{"x":0.2185,"y":-0.0944,"yaw":-53,"seed":2238,"split":"train"},{"x":0.2303,"y":-0.0877,"yaw":-71,"seed":4091,"split":"train"},{"x":0.2192,"y":-0.0833,"yaw":-58,"seed":7741,"split":"train"},{"x":0.2203,"y":-0.0845,"yaw":-54,"seed":7595,"split":"train"},{"x":0.226,"y":-0.0872,"yaw":-15,"seed":6809,"split":"train"},{"x":0.2279,"y":-0.0675,"yaw":-8,"seed":3186,"split":"train"},{"x":0.2316,"y":-0.0854,"yaw":-5,"seed":5712,"split":"train"},{"x":0.228,"y":-0.093,"yaw":38,"seed":5770,"split":"train"},{"x":0.2209,"y":-0.0766,"yaw":44,"seed":5941,"split":"train"},{"x":0.227,"y":-0.0882,"yaw":48,"seed":4826,"split":"train"},{"x":0.2268,"y":-0.085,"yaw":76,"seed":3941,"split":"train"},{"x":0.2266,"y":-0.0716,"yaw":66,"seed":1796,"split":"val"},{"x":0.22,"y":-0.0732,"yaw":62,"seed":808,"split":"train"},{"x":0.2183,"y":-0.0965,"yaw":29,"seed":9414,"split":"train"},{"x":0.2282,"y":-0.0852,"yaw":120,"seed":8545,"split":"train"},{"x":0.2215,"y":-0.073,"yaw":125,"seed":3744,"split":"train"},{"x":0.221,"y":-0.086,"yaw":104,"seed":7573,"split":"train"},{"x":0.2265,"y":-0.0917,"yaw":143,"seed":3059,"split":"val"},{"x":0.2244,"y":-0.0675,"yaw":130,"seed":2819,"split":"train"},{"x":0.2259,"y":-0.0765,"yaw":168,"seed":5384,"split":"train"},{"x":0.225,"y":-0.0823,"yaw":179,"seed":1050,"split":"train"},{"x":0.2229,"y":-0.0584,"yaw":-135,"seed":456,"split":"train"},{"x":0.2185,"y":-0.0343,"yaw":-176,"seed":1333,"split":"train"},{"x":0.2318,"y":-0.0366,"yaw":-134,"seed":4086,"split":"train"},{"x":0.227,"y":-0.0442,"yaw":-171,"seed":3742,"split":"train"},{"x":0.2188,"y":-0.0401,"yaw":-133,"seed":625,"split":"train"},{"x":0.2223,"y":-0.0444,"yaw":-166,"seed":1377,"split":"train"},{"x":0.2278,"y":-0.0391,"yaw":-135,"seed":2420,"split":"train"},{"x":0.2289,"y":-0.06,"yaw":-10,"seed":8443,"split":"train"},{"x":0.2244,"y":-0.051,"yaw":-39,"seed":6968,"split":"train"},{"x":0.2244,"y":-0.0558,"yaw":-65,"seed":9719,"split":"train"},{"x":0.2275,"y":-0.0407,"yaw":-76,"seed":3078,"split":"train"},{"x":0.2232,"y":-0.0595,"yaw":-66,"seed":771,"split":"train"},{"x":0.2318,"y":-0.0431,"yaw":-39,"seed":9928,"split":"train"},{"x":0.227,"y":-0.0499,"yaw":-47,"seed":9629,"split":"val"},{"x":0.2185,"y":-0.0558,"yaw":22,"seed":9630,"split":"train"},{"x":0.2212,"y":-0.0513,"yaw":27,"seed":4772,"split":"train"},{"x":0.219,"y":-0.0597,"yaw":48,"seed":5404,"split":"train"},{"x":0.2232,"y":-0.0354,"yaw":40,"seed":1435,"split":"val"},{"x":0.232,"y":-0.0442,"yaw":50,"seed":259,"split":"train"},{"x":0.2268,"y":-0.0538,"yaw":48,"seed":3846,"split":"train"},{"x":0.2305,"y":-0.0449,"yaw":3,"seed":7290,"split":"train"},{"x":0.2224,"y":-0.0376,"yaw":98,"seed":165,"split":"train"},{"x":0.2228,"y":-0.063,"yaw":132,"seed":9900,"split":"train"},{"x":0.2273,"y":-0.0583,"yaw":109,"seed":8576,"split":"train"},{"x":0.2211,"y":-0.039,"yaw":147,"seed":33,"split":"train"},{"x":0.2294,"y":-0.0463,"yaw":110,"seed":252,"split":"train"},{"x":0.2298,"y":-0.0577,"yaw":134,"seed":9145,"split":"train"},{"x":0.2204,"y":-0.0455,"yaw":112,"seed":1168,"split":"train"},{"x":0.2257,"y":-0.0211,"yaw":-96,"seed":1302,"split":"train"},{"x":0.2194,"y":-0.0038,"yaw":-179,"seed":2296,"split":"train"},{"x":0.2315,"y":-0.0211,"yaw":-140,"seed":5199,"split":"train"},{"x":0.2267,"y":-0.0303,"yaw":-134,"seed":6931,"split":"train"},{"x":0.2221,"y":-0.0209,"yaw":-154,"seed":3440,"split":"train"},{"x":0.2309,"y":-0.0143,"yaw":-99,"seed":2197,"split":"val"},{"x":0.2262,"y":-0.0293,"yaw":-175,"seed":1316,"split":"train"},{"x":0.2211,"y":-0.0178,"yaw":-63,"seed":3422,"split":"train"},{"x":0.2262,"y":-0.032,"yaw":-31,"seed":2032,"split":"train"},{"x":0.2263,"y":-0.0132,"yaw":-12,"seed":2954,"split":"val"},{"x":0.227,"y":-0.0304,"yaw":-57,"seed":5079,"split":"train"},{"x":0.2196,"y":-0.0268,"yaw":-9,"seed":5955,"split":"train"},{"x":0.226,"y":-0.0243,"yaw":-19,"seed":5553,"split":"train"},{"x":0.2232,"y":-0.0259,"yaw":-12,"seed":9073,"split":"train"},{"x":0.2263,"y":-0.0066,"yaw":56,"seed":7074,"split":"train"},{"x":0.2303,"y":-0.0231,"yaw":19,"seed":180,"split":"train"},{"x":0.2281,"y":-0.0054,"yaw":72,"seed":7765,"split":"train"},{"x":0.2309,"y":-0.0077,"yaw":43,"seed":9403,"split":"train"},{"x":0.2276,"y":-0.0057,"yaw":7,"seed":7644,"split":"val"},{"x":0.2254,"y":-0.0206,"yaw":45,"seed":4177,"split":"train"},{"x":0.218,"y":-0.0058,"yaw":53,"seed":6097,"split":"train"},{"x":0.2282,"y":-0.0281,"yaw":138,"seed":6281,"split":"train"},{"x":0.2236,"y":-0.0105,"yaw":167,"seed":1208,"split":"train"},{"x":0.2297,"y":-0.0191,"yaw":170,"seed":4074,"split":"train"},{"x":0.2247,"y":-0.017,"yaw":117,"seed":8409,"split":"train"},{"x":0.2222,"y":-0.0273,"yaw":101,"seed":668,"split":"train"},{"x":0.2269,"y":-0.0105,"yaw":161,"seed":2538,"split":"train"},{"x":0.2238,"y":-0.0112,"yaw":110,"seed":7907,"split":"train"},{"x":0.2284,"y":0.0269,"yaw":-100,"seed":9043,"split":"train"},{"x":0.231,"y":0.0255,"yaw":-164,"seed":4550,"split":"train"},{"x":0.2264,"y":0.003,"yaw":-142,"seed":2776,"split":"train"},{"x":0.2183,"y":0.0003,"yaw":-160,"seed":1083,"split":"train"},{"x":0.2209,"y":0.0193,"yaw":-124,"seed":9045,"split":"train"},{"x":0.2228,"y":0.0175,"yaw":-173,"seed":6663,"split":"val"},{"x":0.2191,"y":0.0025,"yaw":-126,"seed":4760,"split":"train"},{"x":0.2279,"y":0.0014,"yaw":-33,"seed":6958,"split":"train"},{"x":0.2309,"y":0.0211,"yaw":-68,"seed":3131,"split":"train"},{"x":0.2181,"y":0.0234,"yaw":-5,"seed":8701,"split":"train"},{"x":0.226,"y":0.0269,"yaw":-77,"seed":7204,"split":"val"},{"x":0.2296,"y":0.0239,"yaw":-31,"seed":2424,"split":"train"},{"x":0.2269,"y":0.0211,"yaw":-5,"seed":9443,"split":"train"},{"x":0.2184,"y":0.0244,"yaw":-57,"seed":4062,"split":"train"},{"x":0.2315,"y":0.0159,"yaw":89,"seed":1326,"split":"train"},{"x":0.2216,"y":0.0167,"yaw":36,"seed":3322,"split":"train"},{"x":0.2265,"y":0.0209,"yaw":58,"seed":4502,"split":"train"},{"x":0.2202,"y":0.0241,"yaw":36,"seed":7356,"split":"train"},{"x":0.2239,"y":0.0074,"yaw":68,"seed":9870,"split":"train"},{"x":0.2246,"y":0.0113,"yaw":78,"seed":1617,"split":"train"},{"x":0.2198,"y":0.0252,"yaw":66,"seed":3633,"split":"train"},{"x":0.2229,"y":0.005,"yaw":164,"seed":1712,"split":"val"},{"x":0.2197,"y":0.0298,"yaw":115,"seed":1133,"split":"train"},{"x":0.2278,"y":0.0028,"yaw":96,"seed":5185,"split":"train"},{"x":0.2251,"y":0.022,"yaw":95,"seed":5253,"split":"train"},{"x":0.2288,"y":0.0142,"yaw":156,"seed":8186,"split":"train"},{"x":0.2295,"y":0.0185,"yaw":175,"seed":8976,"split":"train"},{"x":0.2238,"y":0.0085,"yaw":107,"seed":4908,"split":"train"},{"x":0.2358,"y":-0.1132,"yaw":-123,"seed":9792,"split":"train"},{"x":0.2384,"y":-0.1176,"yaw":-107,"seed":7131,"split":"train"},{"x":0.2433,"y":-0.1226,"yaw":-179,"seed":178,"split":"train"},{"x":0.2349,"y":-0.1032,"yaw":-172,"seed":6273,"split":"train"},{"x":0.2368,"y":-0.1255,"yaw":-115,"seed":9324,"split":"val"},{"x":0.238,"y":-0.1161,"yaw":-144,"seed":6943,"split":"train"},{"x":0.2357,"y":-0.123,"yaw":-173,"seed":43,"split":"train"},{"x":0.2377,"y":-0.1171,"yaw":-18,"seed":7983,"split":"train"},{"x":0.2456,"y":-0.0995,"yaw":-74,"seed":2114,"split":"train"},{"x":0.2371,"y":-0.119,"yaw":-36,"seed":4426,"split":"train"},{"x":0.2373,"y":-0.1077,"yaw":-85,"seed":8798,"split":"train"},{"x":0.2335,"y":-0.1269,"yaw":-68,"seed":3992,"split":"train"},{"x":0.2384,"y":-0.1176,"yaw":-18,"seed":2580,"split":"train"},{"x":0.2382,"y":-0.0984,"yaw":-11,"seed":4168,"split":"train"},{"x":0.2393,"y":-0.1183,"yaw":32,"seed":4965,"split":"train"},{"x":0.2426,"y":-0.107,"yaw":36,"seed":1151,"split":"train"},{"x":0.2357,"y":-0.104,"yaw":87,"seed":3917,"split":"train"},{"x":0.2451,"y":-0.1264,"yaw":49,"seed":5472,"split":"val"},{"x":0.2445,"y":-0.1197,"yaw":39,"seed":9372,"split":"train"},{"x":0.2394,"y":-0.1226,"yaw":4,"seed":6322,"split":"train"},{"x":0.2401,"y":-0.1013,"yaw":25,"seed":8637,"split":"train"},{"x":0.2341,"y":-0.1079,"yaw":96,"seed":8862,"split":"train"},{"x":0.2378,"y":-0.1252,"yaw":138,"seed":8212,"split":"train"},{"x":0.2354,"y":-0.1113,"yaw":121,"seed":3753,"split":"train"},{"x":0.2377,"y":-0.1155,"yaw":104,"seed":6005,"split":"train"},{"x":0.2347,"y":-0.111,"yaw":160,"seed":9341,"split":"train"},{"x":0.2409,"y":-0.1185,"yaw":114,"seed":6460,"split":"val"},{"x":0.2325,"y":-0.099,"yaw":167,"seed":8136,"split":"train"},{"x":0.2351,"y":-0.0711,"yaw":-149,"seed":8562,"split":"train"},{"x":0.2346,"y":-0.0868,"yaw":-165,"seed":0,"split":"train"},{"x":0.2338,"y":-0.0938,"yaw":-170,"seed":7731,"split":"train"},{"x":0.2352,"y":-0.0887,"yaw":-99,"seed":7675,"split":"train"},{"x":0.2346,"y":-0.0671,"yaw":-136,"seed":8440,"split":"train"},{"x":0.2412,"y":-0.0951,"yaw":-118,"seed":1094,"split":"train"},{"x":0.2374,"y":-0.0781,"yaw":-118,"seed":6897,"split":"val"},{"x":0.2432,"y":-0.0894,"yaw":-42,"seed":5209,"split":"train"},{"x":0.2379,"y":-0.0738,"yaw":-76,"seed":8062,"split":"train"},{"x":0.2398,"y":-0.0879,"yaw":-35,"seed":9919,"split":"train"},{"x":0.2349,"y":-0.0953,"yaw":-11,"seed":8316,"split":"train"},{"x":0.2386,"y":-0.0745,"yaw":-46,"seed":1082,"split":"train"},{"x":0.2368,"y":-0.0808,"yaw":-61,"seed":4979,"split":"train"},{"x":0.2376,"y":-0.078,"yaw":-43,"seed":6550,"split":"train"},{"x":0.2412,"y":-0.089,"yaw":52,"seed":4497,"split":"train"},{"x":0.2323,"y":-0.0845,"yaw":61,"seed":5543,"split":"train"},{"x":0.2374,"y":-0.0771,"yaw":43,"seed":736,"split":"train"},{"x":0.2434,"y":-0.0902,"yaw":61,"seed":5614,"split":"train"},{"x":0.2325,"y":-0.0914,"yaw":63,"seed":3629,"split":"train"},{"x":0.2458,"y":-0.0731,"yaw":42,"seed":8994,"split":"train"},{"x":0.238,"y":-0.086,"yaw":18,"seed":4250,"split":"val"},{"x":0.2387,"y":-0.0844,"yaw":130,"seed":8956,"split":"train"},{"x":0.2348,"y":-0.0798,"yaw":137,"seed":992,"split":"train"},{"x":0.2442,"y":-0.0807,"yaw":108,"seed":3222,"split":"train"},{"x":0.2407,"y":-0.0914,"yaw":150,"seed":3609,"split":"train"},{"x":0.2424,"y":-0.0727,"yaw":124,"seed":1144,"split":"train"},{"x":0.2358,"y":-0.078,"yaw":163,"seed":3096,"split":"train"},{"x":0.2358,"y":-0.0883,"yaw":173,"seed":8368,"split":"val"},{"x":0.2333,"y":-0.0381,"yaw":-135,"seed":379,"split":"train"},{"x":0.2369,"y":-0.0653,"yaw":-147,"seed":9799,"split":"train"},{"x":0.2353,"y":-0.0461,"yaw":-156,"seed":2851,"split":"train"},{"x":0.234,"y":-0.0367,"yaw":-94,"seed":7210,"split":"train"},{"x":0.2343,"y":-0.0503,"yaw":-168,"seed":1555,"split":"train"},{"x":0.2352,"y":-0.0494,"yaw":-130,"seed":351,"split":"train"},{"x":0.2385,"y":-0.0451,"yaw":-163,"seed":7789,"split":"train"},{"x":0.234,"y":-0.0401,"yaw":-74,"seed":3522,"split":"train"},{"x":0.2431,"y":-0.0599,"yaw":-39,"seed":7575,"split":"train"},{"x":0.2412,"y":-0.039,"yaw":-80,"seed":9920,"split":"train"},{"x":0.243,"y":-0.0342,"yaw":-26,"seed":3479,"split":"train"},{"x":0.2367,"y":-0.0505,"yaw":-70,"seed":6214,"split":"train"},{"x":0.2393,"y":-0.0614,"yaw":-45,"seed":9876,"split":"val"},{"x":0.2457,"y":-0.0492,"yaw":-24,"seed":2068,"split":"train"},{"x":0.2347,"y":-0.0341,"yaw":43,"seed":428,"split":"train"},{"x":0.2445,"y":-0.0374,"yaw":9,"seed":7095,"split":"val"},{"x":0.2341,"y":-0.0505,"yaw":31,"seed":7164,"split":"train"},{"x":0.2341,"y":-0.0562,"yaw":72,"seed":7132,"split":"train"},{"x":0.2428,"y":-0.0658,"yaw":79,"seed":9889,"split":"train"},{"x":0.2376,"y":-0.0475,"yaw":29,"seed":2878,"split":"train"},{"x":0.2354,"y":-0.0536,"yaw":1,"seed":107,"split":"train"},{"x":0.2323,"y":-0.0568,"yaw":122,"seed":2279,"split":"train"},{"x":0.2393,"y":-0.0495,"yaw":154,"seed":1165,"split":"train"},{"x":0.2448,"y":-0.0557,"yaw":109,"seed":6718,"split":"train"},{"x":0.2416,"y":-0.0564,"yaw":133,"seed":7314,"split":"train"},{"x":0.2364,"y":-0.0499,"yaw":102,"seed":9319,"split":"train"},{"x":0.2459,"y":-0.0467,"yaw":176,"seed":7406,"split":"train"},{"x":0.2416,"y":-0.046,"yaw":114,"seed":5400,"split":"train"},{"x":0.2336,"y":-0.0035,"yaw":-106,"seed":7142,"split":"train"},{"x":0.2385,"y":-0.0163,"yaw":-93,"seed":1273,"split":"train"},{"x":0.2382,"y":-0.0237,"yaw":-164,"seed":2040,"split":"train"},{"x":0.2438,"y":-0.0151,"yaw":-160,"seed":3605,"split":"val"},{"x":0.2356,"y":-0.03,"yaw":-139,"seed":1763,"split":"train"},{"x":0.2329,"y":-0.0108,"yaw":-116,"seed":6472,"split":"train"},{"x":0.2334,"y":-0.0186,"yaw":-165,"seed":6421,"split":"train"},{"x":0.2355,"y":-0.0199,"yaw":-64,"seed":6508,"split":"train"},{"x":0.237,"y":-0.0339,"yaw":-4,"seed":709,"split":"train"},{"x":0.2436,"y":-0.0267,"yaw":-76,"seed":1793,"split":"train"},{"x":0.2352,"y":-0.0195,"yaw":-46,"seed":4082,"split":"val"},{"x":0.2408,"y":-0.0302,"yaw":-82,"seed":8550,"split":"train"},{"x":0.2395,"y":-0.0113,"yaw":-80,"seed":2202,"split":"train"},{"x":0.2422,"y":-0.0138,"yaw":-18,"seed":9192,"split":"train"},{"x":0.2339,"y":-0.0301,"yaw":82,"seed":1441,"split":"train"},{"x":0.243,"y":-0.0322,"yaw":62,"seed":9343,"split":"train"},{"x":0.2334,"y":-0.0253,"yaw":88,"seed":9593,"split":"train"},{"x":0.2396,"y":-0.0123,"yaw":48,"seed":1752,"split":"train"},{"x":0.2404,"y":-0.0228,"yaw":9,"seed":6609,"split":"train"},{"x":0.2458,"y":-0.032,"yaw":31,"seed":1876,"split":"train"},{"x":0.2349,"y":-0.0298,"yaw":23,"seed":3135,"split":"val"},{"x":0.234,"y":-0.0254,"yaw":141,"seed":3187,"split":"train"},{"x":0.245,"y":-0.0043,"yaw":169,"seed":124,"split":"train"},{"x":0.2407,"y":-0.0067,"yaw":134,"seed":9065,"split":"train"},{"x":0.2331,"y":-0.0257,"yaw":156,"seed":9563,"split":"train"},{"x":0.233,"y":-0.0335,"yaw":157,"seed":4407,"split":"train"},{"x":0.2357,"y":-0.0202,"yaw":104,"seed":8335,"split":"train"},{"x":0.234,"y":-0.0225,"yaw":134,"seed":8425,"split":"train"},{"x":0.2365,"y":0.0189,"yaw":-108,"seed":5155,"split":"train"},{"x":0.2459,"y":0.0015,"yaw":-149,"seed":198,"split":"val"},{"x":0.2382,"y":0.0232,"yaw":-135,"seed":6251,"split":"train"},{"x":0.2361,"y":0.0276,"yaw":-98,"seed":2038,"split":"train"},{"x":0.2378,"y":0.0245,"yaw":-161,"seed":5316,"split":"train"},{"x":0.2395,"y":0.0026,"yaw":-156,"seed":2658,"split":"train"},{"x":0.2331,"y":0.0219,"yaw":-118,"seed":8770,"split":"train"},{"x":0.2399,"y":0.0087,"yaw":-78,"seed":1542,"split":"train"},{"x":0.2375,"y":0.0008,"yaw":-47,"seed":5246,"split":"train"},{"x":0.2325,"y":0.008,"yaw":-46,"seed":9543,"split":"train"},{"x":0.2437,"y":0.0259,"yaw":-77,"seed":7123,"split":"train"},{"x":0.2394,"y":0.019,"yaw":-67,"seed":4182,"split":"train"},{"x":0.2348,"y":0.0284,"yaw":-5,"seed":2193,"split":"train"},{"x":0.2417,"y":0.0279,"yaw":-50,"seed":7893,"split":"val"},{"x":0.2443,"y":0.0129,"yaw":84,"seed":2696,"split":"train"},{"x":0.2368,"y":-0.001,"yaw":88,"seed":2529,"split":"train"},{"x":0.2411,"y":0.01,"yaw":46,"seed":742,"split":"train"},{"x":0.2374,"y":0.0262,"yaw":8,"seed":7839,"split":"train"},{"x":0.2406,"y":0.0194,"yaw":73,"seed":2272,"split":"train"},{"x":0.2346,"y":0.0295,"yaw":13,"seed":1846,"split":"train"},{"x":0.2417,"y":0.0052,"yaw":31,"seed":8445,"split":"train"},{"x":0.2446,"y":-0.0018,"yaw":124,"seed":7871,"split":"train"},{"x":0.2401,"y":0.0283,"yaw":178,"seed":256,"split":"train"},{"x":0.2444,"y":0.0093,"yaw":122,"seed":3698,"split":"val"},{"x":0.2393,"y":0.0014,"yaw":162,"seed":5919,"split":"train"},{"x":0.2448,"y":0.0085,"yaw":112,"seed":1797,"split":"train"},{"x":0.2329,"y":0.011,"yaw":164,"seed":9790,"split":"train"},{"x":0.2348,"y":0.0268,"yaw":96,"seed":815,"split":"train"},{"x":0.2489,"y":-0.1242,"yaw":-125,"seed":7198,"split":"train"},{"x":0.2497,"y":-0.1128,"yaw":-141,"seed":4416,"split":"train"},{"x":0.2561,"y":-0.1278,"yaw":-162,"seed":2428,"split":"train"},{"x":0.251,"y":-0.1052,"yaw":-160,"seed":7670,"split":"train"},{"x":0.2482,"y":-0.1288,"yaw":-119,"seed":7069,"split":"train"},{"x":0.2553,"y":-0.1219,"yaw":-131,"seed":5948,"split":"val"},{"x":0.2463,"y":-0.1106,"yaw":-120,"seed":6358,"split":"train"},{"x":0.2475,"y":-0.1204,"yaw":-71,"seed":276,"split":"train"},{"x":0.2472,"y":-0.1231,"yaw":-31,"seed":3758,"split":"train"},{"x":0.2488,"y":-0.1094,"yaw":-17,"seed":3157,"split":"train"},{"x":0.2578,"y":-0.1113,"yaw":-81,"seed":7961,"split":"train"},{"x":0.2546,"y":-0.1071,"yaw":-43,"seed":6154,"split":"train"},{"x":0.2545,"y":-0.1043,"yaw":-56,"seed":7235,"split":"train"},{"x":0.2478,"y":-0.1019,"yaw":-44,"seed":122,"split":"train"},{"x":0.2571,"y":-0.1291,"yaw":1,"seed":2911,"split":"val"},{"x":0.2573,"y":-0.1002,"yaw":36,"seed":8014,"split":"train"},{"x":0.2469,"y":-0.1014,"yaw":6,"seed":3550,"split":"train"},{"x":0.2466,"y":-0.12,"yaw":62,"seed":2220,"split":"train"},{"x":0.2489,"y":-0.1216,"yaw":69,"seed":1084,"split":"train"},{"x":0.254,"y":-0.1203,"yaw":89,"seed":5672,"split":"train"},{"x":0.2492,"y":-0.1042,"yaw":21,"seed":17,"split":"train"},{"x":0.2498,"y":-0.1179,"yaw":127,"seed":5904,"split":"train"},{"x":0.2512,"y":-0.1154,"yaw":97,"seed":7837,"split":"train"},{"x":0.2595,"y":-0.124,"yaw":178,"seed":832,"split":"val"},{"x":0.2591,"y":-0.1101,"yaw":143,"seed":7649,"split":"train"},{"x":0.2478,"y":-0.1068,"yaw":130,"seed":4371,"split":"train"},{"x":0.2598,"y":-0.1213,"yaw":167,"seed":316,"split":"train"},{"x":0.2576,"y":-0.1059,"yaw":172,"seed":5249,"split":"train"},{"x":0.2537,"y":-0.0821,"yaw":-163,"seed":3528,"split":"train"},{"x":0.2513,"y":-0.0725,"yaw":-94,"seed":2976,"split":"train"},{"x":0.2488,"y":-0.0909,"yaw":-113,"seed":7127,"split":"val"},{"x":0.2594,"y":-0.0846,"yaw":-91,"seed":5379,"split":"train"},{"x":0.2574,"y":-0.0857,"yaw":-91,"seed":8675,"split":"train"},{"x":0.254,"y":-0.0701,"yaw":-142,"seed":9089,"split":"train"},{"x":0.2484,"y":-0.0661,"yaw":-109,"seed":5286,"split":"train"},{"x":0.2518,"y":-0.0896,"yaw":-1,"seed":9641,"split":"train"},{"x":0.2543,"y":-0.0948,"yaw":-66,"seed":8643,"split":"train"},{"x":0.2556,"y":-0.0711,"yaw":-2,"seed":5074,"split":"train"},{"x":0.2499,"y":-0.0823,"yaw":-57,"seed":2350,"split":"train"},{"x":0.2599,"y":-0.0738,"yaw":-13,"seed":5780,"split":"train"},{"x":0.2535,"y":-0.0708,"yaw":-39,"seed":6071,"split":"train"},{"x":0.2524,"y":-0.0914,"yaw":-79,"seed":4061,"split":"train"},{"x":0.2505,"y":-0.091,"yaw":84,"seed":9384,"split":"train"},{"x":0.2539,"y":-0.083,"yaw":35,"seed":9411,"split":"train"},{"x":0.2481,"y":-0.0921,"yaw":30,"seed":5960,"split":"val"},{"x":0.2502,"y":-0.0855,"yaw":55,"seed":2158,"split":"train"},{"x":0.253,"y":-0.0671,"yaw":75,"seed":7766,"split":"train"},{"x":0.2566,"y":-0.0736,"yaw":1,"seed":2777,"split":"train"},{"x":0.2513,"y":-0.0948,"yaw":9,"seed":7883,"split":"train"},{"x":0.2468,"y":-0.0669,"yaw":126,"seed":6164,"split":"train"},{"x":0.2471,"y":-0.093,"yaw":119,"seed":4202,"split":"train"},{"x":0.2573,"y":-0.077,"yaw":177,"seed":7391,"split":"train"},{"x":0.25,"y":-0.0924,"yaw":125,"seed":9113,"split":"train"},{"x":0.2506,"y":-0.0677,"yaw":101,"seed":7472,"split":"val"},{"x":0.2565,"y":-0.0822,"yaw":179,"seed":3601,"split":"train"},{"x":0.2461,"y":-0.0796,"yaw":153,"seed":8042,"split":"train"},{"x":0.2485,"y":-0.0611,"yaw":-101,"seed":5794,"split":"train"},{"x":0.2576,"y":-0.0405,"yaw":-137,"seed":3937,"split":"train"},{"x":0.2593,"y":-0.0614,"yaw":-153,"seed":554,"split":"train"},{"x":0.2578,"y":-0.0358,"yaw":-93,"seed":4878,"split":"train"},{"x":0.2552,"y":-0.0617,"yaw":-92,"seed":8304,"split":"train"},{"x":0.2516,"y":-0.0563,"yaw":-123,"seed":6092,"split":"train"},{"x":0.2555,"y":-0.038,"yaw":-151,"seed":1915,"split":"train"},{"x":0.2496,"y":-0.051,"yaw":-40,"seed":125,"split":"train"},{"x":0.2492,"y":-0.0347,"yaw":-5,"seed":4897,"split":"train"},{"x":0.25,"y":-0.0387,"yaw":-29,"seed":6011,"split":"val"},{"x":0.2534,"y":-0.0384,"yaw":-71,"seed":7906,"split":"train"},{"x":0.2564,"y":-0.045,"yaw":-50,"seed":9258,"split":"train"},{"x":0.2583,"y":-0.0441,"yaw":-65,"seed":7815,"split":"train"},{"x":0.2465,"y":-0.0381,"yaw":-22,"seed":7193,"split":"train"},{"x":0.2593,"y":-0.0541,"yaw":39,"seed":8638,"split":"train"},{"x":0.2564,"y":-0.0587,"yaw":24,"seed":1816,"split":"train"},{"x":0.2561,"y":-0.0416,"yaw":64,"seed":584,"split":"train"},{"x":0.2572,"y":-0.0552,"yaw":33,"seed":4990,"split":"val"},{"x":0.2506,"y":-0.0469,"yaw":57,"seed":6240,"split":"train"},{"x":0.259,"y":-0.0411,"yaw":57,"seed":3279,"split":"train"},{"x":0.255,"y":-0.065,"yaw":68,"seed":7099,"split":"train"},{"x":0.2488,"y":-0.0452,"yaw":131,"seed":2910,"split":"train"},{"x":0.2567,"y":-0.0611,"yaw":112,"seed":417,"split":"train"},{"x":0.2483,"y":-0.0375,"yaw":160,"seed":5603,"split":"train"},{"x":0.2528,"y":-0.0448,"yaw":176,"seed":3491,"split":"train"},{"x":0.2531,"y":-0.055,"yaw":106,"seed":1850,"split":"train"},{"x":0.2569,"y":-0.0541,"yaw":167,"seed":1844,"split":"train"},{"x":0.2475,"y":-0.0585,"yaw":129,"seed":4037,"split":"train"},{"x":0.2568,"y":-0.0071,"yaw":-135,"seed":41,"split":"train"},{"x":0.2462,"y":-0.0206,"yaw":-172,"seed":9426,"split":"train"},{"x":0.2464,"y":-0.0289,"yaw":-125,"seed":1991,"split":"train"},{"x":0.2493,"y":-0.0053,"yaw":-157,"seed":1605,"split":"val"},{"x":0.2577,"y":-0.0294,"yaw":-130,"seed":7891,"split":"train"},{"x":0.2483,"y":-0.0028,"yaw":-169,"seed":8679,"split":"train"},{"x":0.2484,"y":-0.0113,"yaw":-155,"seed":1393,"split":"train"},{"x":0.2581,"y":-0.0253,"yaw":-66,"seed":1530,"split":"train"},{"x":0.2504,"y":-0.0195,"yaw":-4,"seed":2678,"split":"train"},{"x":0.2535,"y":-0.0231,"yaw":-4,"seed":6945,"split":"train"},{"x":0.2587,"y":-0.0068,"yaw":-4,"seed":4372,"split":"train"},{"x":0.2559,"y":-0.0192,"yaw":-57,"seed":9346,"split":"train"},{"x":0.2507,"y":-0.0224,"yaw":-80,"seed":481,"split":"val"},{"x":0.2502,"y":-0.0249,"yaw":-7,"seed":1111,"split":"train"},{"x":0.2555,"y":-0.0081,"yaw":55,"seed":3060,"split":"train"},{"x":0.2502,"y":-0.0135,"yaw":51,"seed":8730,"split":"train"},{"x":0.2485,"y":-0.0132,"yaw":27,"seed":5217,"split":"val"},{"x":0.2484,"y":-0.0251,"yaw":40,"seed":9450,"split":"train"},{"x":0.2461,"y":-0.0323,"yaw":48,"seed":4539,"split":"train"},{"x":0.2461,"y":-0.0264,"yaw":73,"seed":9024,"split":"train"},{"x":0.2506,"y":-0.0092,"yaw":68,"seed":493,"split":"train"},{"x":0.2562,"y":-0.0301,"yaw":112,"seed":2708,"split":"train"},{"x":0.2471,"y":-0.0134,"yaw":159,"seed":9857,"split":"train"},{"x":0.2531,"y":-0.0079,"yaw":126,"seed":7154,"split":"train"},{"x":0.2468,"y":-0.0277,"yaw":144,"seed":9529,"split":"train"},{"x":0.2594,"y":-0.0099,"yaw":109,"seed":6058,"split":"train"},{"x":0.2465,"y":-0.0266,"yaw":172,"seed":5706,"split":"train"},{"x":0.2497,"y":-0.0304,"yaw":132,"seed":2837,"split":"train"},{"x":0.2515,"y":0.0043,"yaw":-141,"seed":9085,"split":"train"},{"x":0.2579,"y":0.0151,"yaw":-135,"seed":7541,"split":"train"},{"x":0.2573,"y":0.0073,"yaw":-142,"seed":5745,"split":"train"},{"x":0.2462,"y":0.0127,"yaw":-105,"seed":7265,"split":"train"},{"x":0.2483,"y":0.0093,"yaw":-101,"seed":55,"split":"train"},{"x":0.257,"y":0.015,"yaw":-131,"seed":3533,"split":"val"},{"x":0.2595,"y":0.0211,"yaw":-147,"seed":3757,"split":"train"},{"x":0.2574,"y":0.0227,"yaw":-84,"seed":9144,"split":"val"},{"x":0.2558,"y":0.0144,"yaw":-74,"seed":7860,"split":"train"},{"x":0.2533,"y":-0.0014,"yaw":-18,"seed":5511,"split":"train"},{"x":0.2511,"y":0.0283,"yaw":-25,"seed":3364,"split":"train"},{"x":0.2592,"y":0.0239,"yaw":-27,"seed":4287,"split":"train"},{"x":0.258,"y":0.0152,"yaw":-9,"seed":2842,"split":"train"},{"x":0.2597,"y":0.0088,"yaw":-82,"seed":1305,"split":"train"},{"x":0.2569,"y":0.0276,"yaw":61,"seed":9311,"split":"train"},{"x":0.2566,"y":0.0144,"yaw":68,"seed":183,"split":"train"},{"x":0.259,"y":0.006,"yaw":15,"seed":2127,"split":"train"},{"x":0.2535,"y":0.019,"yaw":20,"seed":9153,"split":"train"},{"x":0.2528,"y":0.0092,"yaw":60,"seed":8752,"split":"train"},{"x":0.2543,"y":0.003,"yaw":20,"seed":333,"split":"train"},{"x":0.2592,"y":0.0239,"yaw":56,"seed":7638,"split":"train"},{"x":0.2564,"y":0.0277,"yaw":104,"seed":1865,"split":"train"},{"x":0.248,"y":0.0097,"yaw":151,"seed":1033,"split":"train"},{"x":0.2548,"y":0.0115,"yaw":143,"seed":360,"split":"train"},{"x":0.2489,"y":0.01,"yaw":179,"seed":6951,"split":"train"},{"x":0.2508,"y":0.0024,"yaw":142,"seed":3831,"split":"val"},{"x":0.2504,"y":0.0017,"yaw":157,"seed":9515,"split":"train"},{"x":0.2531,"y":0.0113,"yaw":129,"seed":2725,"split":"train"}],"world":{"pan":[0.0388353,0.0],"reach":[0.09,0.27],"table":{"c":[0.1,0.17],"s":[0.14,0.11]},"target":{"c":[0.1,0.17],"s":[0.1,0.08]},"spawn":{"x":[0.19,0.26],"y":[-0.13,0.03]}},"progress":[{"step":0,"file":"assets/video/ckpt_0.mp4","success_of_5":0,"this_seed":false,"epoch":0.0,"title":"Copies the target and ignores the bowl.","text":"Before fine-tuning, Qwen already writes valid JSON from the prompt alone. But its first move sends the empty gripper straight to the target coordinates, then it opens and declares done."},{"step":374,"file":"assets/video/ckpt_374.mp4","success_of_5":1,"this_seed":false,"epoch":0.22735562310030394,"title":"Finds the bowl, but the grasp misses.","text":"It now reaches down into the bowl at the right spot, but the grasp doesn't hold. It heads to the table empty-handed and fumbles there until it runs out of moves."},{"step":749,"file":"assets/video/ckpt_749.mp4","success_of_5":4,"this_seed":true,"epoch":0.4553191489361702,"title":"Pick, carry, place.","text":"The full sequence emerges: approach, descend, close, lift, carry, lower, release, retreat, done. It solves 4 of the 5 checkpoint scenes."},{"step":1124,"file":"assets/video/ckpt_1124.mp4","success_of_5":5,"this_seed":true,"epoch":0.6832826747720365,"title":"Every checkpoint scene solved.","text":"5 of 5, while validation loss keeps falling on episodes the model has never trained on."},{"step":1498,"file":"assets/video/ckpt_1498.mp4","success_of_5":4,"this_seed":true,"epoch":0.9106382978723404,"title":"The shipped policy.","text":"The final checkpoint: about ten chat turns per task, one action per turn. On the full held-out benchmark it solves 90 of 100."}],"loss":{"train":[[10,2.8333],[20,1.7464],[30,0.6373],[40,0.5465],[50,0.3864],[60,0.419],[70,0.3416],[80,0.4403],[90,0.477],[100,0.367],[110,0.3079],[120,0.379],[130,0.3525],[140,0.3305],[150,0.2628],[160,0.2998],[170,0.2416],[180,0.3497],[190,0.2647],[200,0.3127],[210,0.2265],[220,0.2823],[230,0.385],[240,0.3124],[250,0.3161],[260,0.2446],[270,0.2908],[280,0.2583],[290,0.2588],[300,0.2758],[310,0.2957],[320,0.2888],[330,0.2197],[340,0.275],[350,0.1959],[360,0.3173],[370,0.2962],[380,0.2552],[390,0.2537],[400,0.2105],[410,0.3197],[420,0.2653],[430,0.2249],[440,0.222],[450,0.2636],[460,0.2552],[470,0.2564],[480,0.2519],[490,0.1897],[500,0.2755],[510,0.2251],[520,0.2667],[530,0.2541],[540,0.2219],[550,0.2595],[560,0.2795],[570,0.1889],[580,0.2934],[590,0.2017],[600,0.2675],[610,0.2422],[620,0.2442],[630,0.21],[640,0.2328],[650,0.2404],[660,0.2085],[670,0.3165],[680,0.2672],[690,0.2306],[700,0.2724],[710,0.2838],[720,0.2046],[730,0.2361],[740,0.2578],[750,0.2375],[760,0.2427],[770,0.3064],[780,0.2079],[790,0.2631],[800,0.2522],[810,0.2807],[820,0.2095],[830,0.2053],[840,0.2345],[850,0.2129],[860,0.2559],[870,0.2675],[880,0.2351],[890,0.2355],[900,0.1784],[910,0.246],[920,0.2008],[930,0.2349],[940,0.211],[950,0.2555],[960,0.229],[970,0.2258],[980,0.215],[990,0.2123],[1000,0.2761],[1010,0.2109],[1020,0.2278],[1030,0.257],[1040,0.2079],[1050,0.2387],[1060,0.1702],[1070,0.218],[1080,0.3116],[1090,0.2623],[1100,0.2139],[1110,0.2592],[1120,0.236],[1130,0.2188],[1140,0.2608],[1150,0.2468],[1160,0.236],[1170,0.2489],[1180,0.2443],[1190,0.2345],[1200,0.1904],[1210,0.3056],[1220,0.2825],[1230,0.2789],[1240,0.2204],[1250,0.2598],[1260,0.2444],[1270,0.2844],[1280,0.2496],[1290,0.2449],[1300,0.2423],[1310,0.2549],[1320,0.3018],[1330,0.2114],[1340,0.288],[1350,0.2472],[1360,0.2434],[1370,0.2245],[1380,0.2368],[1390,0.2269],[1400,0.2443],[1410,0.2378],[1420,0.3199],[1430,0.2708],[1440,0.2429],[1450,0.2498],[1460,0.2359],[1470,0.1964],[1480,0.2757],[1490,0.2704]],"val":[[374,0.2561],[749,0.2511],[1124,0.2427],[1498,0.2371]],"total_steps":1498},"trainfacts":[["Base model","Qwen3-1.7B"],["Adapter","LoRA r16 \u00b7 all projections"],["Optimizer steps","1,498 \u00b7 0.91 epochs"],["Final validation loss","0.237"],["Compute at measured speed","\u2248 46 min"]],"trainnote":"Measured 1.8 s per step on the M5 GPU. Memory pressure from other apps stretched this run to 158 min wall-clock. The trainer now enforces a hard time budget and saves at every checkpoint.","eval":{"qwen":{"success":90,"mean_steps":10.02,"invalid":0,"failures":[["dropped bowl",5,"lifted, then lost the bowl in transit",0],["failed grasp",3,"closed the gripper without securing the bowl",0],["missed target",2,"placed the bowl, but outside the target region",0],["invalid json",0,"produced output that failed schema validation",0],["step limit",0,"ran out of the 15-decision budget",0]]},"expert":{"success":100,"mean_steps":10.52},"collisions":{"steps":45,"episodes":12,"episodes_succeeded":2,"expert":0}},"wall":[{"seed":100000,"success":true,"failure":"","steps":10,"x":0.1988,"y":-0.055,"yaw":179,"replay_matches":true,"file":"assets/eval/q100000.mp4","thumb":"assets/eval/q100000.jpg"},{"seed":100001,"success":true,"failure":"","steps":10,"x":0.2496,"y":0.0104,"yaw":-165,"replay_matches":true,"file":"assets/eval/q100001.mp4","thumb":"assets/eval/q100001.jpg"},{"seed":100002,"success":true,"failure":"","steps":10,"x":0.2561,"y":-0.0224,"yaw":46,"replay_matches":true,"file":"assets/eval/q100002.mp4","thumb":"assets/eval/q100002.jpg"},{"seed":100003,"success":true,"failure":"","steps":10,"x":0.1916,"y":-0.0121,"yaw":34,"replay_matches":true,"file":"assets/eval/q100003.mp4","thumb":"assets/eval/q100003.jpg"},{"seed":100004,"success":true,"failure":"","steps":10,"x":0.1914,"y":-0.0281,"yaw":-150,"replay_matches":true,"file":"assets/eval/q100004.mp4","thumb":"assets/eval/q100004.jpg"},{"seed":100005,"success":true,"failure":"","steps":10,"x":0.2252,"y":0.0009,"yaw":-169,"replay_matches":true,"file":"assets/eval/q100005.mp4","thumb":"assets/eval/q100005.jpg"},{"seed":100006,"success":true,"failure":"","steps":10,"x":0.2342,"y":-0.0348,"yaw":-106,"replay_matches":true,"file":"assets/eval/q100006.mp4","thumb":"assets/eval/q100006.jpg"},{"seed":100007,"success":false,"failure":"dropped_bowl","steps":15,"x":0.2065,"y":0.0188,"yaw":-159,"replay_matches":true,"file":"assets/eval/q100007.mp4","thumb":"assets/eval/q100007.jpg"},{"seed":100008,"success":true,"failure":"","steps":11,"x":0.2583,"y":-0.05,"yaw":-50,"replay_matches":true,"file":"assets/eval/q100008.mp4","thumb":"assets/eval/q100008.jpg"},{"seed":100009,"success":true,"failure":"","steps":10,"x":0.2238,"y":-0.038,"yaw":-115,"replay_matches":true,"file":"assets/eval/q100009.mp4","thumb":"assets/eval/q100009.jpg"},{"seed":100010,"success":true,"failure":"","steps":11,"x":0.2583,"y":-0.0957,"yaw":123,"replay_matches":true,"file":"assets/eval/q100010.mp4","thumb":"assets/eval/q100010.jpg"},{"seed":100011,"success":true,"failure":"","steps":10,"x":0.1973,"y":-0.0468,"yaw":-151,"replay_matches":true,"file":"assets/eval/q100011.mp4","thumb":"assets/eval/q100011.jpg"},{"seed":100012,"success":true,"failure":"","steps":10,"x":0.2076,"y":-0.1294,"yaw":48,"replay_matches":true,"file":"assets/eval/q100012.mp4","thumb":"assets/eval/q100012.jpg"},{"seed":100013,"success":true,"failure":"","steps":10,"x":0.2563,"y":-0.0868,"yaw":-16,"replay_matches":true,"file":"assets/eval/q100013.mp4","thumb":"assets/eval/q100013.jpg"},{"seed":100014,"success":true,"failure":"","steps":10,"x":0.2249,"y":-0.0306,"yaw":136,"replay_matches":true,"file":"assets/eval/q100014.mp4","thumb":"assets/eval/q100014.jpg"},{"seed":100015,"success":true,"failure":"","steps":10,"x":0.2157,"y":0.004,"yaw":-99,"replay_matches":true,"file":"assets/eval/q100015.mp4","thumb":"assets/eval/q100015.jpg"},{"seed":100016,"success":true,"failure":"","steps":10,"x":0.2288,"y":0.0014,"yaw":-161,"replay_matches":true,"file":"assets/eval/q100016.mp4","thumb":"assets/eval/q100016.jpg"},{"seed":100017,"success":true,"failure":"","steps":10,"x":0.232,"y":-0.0533,"yaw":139,"replay_matches":true,"file":"assets/eval/q100017.mp4","thumb":"assets/eval/q100017.jpg"},{"seed":100018,"success":true,"failure":"","steps":10,"x":0.2026,"y":-0.0203,"yaw":65,"replay_matches":true,"file":"assets/eval/q100018.mp4","thumb":"assets/eval/q100018.jpg"},{"seed":100019,"success":true,"failure":"","steps":10,"x":0.2113,"y":-0.0803,"yaw":71,"replay_matches":true,"file":"assets/eval/q100019.mp4","thumb":"assets/eval/q100019.jpg"},{"seed":100020,"success":true,"failure":"","steps":10,"x":0.2197,"y":-0.0783,"yaw":-52,"replay_matches":true,"file":"assets/eval/q100020.mp4","thumb":"assets/eval/q100020.jpg"},{"seed":100021,"success":true,"failure":"","steps":10,"x":0.2428,"y":-0.0565,"yaw":-98,"replay_matches":true,"file":"assets/eval/q100021.mp4","thumb":"assets/eval/q100021.jpg"},{"seed":100022,"success":true,"failure":"","steps":10,"x":0.2149,"y":-0.0497,"yaw":146,"replay_matches":true,"file":"assets/eval/q100022.mp4","thumb":"assets/eval/q100022.jpg"},{"seed":100023,"success":true,"failure":"","steps":10,"x":0.1967,"y":-0.0542,"yaw":-7,"replay_matches":true,"file":"assets/eval/q100023.mp4","thumb":"assets/eval/q100023.jpg"},{"seed":100024,"success":true,"failure":"","steps":10,"x":0.2133,"y":-0.0231,"yaw":-94,"replay_matches":true,"file":"assets/eval/q100024.mp4","thumb":"assets/eval/q100024.jpg"},{"seed":100025,"success":true,"failure":"","steps":10,"x":0.2036,"y":-0.1167,"yaw":-138,"replay_matches":true,"file":"assets/eval/q100025.mp4","thumb":"assets/eval/q100025.jpg"},{"seed":100026,"success":true,"failure":"","steps":10,"x":0.2172,"y":-0.1074,"yaw":22,"replay_matches":true,"file":"assets/eval/q100026.mp4","thumb":"assets/eval/q100026.jpg"},{"seed":100027,"success":true,"failure":"","steps":10,"x":0.216,"y":-0.0891,"yaw":-114,"replay_matches":true,"file":"assets/eval/q100027.mp4","thumb":"assets/eval/q100027.jpg"},{"seed":100028,"success":true,"failure":"","steps":10,"x":0.2196,"y":-0.0821,"yaw":-109,"replay_matches":true,"file":"assets/eval/q100028.mp4","thumb":"assets/eval/q100028.jpg"},{"seed":100029,"success":true,"failure":"","steps":10,"x":0.1957,"y":-0.0334,"yaw":-145,"replay_matches":true,"file":"assets/eval/q100029.mp4","thumb":"assets/eval/q100029.jpg"},{"seed":100030,"success":false,"failure":"dropped_bowl","steps":15,"x":0.1949,"y":-0.0316,"yaw":177,"replay_matches":true,"file":"assets/eval/q100030.mp4","thumb":"assets/eval/q100030.jpg"},{"seed":100031,"success":true,"failure":"","steps":10,"x":0.2458,"y":-0.0995,"yaw":-63,"replay_matches":true,"file":"assets/eval/q100031.mp4","thumb":"assets/eval/q100031.jpg"},{"seed":100032,"success":true,"failure":"","steps":10,"x":0.2031,"y":-0.0263,"yaw":109,"replay_matches":true,"file":"assets/eval/q100032.mp4","thumb":"assets/eval/q100032.jpg"},{"seed":100033,"success":true,"failure":"","steps":10,"x":0.2005,"y":-0.0488,"yaw":92,"replay_matches":true,"file":"assets/eval/q100033.mp4","thumb":"assets/eval/q100033.jpg"},{"seed":100034,"success":true,"failure":"","steps":10,"x":0.2469,"y":-0.042,"yaw":83,"replay_matches":true,"file":"assets/eval/q100034.mp4","thumb":"assets/eval/q100034.jpg"},{"seed":100035,"success":false,"failure":"failed_grasp","steps":15,"x":0.1924,"y":-0.0314,"yaw":173,"replay_matches":true,"file":"assets/eval/q100035.mp4","thumb":"assets/eval/q100035.jpg"},{"seed":100036,"success":true,"failure":"","steps":10,"x":0.2422,"y":-0.1244,"yaw":40,"replay_matches":true,"file":"assets/eval/q100036.mp4","thumb":"assets/eval/q100036.jpg"},{"seed":100037,"success":true,"failure":"","steps":10,"x":0.2214,"y":-0.1105,"yaw":106,"replay_matches":true,"file":"assets/eval/q100037.mp4","thumb":"assets/eval/q100037.jpg"},{"seed":100038,"success":true,"failure":"","steps":10,"x":0.1939,"y":0.0151,"yaw":-62,"replay_matches":true,"file":"assets/eval/q100038.mp4","thumb":"assets/eval/q100038.jpg"},{"seed":100039,"success":true,"failure":"","steps":10,"x":0.1999,"y":-0.063,"yaw":-9,"replay_matches":true,"file":"assets/eval/q100039.mp4","thumb":"assets/eval/q100039.jpg"},{"seed":100040,"success":true,"failure":"","steps":10,"x":0.197,"y":0.0203,"yaw":96,"replay_matches":true,"file":"assets/eval/q100040.mp4","thumb":"assets/eval/q100040.jpg"},{"seed":100041,"success":true,"failure":"","steps":10,"x":0.2478,"y":-0.0971,"yaw":51,"replay_matches":true,"file":"assets/eval/q100041.mp4","thumb":"assets/eval/q100041.jpg"},{"seed":100042,"success":false,"failure":"dropped_bowl","steps":15,"x":0.2174,"y":-0.0704,"yaw":154,"replay_matches":true,"file":"assets/eval/q100042.mp4","thumb":"assets/eval/q100042.jpg"},{"seed":100043,"success":true,"failure":"","steps":10,"x":0.2591,"y":-0.0958,"yaw":-99,"replay_matches":true,"file":"assets/eval/q100043.mp4","thumb":"assets/eval/q100043.jpg"},{"seed":100044,"success":true,"failure":"","steps":10,"x":0.225,"y":-0.1219,"yaw":-99,"replay_matches":true,"file":"assets/eval/q100044.mp4","thumb":"assets/eval/q100044.jpg"},{"seed":100045,"success":true,"failure":"","steps":10,"x":0.2339,"y":-0.1197,"yaw":-102,"replay_matches":true,"file":"assets/eval/q100045.mp4","thumb":"assets/eval/q100045.jpg"},{"seed":100046,"success":true,"failure":"","steps":10,"x":0.2591,"y":0.0037,"yaw":-75,"replay_matches":true,"file":"assets/eval/q100046.mp4","thumb":"assets/eval/q100046.jpg"},{"seed":100047,"success":true,"failure":"","steps":10,"x":0.1953,"y":-0.0229,"yaw":10,"replay_matches":true,"file":"assets/eval/q100047.mp4","thumb":"assets/eval/q100047.jpg"},{"seed":100048,"success":true,"failure":"","steps":10,"x":0.2011,"y":-0.0813,"yaw":-124,"replay_matches":true,"file":"assets/eval/q100048.mp4","thumb":"assets/eval/q100048.jpg"},{"seed":100049,"success":true,"failure":"","steps":10,"x":0.2455,"y":-0.0576,"yaw":-61,"replay_matches":true,"file":"assets/eval/q100049.mp4","thumb":"assets/eval/q100049.jpg"},{"seed":100050,"success":false,"failure":"missed_target","steps":10,"x":0.2439,"y":-0.0162,"yaw":158,"replay_matches":true,"file":"assets/eval/q100050.mp4","thumb":"assets/eval/q100050.jpg"},{"seed":100051,"success":false,"failure":"dropped_bowl","steps":15,"x":0.1949,"y":0.0026,"yaw":162,"replay_matches":true,"file":"assets/eval/q100051.mp4","thumb":"assets/eval/q100051.jpg"},{"seed":100052,"success":true,"failure":"","steps":10,"x":0.2271,"y":-0.0247,"yaw":-60,"replay_matches":true,"file":"assets/eval/q100052.mp4","thumb":"assets/eval/q100052.jpg"},{"seed":100053,"success":true,"failure":"","steps":10,"x":0.2187,"y":-0.0854,"yaw":105,"replay_matches":true,"file":"assets/eval/q100053.mp4","thumb":"assets/eval/q100053.jpg"},{"seed":100054,"success":true,"failure":"","steps":10,"x":0.2246,"y":0.0185,"yaw":117,"replay_matches":true,"file":"assets/eval/q100054.mp4","thumb":"assets/eval/q100054.jpg"},{"seed":100055,"success":true,"failure":"","steps":10,"x":0.2136,"y":0.0264,"yaw":-75,"replay_matches":true,"file":"assets/eval/q100055.mp4","thumb":"assets/eval/q100055.jpg"},{"seed":100056,"success":true,"failure":"","steps":10,"x":0.2027,"y":-0.0502,"yaw":-78,"replay_matches":true,"file":"assets/eval/q100056.mp4","thumb":"assets/eval/q100056.jpg"},{"seed":100057,"success":true,"failure":"","steps":10,"x":0.2489,"y":0.0167,"yaw":99,"replay_matches":true,"file":"assets/eval/q100057.mp4","thumb":"assets/eval/q100057.jpg"},{"seed":100058,"success":true,"failure":"","steps":10,"x":0.2456,"y":-0.0677,"yaw":-95,"replay_matches":true,"file":"assets/eval/q100058.mp4","thumb":"assets/eval/q100058.jpg"},{"seed":100059,"success":true,"failure":"","steps":10,"x":0.2532,"y":0.0059,"yaw":71,"replay_matches":true,"file":"assets/eval/q100059.mp4","thumb":"assets/eval/q100059.jpg"},{"seed":100060,"success":true,"failure":"","steps":10,"x":0.2455,"y":0.029,"yaw":115,"replay_matches":true,"file":"assets/eval/q100060.mp4","thumb":"assets/eval/q100060.jpg"},{"seed":100061,"success":true,"failure":"","steps":10,"x":0.2216,"y":0.0198,"yaw":-1,"replay_matches":true,"file":"assets/eval/q100061.mp4","thumb":"assets/eval/q100061.jpg"},{"seed":100062,"success":true,"failure":"","steps":10,"x":0.2362,"y":-0.0821,"yaw":14,"replay_matches":true,"file":"assets/eval/q100062.mp4","thumb":"assets/eval/q100062.jpg"},{"seed":100063,"success":true,"failure":"","steps":10,"x":0.2567,"y":0.0213,"yaw":-120,"replay_matches":true,"file":"assets/eval/q100063.mp4","thumb":"assets/eval/q100063.jpg"},{"seed":100064,"success":true,"failure":"","steps":10,"x":0.2444,"y":0.0143,"yaw":-102,"replay_matches":true,"file":"assets/eval/q100064.mp4","thumb":"assets/eval/q100064.jpg"},{"seed":100065,"success":true,"failure":"","steps":10,"x":0.241,"y":-0.0392,"yaw":-10,"replay_matches":true,"file":"assets/eval/q100065.mp4","thumb":"assets/eval/q100065.jpg"},{"seed":100066,"success":true,"failure":"","steps":10,"x":0.2057,"y":-0.0055,"yaw":-93,"replay_matches":true,"file":"assets/eval/q100066.mp4","thumb":"assets/eval/q100066.jpg"},{"seed":100067,"success":true,"failure":"","steps":10,"x":0.2289,"y":-0.0734,"yaw":83,"replay_matches":true,"file":"assets/eval/q100067.mp4","thumb":"assets/eval/q100067.jpg"},{"seed":100068,"success":true,"failure":"","steps":10,"x":0.2471,"y":-0.1275,"yaw":-56,"replay_matches":true,"file":"assets/eval/q100068.mp4","thumb":"assets/eval/q100068.jpg"},{"seed":100069,"success":true,"failure":"","steps":10,"x":0.2503,"y":-0.0101,"yaw":-41,"replay_matches":true,"file":"assets/eval/q100069.mp4","thumb":"assets/eval/q100069.jpg"},{"seed":100070,"success":true,"failure":"","steps":10,"x":0.234,"y":-0.0144,"yaw":8,"replay_matches":true,"file":"assets/eval/q100070.mp4","thumb":"assets/eval/q100070.jpg"},{"seed":100071,"success":true,"failure":"","steps":10,"x":0.2213,"y":-0.0456,"yaw":-54,"replay_matches":true,"file":"assets/eval/q100071.mp4","thumb":"assets/eval/q100071.jpg"},{"seed":100072,"success":true,"failure":"","steps":10,"x":0.2213,"y":0.0037,"yaw":57,"replay_matches":true,"file":"assets/eval/q100072.mp4","thumb":"assets/eval/q100072.jpg"},{"seed":100073,"success":true,"failure":"","steps":10,"x":0.2143,"y":0.0267,"yaw":35,"replay_matches":true,"file":"assets/eval/q100073.mp4","thumb":"assets/eval/q100073.jpg"},{"seed":100074,"success":true,"failure":"","steps":10,"x":0.2186,"y":0.022,"yaw":-29,"replay_matches":true,"file":"assets/eval/q100074.mp4","thumb":"assets/eval/q100074.jpg"},{"seed":100075,"success":true,"failure":"","steps":10,"x":0.225,"y":-0.0936,"yaw":-154,"replay_matches":true,"file":"assets/eval/q100075.mp4","thumb":"assets/eval/q100075.jpg"},{"seed":100076,"success":true,"failure":"","steps":10,"x":0.2562,"y":-0.1216,"yaw":-75,"replay_matches":true,"file":"assets/eval/q100076.mp4","thumb":"assets/eval/q100076.jpg"},{"seed":100077,"success":true,"failure":"","steps":10,"x":0.2453,"y":-0.0371,"yaw":143,"replay_matches":true,"file":"assets/eval/q100077.mp4","thumb":"assets/eval/q100077.jpg"},{"seed":100078,"success":true,"failure":"","steps":10,"x":0.2304,"y":-0.1112,"yaw":-94,"replay_matches":true,"file":"assets/eval/q100078.mp4","thumb":"assets/eval/q100078.jpg"},{"seed":100079,"success":false,"failure":"failed_grasp","steps":15,"x":0.2275,"y":-0.09,"yaw":156,"replay_matches":true,"file":"assets/eval/q100079.mp4","thumb":"assets/eval/q100079.jpg"},{"seed":100080,"success":true,"failure":"","steps":10,"x":0.1997,"y":-0.0598,"yaw":90,"replay_matches":true,"file":"assets/eval/q100080.mp4","thumb":"assets/eval/q100080.jpg"},{"seed":100081,"success":true,"failure":"","steps":10,"x":0.2192,"y":0.0116,"yaw":-115,"replay_matches":true,"file":"assets/eval/q100081.mp4","thumb":"assets/eval/q100081.jpg"},{"seed":100082,"success":true,"failure":"","steps":10,"x":0.196,"y":-0.1064,"yaw":60,"replay_matches":true,"file":"assets/eval/q100082.mp4","thumb":"assets/eval/q100082.jpg"},{"seed":100083,"success":true,"failure":"","steps":10,"x":0.2158,"y":-0.115,"yaw":-141,"replay_matches":true,"file":"assets/eval/q100083.mp4","thumb":"assets/eval/q100083.jpg"},{"seed":100084,"success":true,"failure":"","steps":10,"x":0.2356,"y":0.0287,"yaw":-49,"replay_matches":true,"file":"assets/eval/q100084.mp4","thumb":"assets/eval/q100084.jpg"},{"seed":100085,"success":true,"failure":"","steps":10,"x":0.1993,"y":0.0027,"yaw":50,"replay_matches":true,"file":"assets/eval/q100085.mp4","thumb":"assets/eval/q100085.jpg"},{"seed":100086,"success":true,"failure":"","steps":10,"x":0.2331,"y":-0.0529,"yaw":-69,"replay_matches":true,"file":"assets/eval/q100086.mp4","thumb":"assets/eval/q100086.jpg"},{"seed":100087,"success":true,"failure":"","steps":10,"x":0.2396,"y":0.0206,"yaw":93,"replay_matches":true,"file":"assets/eval/q100087.mp4","thumb":"assets/eval/q100087.jpg"},{"seed":100088,"success":true,"failure":"","steps":10,"x":0.2147,"y":-0.1056,"yaw":-27,"replay_matches":true,"file":"assets/eval/q100088.mp4","thumb":"assets/eval/q100088.jpg"},{"seed":100089,"success":false,"failure":"dropped_bowl","steps":15,"x":0.2014,"y":-0.0497,"yaw":155,"replay_matches":true,"file":"assets/eval/q100089.mp4","thumb":"assets/eval/q100089.jpg"},{"seed":100090,"success":true,"failure":"","steps":10,"x":0.1976,"y":-0.0465,"yaw":-151,"replay_matches":true,"file":"assets/eval/q100090.mp4","thumb":"assets/eval/q100090.jpg"},{"seed":100091,"success":true,"failure":"","steps":10,"x":0.2542,"y":-0.1074,"yaw":120,"replay_matches":true,"file":"assets/eval/q100091.mp4","thumb":"assets/eval/q100091.jpg"},{"seed":100092,"success":true,"failure":"","steps":10,"x":0.2016,"y":-0.0571,"yaw":-55,"replay_matches":true,"file":"assets/eval/q100092.mp4","thumb":"assets/eval/q100092.jpg"},{"seed":100093,"success":true,"failure":"","steps":10,"x":0.2264,"y":-0.0121,"yaw":77,"replay_matches":true,"file":"assets/eval/q100093.mp4","thumb":"assets/eval/q100093.jpg"},{"seed":100094,"success":true,"failure":"","steps":10,"x":0.2398,"y":-0.08,"yaw":-106,"replay_matches":true,"file":"assets/eval/q100094.mp4","thumb":"assets/eval/q100094.jpg"},{"seed":100095,"success":true,"failure":"","steps":10,"x":0.2503,"y":-0.1243,"yaw":-79,"replay_matches":true,"file":"assets/eval/q100095.mp4","thumb":"assets/eval/q100095.jpg"},{"seed":100096,"success":false,"failure":"missed_target","steps":10,"x":0.2477,"y":-0.0222,"yaw":163,"replay_matches":true,"file":"assets/eval/q100096.mp4","thumb":"assets/eval/q100096.jpg"},{"seed":100097,"success":true,"failure":"","steps":10,"x":0.2207,"y":0.0078,"yaw":-71,"replay_matches":true,"file":"assets/eval/q100097.mp4","thumb":"assets/eval/q100097.jpg"},{"seed":100098,"success":true,"failure":"","steps":10,"x":0.2517,"y":-0.0151,"yaw":-19,"replay_matches":true,"file":"assets/eval/q100098.mp4","thumb":"assets/eval/q100098.jpg"},{"seed":100099,"success":false,"failure":"failed_grasp","steps":15,"x":0.2166,"y":0.0004,"yaw":176,"replay_matches":true,"file":"assets/eval/q100099.mp4","thumb":"assets/eval/q100099.jpg"}]};
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fmt = n => n.toLocaleString("en-US");
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* tooltip */
+const tip = $("#tip");
+function showTip(html, x, y) { tip.innerHTML = html; tip.classList.add("on"); const w = tip.offsetWidth, h = tip.offsetHeight;
+  let L = x + 14, T = y - h - 12; if (L + w > innerWidth - 8) L = x - w - 14; if (T < 8) T = y + 16; tip.style.left = L + "px"; tip.style.top = T + "px"; }
+const hideTip = () => tip.classList.remove("on");
+
+/* nav */
+addEventListener("scroll", () => $("#nav").classList.toggle("scrolled", scrollY > 10), { passive: true });
+
+/* reveal + autoplay-on-visible */
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); e.target.dispatchEvent(new Event("reveal")); } }), { threshold: .15 });
+const vio = new IntersectionObserver(es => es.forEach(e => { const v = e.target; if (e.isIntersecting) { if (!RM) v.play().catch(() => {}); } else v.pause(); }), { threshold: .35 });
+function watch() { $$(".rv").forEach(e => io.observe(e)); $$("video[data-autoplay]").forEach(v => vio.observe(v)); }
+if (RM) { const hv = $("#hero-video"); hv.removeAttribute("autoplay"); hv.pause(); hv.controls = true; }
+
+/* hero terminal: real Qwen actions from a held-out episode */
+(function () {
+  const lines = D.example.trace, box = $("#term-lines"); let i = 0;
+  const hl = s => s.replace(/"(\w+)":/g, '<span class="k">"$1"</span>:').replace(/: ?"([a-z_]+)"/g, ':<span class="a">"$1"</span>');
+  function tick() { const shown = lines.slice(Math.max(0, i - 4), i + 1);
+    box.innerHTML = shown.map((l, k) => `<div style="opacity:${k === shown.length - 1 ? 1 : .45 + .12 * k}">${hl(l)}${k === shown.length - 1 ? ' <span class="cur"></span>' : ""}</div>`).join("");
+    i = (i + 1) % lines.length; }
+  tick(); if (!RM) setInterval(tick, 700);
+})();
+
+/* KPIs */
+(function () {
+  const k = D.kpi, box = $("#kpis");
+  const items = [
+    [`${k.qwen_success}<small>/100</small>`, "success on never-seen scenes, vs 100 for the scripted teacher"],
+    [`${k.invalid}`, `malformed or rejected commands across ${fmt(k.decisions)} decisions`],
+    [`${fmt(k.pairs)}`, `training examples from ${k.curated} curated demos, out of ${fmt(k.raw)} generated`],
+    [`1 <small>laptop</small>`, "Apple M5 with 24 GB, no cloud GPUs, no paid APIs"]];
+  box.innerHTML = items.map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  $("#hero-n").textContent = k.qwen_success;
+  $$("[data-k=q_succ]").forEach(e => e.textContent = Math.round(100 * k.qwen_success / k.expert_success));
+  $$("[data-k=decisions]").forEach(e => e.textContent = fmt(k.decisions));
+  const C = D.eval.collisions;
+  $$("[data-k=coll]").forEach(e => e.textContent = `${C.steps} (in ${C.episodes} episodes)`);
+  $$("[data-k=ecoll]").forEach(e => e.textContent = C.expert);
+  $$("[data-k=collok]").forEach(e => e.textContent = `${C.episodes_succeeded} of ${C.episodes}`);
+})();
+
+/* pipeline */
+$("#pipe").innerHTML = D.pipeline.map((p, i) => `<div class="step rv"><div class="n">0${i + 1}</div><h3>${p[0]}</h3><p>${p[1]}</p><div class="m">${p[2]}</div></div>`).join("");
+
+/* io example */
+(function () {
+  const hlj = s => s.replace(/("[\w]+")(:)/g, '<span class="j-k">$1</span>$2').replace(/:(-?\d+)/g, ':<span class="j-n">$1</span>')
+    .replace(/:("[a-z_]+")/g, ':<span class="j-s">$1</span>').replace(/:(true|false)/g, ':<span class="j-b">$1</span>');
+  const pretty = D.example.user.replace(/^obs:/, "obs: ").replace(/\nlast:/, "\n\nlast: ").replace(/,"(bowl|target|ee|gripper|grasped|last_result)"/g, ',\n  "$1"').replace(/\{"step"/, '{\n  "step"').replace(/\}\n/, "\n}\n");
+  $("#io-in").innerHTML = hlj(pretty);
+  $("#io-out").innerHTML = hlj(D.example.action);
+})();
+
+/* demo videos */
+$("#demos").innerHTML = D.demos.map((d, i) => `<figure class="vcard rv"><video src="${d.file}" poster="${d.file.replace(".mp4", ".jpg")}" muted loop playsinline preload="none" data-autoplay></video>
+  <figcaption><span><b>Expert demo</b> · ${d.grasp_side}-rim grasp${d.waypoints ? " · via waypoint" : ""}</span><span class="mono">yaw ${d.yaw}° · ${d.steps} actions</span></figcaption></figure>`).join("");
+
+/* funnel */
+(function () {
+  const f = D.funnel, max = f[0][1];
+  $("#funnel").innerHTML = f.map(([l, v, alt]) => alt
+    ? `<div class="frow" style="margin-top:6px;padding-top:14px;border-top:1px solid var(--line)"><div class="top"><span>${l}</span><b>${fmt(v)}</b></div></div>`
+    : `<div class="frow"><div class="top"><span>${l}</span><b>${fmt(v)}</b></div><div class="bar" style="transform:scaleX(0)" data-s="${v / max}"></div></div>`).join("");
+  const p = $("#funnel").closest(".panel"); p.addEventListener("reveal", () => $$(".bar", p).forEach((b, i) => setTimeout(() => b.style.transform = `scaleX(${b.dataset.s})`, RM ? 0 : i * 140)), { once: true });
+})();
+
+/* drop reasons */
+$("#drops").innerHTML = `<div class="t" style="margin-top:26px"><span>Why ${D.drops.reduce((a, d) => a + d[1], 0)} episodes were dropped</span></div>` +
+  `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">` + D.drops.map(([l, v]) =>
+  `<div style="background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px"><div style="font:600 20px var(--sans);letter-spacing:-.02em">${v}</div><div style="font-size:13px;color:var(--ink2)">${l}</div></div>`).join("") + `</div>`;
+
+/* workspace map (top view, metres; robot base at origin) */
+function workspace(host, pts, mode) {
+  const W = D.world, pad = { l: 40, r: 12, t: 12, b: 34 };
+  const xd = [-0.035, 0.30], yd = [-0.16, 0.245];
+  const w = 520, sc = (w - pad.l - pad.r) / (xd[1] - xd[0]), h = pad.t + pad.b + (yd[1] - yd[0]) * sc;
+  const X = x => pad.l + (x - xd[0]) * sc, Y = y => pad.t + (yd[1] - y) * sc;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": mode === "eval" ? "Eval outcomes on workspace" : "Curated bowl start positions" }, host);
+  const cid = "clip-" + mode; el("rect", { x: pad.l, y: pad.t, width: w - pad.l - pad.r, height: h - pad.t - pad.b }, el("clipPath", { id: cid }, el("defs", {}, svg)));
+  const arcs = el("g", { "clip-path": `url(#${cid})` }, svg);
+  for (let gx = 0; gx <= 0.3; gx += 0.05) { el("line", { x1: X(gx), x2: X(gx), y1: pad.t, y2: h - pad.b, stroke: css("--grid") }, svg); el("text", { x: X(gx), y: h - pad.b + 18, "text-anchor": "middle" }, svg).textContent = (gx * 100).toFixed(0); }
+  for (let gy = -0.15; gy <= 0.24; gy += 0.05) { el("line", { x1: pad.l, x2: w - pad.r, y1: Y(gy), y2: Y(gy), stroke: css("--grid") }, svg); el("text", { x: pad.l - 8, y: Y(gy) + 4, "text-anchor": "end" }, svg).textContent = (gy * 100).toFixed(0); }
+  el("text", { x: w - pad.r, y: h - 4, "text-anchor": "end" }, svg).textContent = "x (cm) →";
+  // reach annulus
+  for (const r of W.reach) el("path", { d: `M ${X(W.pan[0] + r)} ${Y(0)} A ${r * sc} ${r * sc} 0 0 0 ${X(W.pan[0])} ${Y(r)}`, fill: "none", stroke: "rgba(255,255,255,.12)", "stroke-dasharray": "3 4" }, arcs);
+  for (const r of W.reach) el("path", { d: `M ${X(W.pan[0] + r)} ${Y(0)} A ${r * sc} ${r * sc} 0 0 1 ${X(W.pan[0])} ${Y(-r)}`, fill: "none", stroke: "rgba(255,255,255,.12)", "stroke-dasharray": "3 4" }, arcs);
+  el("text", { x: X(W.pan[0]) + W.reach[1] * sc * .74 , y: Y(-W.reach[1] * .64) , class: "lab", "clip-path": `url(#${cid})` }, svg).textContent = "reach limit";
+  // table + target
+  const T = W.table, G = W.target;
+  el("rect", { x: X(T.c[0] - T.s[0] / 2), y: Y(T.c[1] + T.s[1] / 2), width: T.s[0] * sc, height: T.s[1] * sc, rx: 3, fill: "rgba(140,100,70,.28)", stroke: "rgba(190,140,100,.5)" }, svg);
+  el("rect", { x: X(G.c[0] - G.s[0] / 2), y: Y(G.c[1] + G.s[1] / 2), width: G.s[0] * sc, height: G.s[1] * sc, rx: 2, fill: "rgba(25,158,112,.35)", stroke: "rgba(25,158,112,.9)" }, svg);
+  el("text", { x: X(T.c[0]), y: Y(T.c[1] + T.s[1] / 2) - 7, "text-anchor": "middle", class: "lab" }, svg).textContent = "table + target";
+  // spawn box
+  const S = W.spawn; el("rect", { x: X(S.x[0]), y: Y(S.y[1]), width: (S.x[1] - S.x[0]) * sc, height: (S.y[1] - S.y[0]) * sc, fill: "none", stroke: "rgba(255,255,255,.25)", "stroke-dasharray": "4 4", rx: 3 }, svg);
+  el("text", { x: X(S.x[1]), y: Y(S.y[0]) + 16, "text-anchor": "end", class: "lab" }, svg).textContent = "bowl spawn region";
+  // robot base
+  el("rect", { x: X(-0.0275), y: Y(0.025), width: 0.055 * sc, height: 0.05 * sc, rx: 4, fill: "#2a2d34", stroke: "rgba(242,194,48,.8)" }, svg);
+  el("text", { x: X(0) , y: Y(-0.025) + 16, "text-anchor": "middle", class: "lab" }, svg).textContent = "arm base";
+  const g = el("g", {}, svg);
+  pts.forEach(p => {
+    const cx = X(p.x), cy = Y(p.y);
+    if (mode === "train") {
+      const a = p.yaw * Math.PI / 180, L = 7;
+      el("line", { x1: cx, y1: cy, x2: cx + L * Math.cos(a), y2: cy - L * Math.sin(a), stroke: "rgba(134,182,239,.55)", "stroke-width": 1.2, "stroke-linecap": "round" }, g);
+      el("circle", { cx, cy, r: 2.6, fill: css("--qwen"), stroke: css("--bg2"), "stroke-width": 1 }, g);
+    } else if (p.success) {
+      el("circle", { cx, cy, r: 5, fill: css("--qwen"), stroke: css("--card"), "stroke-width": 2 }, g);
+    } else {
+      const s = 5.5, m = el("g", { stroke: css("--bad"), "stroke-width": 2.6, "stroke-linecap": "round" }, g);
+      el("circle", { cx, cy, r: 8, fill: css("--card"), stroke: "none" }, m);
+      el("line", { x1: cx - s, y1: cy - s, x2: cx + s, y2: cy + s }, m); el("line", { x1: cx - s, y1: cy + s, x2: cx + s, y2: cy - s }, m);
+    }
+    const hit = el("circle", { cx, cy, r: 9, fill: "transparent", style: "cursor:" + (mode === "eval" ? "pointer" : "default") }, svg);
+    hit.addEventListener("pointermove", e => showTip(mode === "eval"
+      ? `<div class="h">seed ${p.seed}</div><div class="row"><span class="pill ${p.success ? "ok" : "no"}">${p.success ? "✓ success" : "✕ " + p.failure.replace("_", " ")}</span></div><div style="margin-top:4px;color:var(--ink2)">${p.steps} decisions · yaw ${p.yaw}°</div>`
+      : `<div class="h">seed ${p.seed}</div>x ${(p.x * 100).toFixed(1)} cm · y ${(p.y * 100).toFixed(1)} cm<br>yaw ${p.yaw}° · ${p.split}`, e.clientX, e.clientY));
+    hit.addEventListener("pointerleave", hideTip);
+    if (mode === "eval") hit.addEventListener("click", () => openEp(p));
+  });
+}
+workspace($("#map-train"), D.spawn, "train");
+
+/* checkpoint player */
+(function () {
+  const P = D.progress, v = $("#ck-video"), seg = $("#ck-seg"); let cur = 0, auto = true;
+  seg.innerHTML = P.map((p, i) => `<button aria-pressed="${i === 0}" data-i="${i}"><div class="s">step ${fmt(p.step)}</div><div class="r">${p.success_of_5}<small>/5</small></div><div class="prog"></div></button>`).join("");
+  function show(i, user) {
+    cur = i; if (user) auto = false; const p = P[i];
+    $$("button", seg).forEach((b, k) => { b.setAttribute("aria-pressed", k === i); $(".prog", b).style.width = k < i && auto ? "100%" : "0"; });
+    v.src = p.file; v.poster = p.file.replace(".mp4", ".jpg"); v.loop = !auto; if (!RM) v.play().catch(() => {});
+    $("#ck-badge").innerHTML = `<span class="pill ${p.this_seed ? "ok" : "no"}">${p.this_seed ? "✓ success" : "✕ fail"}</span> this scene · step ${fmt(p.step)}`;
+    $("#ck-tag").textContent = `Step ${fmt(p.step)} · ${p.epoch.toFixed(2)} epochs`; $("#ck-score").textContent = `${p.success_of_5}/5 scenes`;
+    $("#ck-title").textContent = p.title; $("#ck-text").textContent = p.text;
+    highlightStep(p.step);
+  }
+  v.addEventListener("timeupdate", () => { if (auto && v.duration) $(".prog", seg.children[cur]).style.width = (100 * v.currentTime / v.duration) + "%"; });
+  v.addEventListener("ended", () => { if (auto) show((cur + 1) % P.length); });
+  seg.addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(+b.dataset.i, true); });
+  const stage = $(".stage"); let started = false;
+  new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !started) { started = true; show(0); } else if (!e.isIntersecting) v.pause(); else if (!RM) v.play().catch(() => {}); }), { threshold: .4 }).observe(stage);
+  window.__ckShow = show;
+})();
+
+/* checkpoint bars */
+function ckBars() {
+  const host = $("#ck-bars"), P = D.progress, w = 360, h = 170, pad = { l: 26, r: 6, t: 20, b: 26 };
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Checkpoint success out of 5" }, host);
+  const bw = (w - pad.l - pad.r) / P.length, Y = v => pad.t + (h - pad.t - pad.b) * (1 - v / 5);
+  for (let v = 0; v <= 5; v++) { el("line", { x1: pad.l, x2: w - pad.r, y1: Y(v), y2: Y(v), stroke: v ? css("--grid") : css("--axis") }, svg); if (v % 5 === 0 || v === 1 || v === 3) el("text", { x: pad.l - 7, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v; }
+  P.forEach((p, i) => {
+    const x = pad.l + i * bw + bw * .22, ww = bw * .56, y = Y(p.success_of_5), hh = Y(0) - y;
+    if (hh > 0) el("path", { d: `M${x},${Y(0)} V${y + 4} q0,-4 4,-4 h${ww - 8} q4,0 4,4 V${Y(0)} Z`, fill: css("--qwen"), class: "ckb", "data-step": p.step }, svg);
+    el("text", { x: x + ww / 2, y: y - 7, "text-anchor": "middle", class: "val" }, svg).textContent = p.success_of_5;
+    el("text", { x: x + ww / 2, y: h - 8, "text-anchor": "middle" }, svg).textContent = fmt(p.step);
+    const hit = el("rect", { x: pad.l + i * bw, y: pad.t, width: bw, height: h - pad.t - pad.b, fill: "transparent", style: "cursor:pointer" }, svg);
+    hit.addEventListener("pointermove", e => showTip(`<div class="h">step ${fmt(p.step)}</div>${p.success_of_5} of 5 held-out scenes solved<br><span style="color:var(--ink2)">0 malformed actions</span>`, e.clientX, e.clientY));
+    hit.addEventListener("pointerleave", hideTip); hit.addEventListener("click", () => window.__ckShow(i, true));
+  });
+}
+
+/* loss chart: train + val, log y, crosshair tooltip */
+let highlightStep = () => {};
+function lossChart() {
+  const host = $("#loss"), tr = D.loss.train, va = D.loss.val, w = 640, h = 280, pad = { l: 44, r: 16, t: 14, b: 30 };
+  const xmax = D.loss.total_steps, ymin = 0.15, ymax = 3.2;
+  const X = s => pad.l + (w - pad.l - pad.r) * s / xmax, Y = v => pad.t + (h - pad.t - pad.b) * (Math.log(ymax) - Math.log(v)) / (Math.log(ymax) - Math.log(ymin));
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Training and validation loss" }, host);
+  [0.2, 0.5, 1, 2].forEach(v => { el("line", { x1: pad.l, x2: w - pad.r, y1: Y(v), y2: Y(v), stroke: css("--grid") }, svg); el("text", { x: pad.l - 8, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v; });
+  el("line", { x1: pad.l, x2: w - pad.r, y1: h - pad.b, y2: h - pad.b, stroke: css("--axis") }, svg);
+  [0, 250, 500, 750, 1000, 1250, 1500].filter(s => s <= xmax + 5).forEach(s => el("text", { x: X(s), y: h - 10, "text-anchor": "middle" }, svg).textContent = fmt(s));
+  const marker = el("g", { opacity: 0 }, svg); const ml = el("line", { y1: pad.t, y2: h - pad.b, stroke: "rgba(242,194,48,.55)", "stroke-dasharray": "3 3" }, marker);
+  const mt = el("text", { y: h - pad.b - 8, "text-anchor": "middle", style: "fill:var(--accent);font-size:11px" }, marker);
+  highlightStep = s => { marker.setAttribute("opacity", 1); ml.setAttribute("x1", X(s)); ml.setAttribute("x2", X(s)); mt.setAttribute("x", Math.min(w - pad.r - 30, Math.max(pad.l + 30, X(s)))); mt.textContent = `step ${fmt(s)}`; };
+  const path = pts => pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+  const tp = el("path", { d: path(tr), fill: "none", stroke: css("--qwen"), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  if (!RM) { const L = tp.getTotalLength(); tp.style.strokeDasharray = L; tp.style.strokeDashoffset = L; host.closest(".panel").addEventListener("reveal", () => { tp.style.transition = "stroke-dashoffset 1.8s cubic-bezier(.3,.6,.2,1)"; tp.style.strokeDashoffset = 0; }, { once: true }); }
+  el("path", { d: path(va), fill: "none", stroke: css("--val"), "stroke-width": 2 }, svg);
+  va.forEach(p => el("circle", { cx: X(p[0]), cy: Y(p[1]), r: 4, fill: css("--val"), stroke: css("--card"), "stroke-width": 2 }, svg));
+  const lastT = tr[tr.length - 1], lastV = va[va.length - 1];
+  el("text", { x: X(lastT[0]) - 4, y: Y(lastT[1]) - 10, "text-anchor": "end", class: "lab" }, svg).textContent = `train ${lastT[1].toFixed(2)}`;
+  el("text", { x: X(lastV[0]) - 4, y: Y(lastV[1]) + 18, "text-anchor": "end", class: "lab" }, svg).textContent = `val ${lastV[1].toFixed(3)}`;
+  el("text", { x: X(tr[0][0]) + 8, y: Y(tr[0][1]) + 4, class: "lab" }, svg).textContent = `${tr[0][1].toFixed(2)} at step ${tr[0][0]}`;
+  // crosshair
+  const cross = el("g", { opacity: 0 }, svg), cl = el("line", { y1: pad.t, y2: h - pad.b, stroke: "rgba(255,255,255,.3)" }, cross), cd = el("circle", { r: 4, fill: css("--qwen"), stroke: css("--card"), "stroke-width": 2 }, cross);
+  const hit = el("rect", { x: pad.l, y: pad.t, width: w - pad.l - pad.r, height: h - pad.t - pad.b, fill: "transparent" }, svg);
+  hit.addEventListener("pointermove", e => { const r = svg.getBoundingClientRect(), sx = (e.clientX - r.left) * w / r.width, s = (sx - pad.l) / (w - pad.l - pad.r) * xmax;
+    let best = tr[0]; for (const p of tr) if (Math.abs(p[0] - s) < Math.abs(best[0] - s)) best = p;
+    cross.setAttribute("opacity", 1); cl.setAttribute("x1", X(best[0])); cl.setAttribute("x2", X(best[0])); cd.setAttribute("cx", X(best[0])); cd.setAttribute("cy", Y(best[1]));
+    const vv = va.find(p => Math.abs(p[0] - best[0]) <= 6);
+    showTip(`<div class="h">step ${fmt(best[0])}</div><div class="row"><span class="sw" style="background:var(--qwen)"></span>train ${best[1].toFixed(3)}</div>${vv ? `<div class="row"><span class="sw" style="background:var(--val)"></span>val ${vv[1].toFixed(3)}</div>` : ""}`, e.clientX, e.clientY); });
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+  $("#loss-table").innerHTML = "<tr><th>step</th><th>train loss</th><th>val loss</th></tr>" + tr.filter((p, i) => i % 15 === 0 || i === tr.length - 1).map(p => { const vv = va.find(q => Math.abs(q[0] - p[0]) <= 6); return `<tr><td>${p[0]}</td><td>${p[1].toFixed(3)}</td><td>${vv ? vv[1].toFixed(3) : ""}</td></tr>`; }).join("") + va.map(p => `<tr><td>${p[0]}</td><td></td><td>${p[1].toFixed(3)}</td></tr>`).join("");
+}
+
+/* training facts */
+$("#trainfacts").innerHTML = D.trainfacts.map(([l, v]) => `<div class="frow"><div class="top"><span>${l}</span><b style="font-size:18px">${v}</b></div></div>`).join("") +
+  `<p class="note" style="margin-top:4px">${D.trainnote}</p>`;
+
+/* results duel */
+(function () {
+  const q = D.eval.qwen, e = D.eval.expert;
+  $("#q-facts").innerHTML = `<span><b>${q.mean_steps}</b>decisions per success</span><span><b>${q.invalid}</b>malformed outputs</span><span><b>${fmt(D.kpi.decisions)}</b>decisions made</span>`;
+  $("#e-facts").innerHTML = `<span><b>${e.mean_steps}</b>decisions per success</span><span><b>hand-coded</b>rules + state</span><span><b>${D.kpi.expert_check}</b>on its own check set</span>`;
+  const sec = $("#results");
+  const run = () => {
+    [["#q-num", q.success], ["#e-num", e.success]].forEach(([s, to]) => { const n = $(s); if (RM) { n.textContent = to; return; } const t0 = performance.now();
+      const f = t => { const u = Math.min(1, (t - t0) / 1400), k = 1 - Math.pow(1 - u, 3); n.textContent = Math.round(to * k); if (u < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    $("#q-meter").style.transform = `scaleX(${q.success / 100})`; $("#e-meter").style.transform = `scaleX(${e.success / 100})`;
+  };
+  new IntersectionObserver((es, o) => es.forEach(x => { if (x.isIntersecting) { run(); o.disconnect(); } }), { threshold: .3 }).observe($(".duel"));
+})();
+
+/* failure bars */
+(function () {
+  const F = D.eval.qwen.failures, host = $("#fails"), w = 460, rowH = 40, pad = { l: 128, r: 40, t: 6 }, h = pad.t + F.length * rowH;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Qwen failure breakdown" }, host);
+  const max = Math.max(5, ...F.map(f => f[1])), X = v => (w - pad.l - pad.r) * v / max;
+  F.forEach(([name, v, desc], i) => {
+    const y = pad.t + i * rowH;
+    el("text", { x: pad.l - 12, y: y + 20, "text-anchor": "end", class: "lab" }, svg).textContent = name;
+    el("line", { x1: pad.l, x2: pad.l, y1: y + 4, y2: y + 28, stroke: css("--axis") }, svg);
+    if (v > 0) el("path", { d: `M${pad.l},${y + 8} h${X(v) - 4} q4,0 4,4 v8 q0,4 -4,4 h${-(X(v) - 4)} Z`, fill: css("--qwen") }, svg);
+    el("text", { x: pad.l + X(v) + 8, y: y + 21, class: "val" }, svg).textContent = v;
+    const hit = el("rect", { x: 0, y, width: w, height: rowH, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", e => showTip(`<div class="h">${name}</div>${v} of 100 episodes<br><span style="color:var(--ink2)">${desc}</span>`, e.clientX, e.clientY));
+    hit.addEventListener("pointerleave", hideTip);
+  });
+  $("#fail-table").innerHTML = "<tr><th>failure</th><th>Qwen</th><th>expert</th></tr>" + F.map(f => `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[3]}</td></tr>`).join("");
+})();
+
+/* eval map + wall */
+workspace($("#map-eval"), D.wall, "eval");
+function openEp(p) { const d = $("#dlg"); $("#dlg-v").src = p.file; $("#dlg-m").innerHTML = `<span><b>Qwen · seed ${p.seed}</b> · ${p.steps} decisions · yaw ${p.yaw}°</span> <span class="pill ${p.success ? "ok" : "no"}">${p.success ? "✓ success" : "✕ " + p.failure.replace("_", " ")}</span>`; d.showModal(); }
+$("#dlg-c").onclick = () => $("#dlg").close();
+$("#dlg").addEventListener("close", () => $("#dlg-v").pause());
+$("#dlg").addEventListener("click", e => { if (e.target.id === "dlg") e.target.close(); });
+(function () {
+  const wall = $("#wall");
+  wall.innerHTML = D.wall.map((p, i) => `<button class="tile ${p.success ? "ok" : "no"}" data-i="${i}" aria-label="seed ${p.seed}, ${p.success ? "success" : "failure: " + p.failure}">
+    <img src="${p.thumb}" alt="" loading="lazy"><span class="st" aria-hidden="true">${p.success ? "✓" : "✕"}</span></button>`).join("");
+  $$(".tile", wall).forEach(t => {
+    const p = D.wall[+t.dataset.i]; let vid;
+    t.addEventListener("pointerenter", () => { if (RM) return; vid = document.createElement("video"); Object.assign(vid, { src: p.file, muted: true, loop: true, playsInline: true, autoplay: true }); t.insertBefore(vid, t.querySelector(".st")); });
+    t.addEventListener("pointerleave", () => { vid && vid.remove(); vid = null; });
+    t.addEventListener("click", () => openEp(p));
+  });
+  $$(".filters button").forEach(b => b.addEventListener("click", () => {
+    $$(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b)); const f = b.dataset.f;
+    $$(".tile", wall).forEach(t => t.classList.toggle("dim", f !== "all" && !t.classList.contains(f)));
+  }));
+})();
+
+ckBars(); lossChart();
+$("#foot-gen").textContent = `Generated ${D.generated} from outputs/*.json`;
+watch();
+</script>
+</body>
+</html>

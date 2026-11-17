@@ -1,0 +1,1114 @@
+{
+ "demos": [
+  {
+   "file": "assets/video/demo_0.mp4",
+   "seed": 7074,
+   "success": true,
+   "steps": 10,
+   "yaw": 56,
+   "grasp_side": "near",
+   "waypoints": 0
+  },
+  {
+   "file": "assets/video/demo_1.mp4",
+   "seed": 3808,
+   "success": true,
+   "steps": 10,
+   "yaw": 145,
+   "grasp_side": "far",
+   "waypoints": 0
+  },
+  {
+   "file": "assets/video/demo_2.mp4",
+   "seed": 724,
+   "success": true,
+   "steps": 11,
+   "yaw": 52,
+   "grasp_side": "near",
+   "waypoints": 1
+  },
+  {
+   "file": "assets/video/demo_3.mp4",
+   "seed": 5249,
+   "success": true,
+   "steps": 10,
+   "yaw": 172,
+   "grasp_side": "near",
+   "waypoints": 0
+  },
+  {
+   "file": "assets/video/demo_4.mp4",
+   "seed": 946,
+   "success": true,
+   "steps": 10,
+   "yaw": -160,
+   "grasp_side": "far",
+   "waypoints": 0
+  },
+  {
+   "file": "assets/video/demo_5.mp4",
+   "seed": 8336,
+   "success": true,
+   "steps": 11,
+   "yaw": -16,
+   "grasp_side": "near",
+   "waypoints": 1
+  }
+ ],
+ "hero": [
+  {
+   "seed": 100000,
+   "success": true,
+   "steps": 10
+  },
+  {
+   "seed": 100003,
+   "success": true,
+   "steps": 10
+  },
+  {
+   "seed": 100012,
+   "success": true,
+   "steps": 10
+  },
+  {
+   "seed": 100021,
+   "success": true,
+   "steps": 10
+  }
+ ],
+ "progress": [
+  {
+   "step": 0,
+   "file": "assets/video/ckpt_0.mp4",
+   "success_of_5": 0,
+   "this_seed": false
+  },
+  {
+   "step": 374,
+   "file": "assets/video/ckpt_374.mp4",
+   "success_of_5": 1,
+   "this_seed": false
+  },
+  {
+   "step": 749,
+   "file": "assets/video/ckpt_749.mp4",
+   "success_of_5": 4,
+   "this_seed": true
+  },
+  {
+   "step": 1124,
+   "file": "assets/video/ckpt_1124.mp4",
+   "success_of_5": 5,
+   "this_seed": true
+  },
+  {
+   "step": 1498,
+   "file": "assets/video/ckpt_1498.mp4",
+   "success_of_5": 4,
+   "this_seed": true
+  }
+ ],
+ "evalwall": [
+  {
+   "seed": 100000,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1988,
+   "y": -0.055,
+   "yaw": 179,
+   "replay_matches": true
+  },
+  {
+   "seed": 100001,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2496,
+   "y": 0.0104,
+   "yaw": -165,
+   "replay_matches": true
+  },
+  {
+   "seed": 100002,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2561,
+   "y": -0.0224,
+   "yaw": 46,
+   "replay_matches": true
+  },
+  {
+   "seed": 100003,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1916,
+   "y": -0.0121,
+   "yaw": 34,
+   "replay_matches": true
+  },
+  {
+   "seed": 100004,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1914,
+   "y": -0.0281,
+   "yaw": -150,
+   "replay_matches": true
+  },
+  {
+   "seed": 100005,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2252,
+   "y": 0.0009,
+   "yaw": -169,
+   "replay_matches": true
+  },
+  {
+   "seed": 100006,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2342,
+   "y": -0.0348,
+   "yaw": -106,
+   "replay_matches": true
+  },
+  {
+   "seed": 100007,
+   "success": false,
+   "failure": "dropped_bowl",
+   "steps": 15,
+   "x": 0.2065,
+   "y": 0.0188,
+   "yaw": -159,
+   "replay_matches": true
+  },
+  {
+   "seed": 100008,
+   "success": true,
+   "failure": "",
+   "steps": 11,
+   "x": 0.2583,
+   "y": -0.05,
+   "yaw": -50,
+   "replay_matches": true
+  },
+  {
+   "seed": 100009,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2238,
+   "y": -0.038,
+   "yaw": -115,
+   "replay_matches": true
+  },
+  {
+   "seed": 100010,
+   "success": true,
+   "failure": "",
+   "steps": 11,
+   "x": 0.2583,
+   "y": -0.0957,
+   "yaw": 123,
+   "replay_matches": true
+  },
+  {
+   "seed": 100011,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1973,
+   "y": -0.0468,
+   "yaw": -151,
+   "replay_matches": true
+  },
+  {
+   "seed": 100012,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2076,
+   "y": -0.1294,
+   "yaw": 48,
+   "replay_matches": true
+  },
+  {
+   "seed": 100013,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2563,
+   "y": -0.0868,
+   "yaw": -16,
+   "replay_matches": true
+  },
+  {
+   "seed": 100014,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2249,
+   "y": -0.0306,
+   "yaw": 136,
+   "replay_matches": true
+  },
+  {
+   "seed": 100015,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2157,
+   "y": 0.004,
+   "yaw": -99,
+   "replay_matches": true
+  },
+  {
+   "seed": 100016,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2288,
+   "y": 0.0014,
+   "yaw": -161,
+   "replay_matches": true
+  },
+  {
+   "seed": 100017,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.232,
+   "y": -0.0533,
+   "yaw": 139,
+   "replay_matches": true
+  },
+  {
+   "seed": 100018,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2026,
+   "y": -0.0203,
+   "yaw": 65,
+   "replay_matches": true
+  },
+  {
+   "seed": 100019,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2113,
+   "y": -0.0803,
+   "yaw": 71,
+   "replay_matches": true
+  },
+  {
+   "seed": 100020,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2197,
+   "y": -0.0783,
+   "yaw": -52,
+   "replay_matches": true
+  },
+  {
+   "seed": 100021,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2428,
+   "y": -0.0565,
+   "yaw": -98,
+   "replay_matches": true
+  },
+  {
+   "seed": 100022,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2149,
+   "y": -0.0497,
+   "yaw": 146,
+   "replay_matches": true
+  },
+  {
+   "seed": 100023,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1967,
+   "y": -0.0542,
+   "yaw": -7,
+   "replay_matches": true
+  },
+  {
+   "seed": 100024,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2133,
+   "y": -0.0231,
+   "yaw": -94,
+   "replay_matches": true
+  },
+  {
+   "seed": 100025,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2036,
+   "y": -0.1167,
+   "yaw": -138,
+   "replay_matches": true
+  },
+  {
+   "seed": 100026,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2172,
+   "y": -0.1074,
+   "yaw": 22,
+   "replay_matches": true
+  },
+  {
+   "seed": 100027,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.216,
+   "y": -0.0891,
+   "yaw": -114,
+   "replay_matches": true
+  },
+  {
+   "seed": 100028,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2196,
+   "y": -0.0821,
+   "yaw": -109,
+   "replay_matches": true
+  },
+  {
+   "seed": 100029,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1957,
+   "y": -0.0334,
+   "yaw": -145,
+   "replay_matches": true
+  },
+  {
+   "seed": 100030,
+   "success": false,
+   "failure": "dropped_bowl",
+   "steps": 15,
+   "x": 0.1949,
+   "y": -0.0316,
+   "yaw": 177,
+   "replay_matches": true
+  },
+  {
+   "seed": 100031,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2458,
+   "y": -0.0995,
+   "yaw": -63,
+   "replay_matches": true
+  },
+  {
+   "seed": 100032,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2031,
+   "y": -0.0263,
+   "yaw": 109,
+   "replay_matches": true
+  },
+  {
+   "seed": 100033,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2005,
+   "y": -0.0488,
+   "yaw": 92,
+   "replay_matches": true
+  },
+  {
+   "seed": 100034,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2469,
+   "y": -0.042,
+   "yaw": 83,
+   "replay_matches": true
+  },
+  {
+   "seed": 100035,
+   "success": false,
+   "failure": "failed_grasp",
+   "steps": 15,
+   "x": 0.1924,
+   "y": -0.0314,
+   "yaw": 173,
+   "replay_matches": true
+  },
+  {
+   "seed": 100036,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2422,
+   "y": -0.1244,
+   "yaw": 40,
+   "replay_matches": true
+  },
+  {
+   "seed": 100037,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2214,
+   "y": -0.1105,
+   "yaw": 106,
+   "replay_matches": true
+  },
+  {
+   "seed": 100038,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1939,
+   "y": 0.0151,
+   "yaw": -62,
+   "replay_matches": true
+  },
+  {
+   "seed": 100039,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1999,
+   "y": -0.063,
+   "yaw": -9,
+   "replay_matches": true
+  },
+  {
+   "seed": 100040,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.197,
+   "y": 0.0203,
+   "yaw": 96,
+   "replay_matches": true
+  },
+  {
+   "seed": 100041,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2478,
+   "y": -0.0971,
+   "yaw": 51,
+   "replay_matches": true
+  },
+  {
+   "seed": 100042,
+   "success": false,
+   "failure": "dropped_bowl",
+   "steps": 15,
+   "x": 0.2174,
+   "y": -0.0704,
+   "yaw": 154,
+   "replay_matches": true
+  },
+  {
+   "seed": 100043,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2591,
+   "y": -0.0958,
+   "yaw": -99,
+   "replay_matches": true
+  },
+  {
+   "seed": 100044,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.225,
+   "y": -0.1219,
+   "yaw": -99,
+   "replay_matches": true
+  },
+  {
+   "seed": 100045,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2339,
+   "y": -0.1197,
+   "yaw": -102,
+   "replay_matches": true
+  },
+  {
+   "seed": 100046,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2591,
+   "y": 0.0037,
+   "yaw": -75,
+   "replay_matches": true
+  },
+  {
+   "seed": 100047,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1953,
+   "y": -0.0229,
+   "yaw": 10,
+   "replay_matches": true
+  },
+  {
+   "seed": 100048,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2011,
+   "y": -0.0813,
+   "yaw": -124,
+   "replay_matches": true
+  },
+  {
+   "seed": 100049,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2455,
+   "y": -0.0576,
+   "yaw": -61,
+   "replay_matches": true
+  },
+  {
+   "seed": 100050,
+   "success": false,
+   "failure": "missed_target",
+   "steps": 10,
+   "x": 0.2439,
+   "y": -0.0162,
+   "yaw": 158,
+   "replay_matches": true
+  },
+  {
+   "seed": 100051,
+   "success": false,
+   "failure": "dropped_bowl",
+   "steps": 15,
+   "x": 0.1949,
+   "y": 0.0026,
+   "yaw": 162,
+   "replay_matches": true
+  },
+  {
+   "seed": 100052,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2271,
+   "y": -0.0247,
+   "yaw": -60,
+   "replay_matches": true
+  },
+  {
+   "seed": 100053,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2187,
+   "y": -0.0854,
+   "yaw": 105,
+   "replay_matches": true
+  },
+  {
+   "seed": 100054,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2246,
+   "y": 0.0185,
+   "yaw": 117,
+   "replay_matches": true
+  },
+  {
+   "seed": 100055,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2136,
+   "y": 0.0264,
+   "yaw": -75,
+   "replay_matches": true
+  },
+  {
+   "seed": 100056,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2027,
+   "y": -0.0502,
+   "yaw": -78,
+   "replay_matches": true
+  },
+  {
+   "seed": 100057,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2489,
+   "y": 0.0167,
+   "yaw": 99,
+   "replay_matches": true
+  },
+  {
+   "seed": 100058,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2456,
+   "y": -0.0677,
+   "yaw": -95,
+   "replay_matches": true
+  },
+  {
+   "seed": 100059,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2532,
+   "y": 0.0059,
+   "yaw": 71,
+   "replay_matches": true
+  },
+  {
+   "seed": 100060,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2455,
+   "y": 0.029,
+   "yaw": 115,
+   "replay_matches": true
+  },
+  {
+   "seed": 100061,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2216,
+   "y": 0.0198,
+   "yaw": -1,
+   "replay_matches": true
+  },
+  {
+   "seed": 100062,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2362,
+   "y": -0.0821,
+   "yaw": 14,
+   "replay_matches": true
+  },
+  {
+   "seed": 100063,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2567,
+   "y": 0.0213,
+   "yaw": -120,
+   "replay_matches": true
+  },
+  {
+   "seed": 100064,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2444,
+   "y": 0.0143,
+   "yaw": -102,
+   "replay_matches": true
+  },
+  {
+   "seed": 100065,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.241,
+   "y": -0.0392,
+   "yaw": -10,
+   "replay_matches": true
+  },
+  {
+   "seed": 100066,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2057,
+   "y": -0.0055,
+   "yaw": -93,
+   "replay_matches": true
+  },
+  {
+   "seed": 100067,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2289,
+   "y": -0.0734,
+   "yaw": 83,
+   "replay_matches": true
+  },
+  {
+   "seed": 100068,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2471,
+   "y": -0.1275,
+   "yaw": -56,
+   "replay_matches": true
+  },
+  {
+   "seed": 100069,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2503,
+   "y": -0.0101,
+   "yaw": -41,
+   "replay_matches": true
+  },
+  {
+   "seed": 100070,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.234,
+   "y": -0.0144,
+   "yaw": 8,
+   "replay_matches": true
+  },
+  {
+   "seed": 100071,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2213,
+   "y": -0.0456,
+   "yaw": -54,
+   "replay_matches": true
+  },
+  {
+   "seed": 100072,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2213,
+   "y": 0.0037,
+   "yaw": 57,
+   "replay_matches": true
+  },
+  {
+   "seed": 100073,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2143,
+   "y": 0.0267,
+   "yaw": 35,
+   "replay_matches": true
+  },
+  {
+   "seed": 100074,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2186,
+   "y": 0.022,
+   "yaw": -29,
+   "replay_matches": true
+  },
+  {
+   "seed": 100075,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.225,
+   "y": -0.0936,
+   "yaw": -154,
+   "replay_matches": true
+  },
+  {
+   "seed": 100076,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2562,
+   "y": -0.1216,
+   "yaw": -75,
+   "replay_matches": true
+  },
+  {
+   "seed": 100077,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2453,
+   "y": -0.0371,
+   "yaw": 143,
+   "replay_matches": true
+  },
+  {
+   "seed": 100078,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2304,
+   "y": -0.1112,
+   "yaw": -94,
+   "replay_matches": true
+  },
+  {
+   "seed": 100079,
+   "success": false,
+   "failure": "failed_grasp",
+   "steps": 15,
+   "x": 0.2275,
+   "y": -0.09,
+   "yaw": 156,
+   "replay_matches": true
+  },
+  {
+   "seed": 100080,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1997,
+   "y": -0.0598,
+   "yaw": 90,
+   "replay_matches": true
+  },
+  {
+   "seed": 100081,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2192,
+   "y": 0.0116,
+   "yaw": -115,
+   "replay_matches": true
+  },
+  {
+   "seed": 100082,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.196,
+   "y": -0.1064,
+   "yaw": 60,
+   "replay_matches": true
+  },
+  {
+   "seed": 100083,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2158,
+   "y": -0.115,
+   "yaw": -141,
+   "replay_matches": true
+  },
+  {
+   "seed": 100084,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2356,
+   "y": 0.0287,
+   "yaw": -49,
+   "replay_matches": true
+  },
+  {
+   "seed": 100085,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1993,
+   "y": 0.0027,
+   "yaw": 50,
+   "replay_matches": true
+  },
+  {
+   "seed": 100086,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2331,
+   "y": -0.0529,
+   "yaw": -69,
+   "replay_matches": true
+  },
+  {
+   "seed": 100087,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2396,
+   "y": 0.0206,
+   "yaw": 93,
+   "replay_matches": true
+  },
+  {
+   "seed": 100088,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2147,
+   "y": -0.1056,
+   "yaw": -27,
+   "replay_matches": true
+  },
+  {
+   "seed": 100089,
+   "success": false,
+   "failure": "dropped_bowl",
+   "steps": 15,
+   "x": 0.2014,
+   "y": -0.0497,
+   "yaw": 155,
+   "replay_matches": true
+  },
+  {
+   "seed": 100090,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.1976,
+   "y": -0.0465,
+   "yaw": -151,
+   "replay_matches": true
+  },
+  {
+   "seed": 100091,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2542,
+   "y": -0.1074,
+   "yaw": 120,
+   "replay_matches": true
+  },
+  {
+   "seed": 100092,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2016,
+   "y": -0.0571,
+   "yaw": -55,
+   "replay_matches": true
+  },
+  {
+   "seed": 100093,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2264,
+   "y": -0.0121,
+   "yaw": 77,
+   "replay_matches": true
+  },
+  {
+   "seed": 100094,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2398,
+   "y": -0.08,
+   "yaw": -106,
+   "replay_matches": true
+  },
+  {
+   "seed": 100095,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2503,
+   "y": -0.1243,
+   "yaw": -79,
+   "replay_matches": true
+  },
+  {
+   "seed": 100096,
+   "success": false,
+   "failure": "missed_target",
+   "steps": 10,
+   "x": 0.2477,
+   "y": -0.0222,
+   "yaw": 163,
+   "replay_matches": true
+  },
+  {
+   "seed": 100097,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2207,
+   "y": 0.0078,
+   "yaw": -71,
+   "replay_matches": true
+  },
+  {
+   "seed": 100098,
+   "success": true,
+   "failure": "",
+   "steps": 10,
+   "x": 0.2517,
+   "y": -0.0151,
+   "yaw": -19,
+   "replay_matches": true
+  },
+  {
+   "seed": 100099,
+   "success": false,
+   "failure": "failed_grasp",
+   "steps": 15,
+   "x": 0.2166,
+   "y": 0.0004,
+   "yaw": 176,
+   "replay_matches": true
+  }
+ ]
+}

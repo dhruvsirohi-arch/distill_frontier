@@ -21,6 +21,36 @@ After fine-tuning, Qwen produced **0 invalid JSON actions** over all 100 episode
 `outputs/results.json`; Qwen's failures are scattered across the workspace, with no single cell
 failing on every seed.
 
+## Latency (`python -m eval.latency` → `outputs/latency.json`, every token in `outputs/latency_decisions.jsonl`)
+
+Setup: one robot (batch size 1), greedy decoding, merged Qwen3-1.7B + LoRA in bf16 on the Apple M5 GPU (MPS).
+Thinking is off, so there are no reasoning tokens and every output token is part of the action JSON. The run
+covers all 1,041 decisions of the 100 held-out episodes. Decoding runs token by token with a device sync after
+each token; the first 40 decisions were checked and are 40/40 identical to `model.generate`. Success at batch 1
+is also 90/100.
+
+| | mean | p50 | p90 | p99 |
+|---|---|---|---|---|
+| **per decision (observation → complete action)** | 779 ms | **889 ms** | 1167 ms | 1427 ms |
+| time to first token (prefill of ~234 prompt tokens) | 148 ms | 143 ms | 192 ms | 275 ms |
+| per output token after the first | 38.4 ms | 36.5 ms | 47.3 ms | 55.1 ms |
+
+| action | decisions | output tokens | p50 latency |
+|---|---|---|---|
+| move_to | 625 | 24 | 993 ms |
+| open_gripper | 208 | 8 | 416 ms |
+| close_gripper | 116 | 8 | 389 ms |
+| done | 92 | 6 | 323 ms |
+
+* Model time per episode: p50 8.0 s, against 6.3 s of simulated arm motion. The model currently thinks while
+  the arm is stopped.
+* Latency is set by the number of output tokens. In a `move_to`, 14 of the 25 tokens are fixed JSON syntax, and
+  Qwen writes coordinates one digit per token. A compact action format or constrained decoding that fills in the
+  fixed syntax would bring a `move_to` to about 11 generated tokens, roughly 0.5 s.
+* The numbers drifted up during the run: a 3-episode smoke test just before it measured 106 ms to first token
+  and 32.7 ms per token, probably because of thermal load or background load on the laptop. The table reports
+  the slower full run.
+
 ## Pipeline numbers
 
 | stage | result |

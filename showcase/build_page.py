@@ -41,6 +41,45 @@ FAIL_DESC = {
 }
 
 
+def latency_block(out):
+    """Summary + one representative move_to decision for the token timeline (None if not measured)."""
+    lp = out / "latency.json"
+    if not lp.exists():
+        return None
+    L = json.load(open(lp))
+    recs = [json.loads(line) for line in open(out / "latency_decisions.jsonl")]
+    mv = [r for r in recs if r["action"] == "move_to"]
+    med = sorted(r["total_ms"] for r in mv)[len(mv) // 2]
+    ex = min(mv, key=lambda r: abs(r["total_ms"] - med))
+    # which tokens are decided by the model (action name, digits, sign) vs fixed JSON syntax
+    text, spans = "", []
+    for t in ex["tokens"]:
+        spans.append((len(text), len(text) + len(t)))
+        text += t
+    a0 = text.find('"action":"') + len('"action":"')
+    a1 = text.find('"', a0)
+    fixed = []
+    for (i0, i1), t in zip(spans, ex["tokens"]):
+        content = any(c.isdigit() or c == "-" for c in t) or (i0 < a1 and i1 > a0)
+        fixed.append(not content)
+    order = ["move_to", "open_gripper", "close_gripper", "done"]
+    by = [{"action": k, "n": v["n"], "tokens": v["output_tokens"], "p50": v["total_ms"]["p50"],
+           "p90": v["total_ms"]["p90"]} for k, v in L["by_action"].items() if k in order]
+    by.sort(key=lambda r: order.index(r["action"]))
+    dev = L["setup"]["device"]
+    return {
+        "decisions": L["decisions"], "decision_ms": L["decision_ms"], "ttft_ms": L["ttft_ms"],
+        "decode_ms_per_token": L["decode_ms_per_token"], "tps": L["decode_tokens_per_s"],
+        "out_tokens": L["output_tokens_per_action"]["mean"], "prompt_tokens": L["prompt_tokens"]["mean"],
+        "by_action": by, "ep_model_s": L["per_episode_model_seconds"]["p50"],
+        "ep_sim_s": L["per_episode_sim_seconds"]["p50"],
+        "dec_per_ep": L["decisions"] / L["episodes"]["n"],
+        "device_label": "Apple M5" if dev.startswith("mps") else dev, "equiv": L["setup"]["generate_equivalence"],
+        "example": {"seed": ex["seed"], "step": ex["step"], "tokens": ex["tokens"], "token_ms": ex["token_ms"],
+                    "fixed": fixed, "text": text.replace("<|im_end|>", "").strip()},
+    }
+
+
 def main():
     cfg = load_config(None)
     out = REPO / "outputs"
@@ -136,6 +175,7 @@ def main():
                  "expert": {"success": ex["success"], "mean_steps": ex["mean_steps_to_success"]},
                  "collisions": {"steps": coll, "episodes": len(coll_eps),
                                 "episodes_succeeded": sum(e["success"] for e in coll_eps), "expert": e_coll}},
+        "latency": latency_block(out),
         "wall_base": [{**w, "file": f"assets/eval/b{w['seed']}.mp4", "thumb": f"assets/eval/b{w['seed']}.jpg"}
                       for w in media["basewall"]],
         "wall": [{**w, "file": f"assets/eval/q{w['seed']}.mp4", "thumb": f"assets/eval/q{w['seed']}.jpg"}

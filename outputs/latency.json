@@ -1,0 +1,293 @@
+{
+  "setup": {
+    "model": "Qwen/Qwen3-1.7B + LoRA (merged)",
+    "device": "mps:0",
+    "dtype": "bfloat16",
+    "batch_size": 1,
+    "decoding": "greedy",
+    "thinking": "off (no reasoning tokens; every output token is part of the action)",
+    "machine": "arm64 Darwin 26.7.1",
+    "torch": "2.15.0",
+    "seeds": [
+      100000,
+      100099
+    ],
+    "generate_equivalence": "40/40 decisions identical to model.generate"
+  },
+  "decisions": 1041,
+  "prompt_tokens": {
+    "mean": 234.3,
+    "p50": 235.0,
+    "p90": 253.0,
+    "p99": 254.0,
+    "min": 204,
+    "max": 255,
+    "n": 1041
+  },
+  "output_tokens_per_action": {
+    "mean": 17.4,
+    "p50": 23.0,
+    "p90": 25.0,
+    "p99": 25.0,
+    "min": 6,
+    "max": 25,
+    "n": 1041
+  },
+  "decision_ms": {
+    "mean": 779.0,
+    "p50": 888.6,
+    "p90": 1166.9,
+    "p99": 1426.6,
+    "min": 267.1,
+    "max": 1990.8,
+    "n": 1041
+  },
+  "ttft_ms": {
+    "mean": 148.1,
+    "p50": 143.3,
+    "p90": 192.0,
+    "p99": 275.2,
+    "min": 99.6,
+    "max": 382.7,
+    "n": 1041
+  },
+  "decode_ms_per_token": {
+    "mean": 38.4,
+    "p50": 36.5,
+    "p90": 47.3,
+    "p99": 55.1,
+    "min": 32.0,
+    "max": 179.4,
+    "n": 17109
+  },
+  "decode_tokens_per_s": 26.1,
+  "by_action": {
+    "close_gripper": {
+      "n": 116,
+      "output_tokens": 8.0,
+      "total_ms": {
+        "mean": 418.3,
+        "p50": 389.0,
+        "p90": 543.9,
+        "p99": 664.0,
+        "min": 334.0,
+        "max": 704.6,
+        "n": 116
+      }
+    },
+    "done": {
+      "n": 92,
+      "output_tokens": 6.0,
+      "total_ms": {
+        "mean": 335.0,
+        "p50": 322.9,
+        "p90": 405.3,
+        "p99": 515.4,
+        "min": 267.1,
+        "max": 530.7,
+        "n": 92
+      }
+    },
+    "move_to": {
+      "n": 625,
+      "output_tokens": 24.01,
+      "total_ms": {
+        "mean": 1028.3,
+        "p50": 993.0,
+        "p90": 1246.7,
+        "p99": 1444.9,
+        "min": 816.9,
+        "max": 1990.8,
+        "n": 625
+      }
+    },
+    "open_gripper": {
+      "n": 208,
+      "output_tokens": 8.0,
+      "total_ms": {
+        "mean": 427.5,
+        "p50": 415.6,
+        "p90": 524.7,
+        "p99": 645.7,
+        "min": 327.5,
+        "max": 773.0,
+        "n": 208
+      }
+    }
+  },
+  "by_token_position": [
+    {
+      "index": 1,
+      "n": 1041,
+      "mean_ms": 148.11,
+      "p90_ms": 192.0
+    },
+    {
+      "index": 2,
+      "n": 1041,
+      "mean_ms": 40.19,
+      "p90_ms": 49.2
+    },
+    {
+      "index": 3,
+      "n": 1041,
+      "mean_ms": 39.89,
+      "p90_ms": 48.8
+    },
+    {
+      "index": 4,
+      "n": 1041,
+      "mean_ms": 39.61,
+      "p90_ms": 48.6
+    },
+    {
+      "index": 5,
+      "n": 1041,
+      "mean_ms": 39.41,
+      "p90_ms": 48.4
+    },
+    {
+      "index": 6,
+      "n": 1041,
+      "mean_ms": 39.22,
+      "p90_ms": 48.2
+    },
+    {
+      "index": 7,
+      "n": 949,
+      "mean_ms": 39.17,
+      "p90_ms": 48.0
+    },
+    {
+      "index": 8,
+      "n": 949,
+      "mean_ms": 38.95,
+      "p90_ms": 47.8
+    },
+    {
+      "index": 9,
+      "n": 625,
+      "mean_ms": 38.71,
+      "p90_ms": 47.4
+    },
+    {
+      "index": 10,
+      "n": 625,
+      "mean_ms": 38.49,
+      "p90_ms": 47.5
+    },
+    {
+      "index": 11,
+      "n": 625,
+      "mean_ms": 38.29,
+      "p90_ms": 47.2
+    },
+    {
+      "index": 12,
+      "n": 625,
+      "mean_ms": 38.1,
+      "p90_ms": 46.6
+    },
+    {
+      "index": 13,
+      "n": 625,
+      "mean_ms": 37.92,
+      "p90_ms": 46.2
+    },
+    {
+      "index": 14,
+      "n": 625,
+      "mean_ms": 37.86,
+      "p90_ms": 45.6
+    },
+    {
+      "index": 15,
+      "n": 625,
+      "mean_ms": 37.7,
+      "p90_ms": 45.6
+    },
+    {
+      "index": 16,
+      "n": 625,
+      "mean_ms": 37.59,
+      "p90_ms": 45.0
+    },
+    {
+      "index": 17,
+      "n": 625,
+      "mean_ms": 37.45,
+      "p90_ms": 45.1
+    },
+    {
+      "index": 18,
+      "n": 625,
+      "mean_ms": 37.39,
+      "p90_ms": 44.6
+    },
+    {
+      "index": 19,
+      "n": 625,
+      "mean_ms": 37.29,
+      "p90_ms": 44.1
+    },
+    {
+      "index": 20,
+      "n": 625,
+      "mean_ms": 37.12,
+      "p90_ms": 43.8
+    },
+    {
+      "index": 21,
+      "n": 625,
+      "mean_ms": 37.03,
+      "p90_ms": 43.4
+    },
+    {
+      "index": 22,
+      "n": 625,
+      "mean_ms": 36.88,
+      "p90_ms": 43.0
+    },
+    {
+      "index": 23,
+      "n": 615,
+      "mean_ms": 36.79,
+      "p90_ms": 42.7
+    },
+    {
+      "index": 24,
+      "n": 429,
+      "mean_ms": 37.02,
+      "p90_ms": 42.8
+    },
+    {
+      "index": 25,
+      "n": 212,
+      "mean_ms": 36.37,
+      "p90_ms": 40.5
+    }
+  ],
+  "per_episode_model_seconds": {
+    "mean": 8.1,
+    "p50": 8.0,
+    "p90": 9.2,
+    "p99": 12.3,
+    "min": 6.4,
+    "max": 13.7,
+    "n": 100
+  },
+  "per_episode_sim_seconds": {
+    "mean": 6.4,
+    "p50": 6.3,
+    "p90": 6.6,
+    "p99": 7.6,
+    "min": 5.4,
+    "max": 7.7,
+    "n": 100
+  },
+  "episodes": {
+    "n": 100,
+    "success": 90
+  },
+  "wall_time_s": 846.6
+}

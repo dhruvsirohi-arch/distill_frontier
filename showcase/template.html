@@ -254,6 +254,21 @@ dialog button.close{all:unset;cursor:pointer;font:500 13px var(--sans);padding:7
 footer{padding:60px 0 50px;color:var(--ink3);font-size:13px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:26px}
 
+
+/* latency */
+.lat-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media (max-width:860px){.lat-kpis{grid-template-columns:repeat(2,1fr)}}
+.tl{position:relative;margin-top:18px}
+.tl-track{display:flex;height:64px;border-radius:10px;overflow:hidden;gap:2px}
+.tl-seg{position:relative;min-width:2px;background:var(--qwen);display:flex;align-items:flex-end;justify-content:center;transition:filter .15s;cursor:default}
+.tl-seg.pre{background:repeating-linear-gradient(135deg,#2a5d9e 0 6px,#2f68b0 6px 12px)}
+.tl-seg.fix{background:#2d4f7a}
+.tl-seg:hover{filter:brightness(1.35)}
+.tl-seg span{font:11px var(--mono);color:#e8eefb;padding-bottom:5px;white-space:pre;overflow:hidden;text-overflow:clip;max-width:100%}
+.tl-axis{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--ink3);margin-top:8px}
+.tl-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-top:12px}
+.tl-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-2px}
+
 /* motion */
 .rv{opacity:0;transform:translateY(18px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
@@ -263,7 +278,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <body>
 <nav class="nav" id="nav"><div class="wrap">
   <a class="logo" href="#top"><i></i>distill_frontier</a>
-  <ul><li><a href="#how">How it works</a></li><li><a href="#data">Data</a></li><li><a href="#learn">Learning</a></li><li><a href="#results">Results</a></li><li><a href="#next">What's next</a></li></ul>
+  <ul><li><a href="#how">How it works</a></li><li><a href="#data">Data</a></li><li><a href="#learn">Learning</a></li><li><a href="#results">Results</a></li><li><a href="#speed">Latency</a></li><li><a href="#next">What's next</a></li></ul>
   <a class="btn" href="__REPO__" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
 </div></nav>
 
@@ -360,6 +375,22 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="filters" role="group" aria-label="Filter episodes"><button aria-pressed="true" data-f="all">All 100</button><button aria-pressed="false" data-f="ok">Successes</button><button aria-pressed="false" data-f="no">Failures</button></div></div></div>
   <div class="wall rv" id="wall"></div>
   <p class="note">Hover to preview, click to watch. Each clip is a re-render of the scored run: same seeds, same batching, and every outcome checked identical to the reported results. The thumbnail is the final frame.</p>
+</div></section>
+
+<section id="speed"><div class="wrap">
+  <div class="head"><div class="eyebrow rv">Latency</div>
+  <h2 class="rv">Fast enough to drive: <em><span data-l="p50s"></span> s</em> per decision, on a laptop.</h2>
+  <p class="sub rv">Measured as one robot would run it: batch size 1, greedy, on the <span data-l="device"></span> GPU in bf16, over all <b><span data-l="n"></span> decisions</b> of the 100 held-out episodes. Thinking is off, so there are no hidden reasoning tokens. <b>Every token the model emits is part of the action.</b> The timing loop is verified token-for-token against <span class="mono">model.generate</span> (<span data-l="equiv"></span>).</p></div>
+  <div class="lat-kpis rv" id="lat-kpis"></div>
+  <div class="panel rv" style="margin-top:14px"><div class="t"><span>One real decision, token by token</span><span id="tl-meta"></span></div>
+    <div class="tl"><div class="tl-track" id="tl"></div><div class="tl-axis" id="tl-axis"></div></div>
+    <div class="tl-legend"><span><i style="background:repeating-linear-gradient(135deg,#2a5d9e 0 3px,#2f68b0 3px 6px)"></i>prefill: read the prompt, pick token 1</span><span><i style="background:#2d4f7a"></i>fixed JSON syntax</span><span><i style="background:var(--qwen)"></i>content the model decides (action, coordinates)</span></div>
+    <p class="note" id="tl-note"></p></div>
+  <div class="charts2">
+    <div class="panel rv"><div class="t"><span>Latency by action type</span><span>median ms · tokens</span></div><div class="chart" id="lat-types"></div>
+      <details class="data"><summary>Show data</summary><table id="lat-table"></table></details></div>
+    <div class="panel rv"><div class="t"><span>Per episode</span><span>model time vs motion</span></div><div id="lat-ep" class="funnel"></div></div>
+  </div>
 </div></section>
 
 <section id="next"><div class="wrap">
@@ -664,6 +695,55 @@ $("#dlg").addEventListener("click", e => { if (e.target.id === "dlg") e.target.c
   $$(".filters button[data-f]").forEach(b => b.addEventListener("click", () => { $$(".filters button[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b)); filt = b.dataset.f; draw(); }));
   $$(".filters button[data-m]").forEach(b => b.addEventListener("click", () => { $$(".filters button[data-m]").forEach(x => x.setAttribute("aria-pressed", x === b)); model = b.dataset.m; draw(); }));
   draw();
+})();
+
+/* latency */
+(function () {
+  const L = D.latency; if (!L) { $("#speed").remove(); return; }
+  const f1 = x => x.toFixed(0);
+  $$("[data-l=p50s]").forEach(e => e.textContent = (L.decision_ms.p50 / 1000).toFixed(2));
+  $$("[data-l=device]").forEach(e => e.textContent = L.device_label);
+  $$("[data-l=n]").forEach(e => e.textContent = fmt(L.decisions));
+  $$("[data-l=equiv]").forEach(e => e.textContent = L.equiv);
+  const K = [[`${f1(L.decision_ms.p50)}<small> ms</small>`, `median per decision · p90 ${f1(L.decision_ms.p90)} ms`],
+    [`${f1(L.ttft_ms.p50)}<small> ms</small>`, `prefill: ~${f1(L.prompt_tokens)}-token prompt to first token`],
+    [`${L.decode_ms_per_token.p50.toFixed(1)}<small> ms</small>`, `per output token after that (${f1(L.tps)} tokens/s)`],
+    [`${L.out_tokens.toFixed(1)}`, `output tokens per action on average, all of them action JSON`]];
+  $("#lat-kpis").innerHTML = K.map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+
+  // token timeline
+  const X = L.example, tot = X.token_ms.reduce((a, b) => a + b, 0), tl = $("#tl");
+  tl.innerHTML = X.tokens.map((t, i) => { const cls = i === 0 ? "pre" : (X.fixed[i] ? "fix" : "");
+    const lab = t === "" ? "⏎" : t; return `<div class="tl-seg ${cls}" style="flex:${X.token_ms[i]}" data-i="${i}"><span>${lab.replace(/</g, "&lt;")}</span></div>`; }).join("");
+  $$(".tl-seg", tl).forEach(sg => { const i = +sg.dataset.i;
+    sg.addEventListener("pointermove", e => showTip(`<div class="h">token ${i + 1} of ${X.tokens.length}</div><span class="mono">${(X.tokens[i] || "&lt;|im_end|&gt;").replace(/</g, "&lt;")}</span><br>${X.token_ms[i].toFixed(1)} ms${i === 0 ? " (incl. reading the prompt)" : ""}`, e.clientX, e.clientY));
+    sg.addEventListener("pointerleave", hideTip); });
+  $("#tl-axis").innerHTML = [0, .25, .5, .75, 1].map(u => `<span>${f1(u * tot)} ms</span>`).join("");
+  $("#tl-meta").textContent = `seed ${X.seed} · step ${X.step} · ${X.tokens.length} tokens · ${f1(tot)} ms`;
+  const nfix = X.fixed.filter(Boolean).length;
+  $("#tl-note").innerHTML = `Output: <span class="mono" style="color:#8cc2ff">${X.text.replace(/</g, "&lt;")}</span>. ` +
+    `${nfix} of ${X.tokens.length} tokens are fixed JSON syntax the model must still spell out one at a time. A compact action format or constrained decoding that fills in the fixed syntax would cut a <span class="mono">move_to</span> to roughly ${X.tokens.length - nfix} generated tokens, about ${f1(X.token_ms[0] + (X.tokens.length - nfix - 1) * L.decode_ms_per_token.p50)} ms.`;
+
+  // by action type
+  const T = L.by_action, host = $("#lat-types"), w = 460, rowH = 44, pad = { l: 118, r: 70, t: 4 }, h = pad.t + T.length * rowH;
+  const svg = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": "Median latency by action type" }, host);
+  const max = Math.max(...T.map(t => t.p50)), Xs = v => (w - pad.l - pad.r) * v / max;
+  T.forEach((t, i) => { const y = pad.t + i * rowH;
+    el("text", { x: pad.l - 12, y: y + 20, "text-anchor": "end", class: "lab" }, svg).textContent = t.action;
+    el("line", { x1: pad.l, x2: pad.l, y1: y + 4, y2: y + 30, stroke: css("--axis") }, svg);
+    el("path", { d: `M${pad.l},${y + 8} h${Xs(t.p50) - 4} q4,0 4,4 v10 q0,4 -4,4 h${-(Xs(t.p50) - 4)} Z`, fill: css("--qwen") }, svg);
+    el("text", { x: pad.l + Xs(t.p50) + 8, y: y + 22, class: "val" }, svg).textContent = `${f1(t.p50)} ms`;
+    const hit = el("rect", { x: 0, y, width: w, height: rowH, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", e => showTip(`<div class="h">${t.action}</div>median ${f1(t.p50)} ms · p90 ${f1(t.p90)} ms<br>${t.tokens.toFixed(0)} output tokens · ${fmt(t.n)} decisions`, e.clientX, e.clientY));
+    hit.addEventListener("pointerleave", hideTip); });
+  $("#lat-table").innerHTML = "<tr><th>action</th><th>n</th><th>tokens</th><th>p50 ms</th><th>p90 ms</th></tr>" +
+    T.map(t => `<tr><td>${t.action}</td><td>${t.n}</td><td>${t.tokens.toFixed(1)}</td><td>${f1(t.p50)}</td><td>${f1(t.p90)}</td></tr>`).join("");
+
+  // per episode
+  $("#lat-ep").innerHTML = [["Model time per episode (median)", `${L.ep_model_s.toFixed(1)} s`], ["Robot motion per episode (median, sim)", `${L.ep_sim_s.toFixed(1)} s`],
+    ["Decisions per episode", `${L.dec_per_ep.toFixed(1)}`], ["Prompt per decision", `${f1(L.prompt_tokens)} tokens`]]
+    .map(([l, v]) => `<div class="frow"><div class="top"><span>${l}</span><b style="font-size:18px">${v}</b></div></div>`).join("") +
+    `<p class="note" style="margin-top:4px">The model decides while the arm is stopped, so today an episode takes model time plus motion time. Overlapping the next decision with the current motion, a compact action format and a 4-bit model are the obvious next steps toward a reactive control rate.</p>`;
 })();
 
 ckBars(); lossChart();

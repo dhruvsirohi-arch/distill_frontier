@@ -62,3 +62,33 @@ seeds:
 paths:
   data: outputs/vla/data
   runs: outputs/vla/runs
+
+model:
+  vision: facebook/dinov2-small
+  text: openai/clip-vit-base-patch32
+  d_model: 384
+  n_heads: 6
+  enc_layers: 4
+  dec_layers: 4
+  pool: 2                    # average-pool the 16x16 patch grid by this factor -> 64 tokens per image
+  history_offset: 4          # ticks between the "previous" and "current" frame
+  chunk: 16                  # action ticks predicted per inference (0.64 s)
+  exec_horizon: 4            # ticks executed before replanning
+  flow_steps: 4              # Euler steps at inference
+  vision_trainable_blocks: 2
+
+train:
+  batch_size: 128
+  steps: 20000
+  lr: 3.0e-4
+  lr_vision: 3.0e-5
+  weight_decay: 0.05
+  warmup_steps: 500
+  workers: 12
+  grad_clip: 1.0
+  ema: 0.999
+  eval_every: 4000
+  eval_episodes: 20
+  seed: 1234
+  aug_shift: 8               # px random translation
+  aug_brightness: 0.15

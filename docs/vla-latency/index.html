@@ -2,219 +2,361 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VLA action-generation latency</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A VLA that acts in ten milliseconds: latency report</title>
 <meta name="description" content="Latency characterization of a 39.7 M-parameter vision-language-action model on an RTX 4090, compared with published figures for other VLAs.">
+<meta property="og:title" content="A VLA that acts in ten milliseconds">
+<meta property="og:description" content="10.3 ms from camera frames to a 16-step action chunk. 100/100 on held-out scenes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  color-scheme:light;
-  --page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
-  --grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);
-  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--other:#898781;
-  --wash:rgba(42,120,214,.08);
-}
-@media (prefers-color-scheme:dark){:root{
+  --bg:#0a0b0e;--bg2:#0f1115;--card:#13151a;--card2:#181b21;
+  --line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
+  --ink:#f2f1ee;--ink2:#b4b7bf;--ink3:#7c818c;
+  --accent:#f2c230;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--other:#8b8f98;
+  --grid:rgba(255,255,255,.06);--axis:rgba(255,255,255,.22);
+  --r:16px;--maxw:1120px;--col:68ch;
+  --sans:"Inter Tight",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --serif:"Instrument Serif",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   color-scheme:dark;
-  --page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;
-  --grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
-  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--other:#898781;
-  --wash:rgba(57,135,229,.12);
-}}
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
-main{max-width:880px;margin:0 auto;padding:48px 16px 96px}
-h1{font-size:34px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em;text-wrap:balance}
-h2{font-size:22px;line-height:1.25;margin:56px 0 12px;text-wrap:balance}
-h3{font-size:16px;margin:0 0 4px}
-p{margin:0 0 14px;max-width:70ch}
-a{color:inherit;text-decoration-color:var(--axis);text-underline-offset:3px}
-a:hover{text-decoration-color:var(--ink)}
-.lede{font-size:18px;color:var(--ink2);max-width:66ch}
-.meta{color:var(--muted);font-size:14px;margin-bottom:28px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin:20px 0}
-.card .sub{color:var(--ink2);font-size:14px;margin:0 0 14px;max-width:none}
-.note{color:var(--ink2);font-size:14px;margin:12px 0 0;max-width:none}
-.hero{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;margin:0 0 4px}
-.hero b{font-size:64px;line-height:1;font-weight:650;letter-spacing:-.02em}
-.hero span{color:var(--ink2);font-size:16px;max-width:40ch}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 0}
-.tile{border-top:1px solid var(--grid);padding-top:10px}
-.tile .v{font-size:24px;font-weight:650;line-height:1.2}
-.tile .l{font-size:13px;color:var(--ink2);line-height:1.35}
-svg{display:block;width:100%;height:auto;overflow:visible}
-svg text{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;fill:var(--ink2)}
-svg .tick{fill:var(--muted);font-variant-numeric:tabular-nums}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+video,svg{display:block;max-width:100%}
+a{color:inherit}
+::selection{background:rgba(242,194,48,.35)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+@media (max-width:640px){.wrap{padding:0 16px}}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto 0;z-index:50;backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);background:rgba(10,11,14,.66);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:60px}
+.logo{font:500 14px var(--mono);letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo i{width:9px;height:9px;border-radius:2px;background:var(--accent);box-shadow:0 0 14px rgba(242,194,48,.7)}
+.logo span{color:var(--ink3)}
+.nav ul{display:flex;gap:22px;list-style:none;margin:0 0 0 auto;padding:0}
+.nav ul a{font-size:14px;color:var(--ink2);text-decoration:none;transition:color .2s}
+.nav ul a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:500 14px var(--sans);text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);color:var(--ink);background:rgba(255,255,255,.03);transition:background .2s,border-color .2s}
+.btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
+@media (max-width:900px){.nav ul{display:none}.nav .btn{margin-left:auto}}
+
+/* hero */
+.hero{position:relative;padding:150px 0 0;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto -10%;height:900px;pointer-events:none;
+  background:radial-gradient(620px 340px at 20% 16%,rgba(57,135,229,.20),transparent 70%),radial-gradient(520px 300px at 84% 6%,rgba(242,194,48,.09),transparent 70%)}
+.hero .wrap{position:relative}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.7}
+h1{font:600 clamp(40px,6.2vw,80px)/1.02 var(--sans);letter-spacing:-.035em;margin:22px 0 0;max-width:16ch;text-wrap:balance}
+h1 em,h2 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em;color:#fff}
+.lede{font-size:clamp(17px,1.6vw,20px);color:var(--ink2);max-width:62ch;margin:26px 0 0}
+.lede b{color:var(--ink);font-weight:500}
+.byline{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px}
+.tag{font:500 12px var(--mono);letter-spacing:.03em;color:var(--ink2);padding:7px 12px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.02);white-space:nowrap}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:56px}
+.kpi{background:var(--bg2);padding:26px 24px 24px}
+.kpi .v{font:600 clamp(34px,4vw,48px)/1 var(--sans);letter-spacing:-.03em}
+.kpi .v small{font-size:.5em;color:var(--ink3);font-weight:500;letter-spacing:-.01em;margin-left:4px}
+.kpi .l{margin-top:10px;font-size:14px;color:var(--ink2);line-height:1.45}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* abstract */
+.abstract{display:grid;grid-template-columns:160px 1fr;gap:24px;margin-top:72px;padding-top:28px;border-top:1px solid var(--line)}
+.abstract .k{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);padding-top:6px}
+.abstract p{margin:0;font:400 clamp(20px,2.1vw,26px)/1.45 var(--serif);color:var(--ink);max-width:46ch;letter-spacing:.005em}
+@media (max-width:720px){.abstract{grid-template-columns:1fr;gap:10px}}
+
+/* sections */
+section{padding:120px 0 0}
+@media (max-width:640px){section{padding-top:88px}}
+h2{font:600 clamp(30px,4vw,50px)/1.06 var(--sans);letter-spacing:-.03em;margin:18px 0 0;max-width:22ch;text-wrap:balance}
+.head{margin-bottom:40px}
+.sub{color:var(--ink2);max-width:62ch;margin:20px 0 0;font-size:18px}
+.sub b,.prose b{color:var(--ink);font-weight:500}
+.prose{max-width:var(--col);color:var(--ink2)}
+.prose p{margin:0 0 16px}
+.prose code,.sub code,li code,.cap code{font:13px var(--mono);color:#cfd3da;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+
+/* figures */
+.fig{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px 22px;margin:28px 0 0;min-width:0}
+.fig .t{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.fig .t b{color:var(--accent);font-weight:500}
+.fig h3{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;margin:12px 0 0}
+.fig .d{color:var(--ink2);font-size:14.5px;margin:6px 0 18px;max-width:none}
+.cap{color:var(--ink3);font-size:13.5px;line-height:1.55;margin:16px 0 0;max-width:86ch}
+svg{width:100%;height:auto;overflow:visible}
+svg text{font:500 12px var(--sans);fill:var(--ink2)}
+svg .tick{font:400 11px var(--mono);fill:var(--ink3)}
 svg .lab{fill:var(--ink)}
-svg .val{fill:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink2);margin:0 0 10px}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+svg .val{fill:var(--ink);font:500 11.5px var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13.5px;color:var(--ink2);margin:0 0 14px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
 .legend i.line{height:2px;width:16px;border-radius:1px;vertical-align:4px}
-.legend i.dot{border-radius:50%;width:10px;height:10px}
-.scroll{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
-th{font-weight:600;color:var(--ink2);font-size:13px;white-space:nowrap}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-tr.me td{background:var(--wash)}
-td small{color:var(--muted)}
-#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--surface);font-size:13px;line-height:1.35;padding:6px 9px;border-radius:6px;opacity:0;transition:opacity .08s;z-index:5;max-width:280px}
-#tip b{display:block;font-size:14px}
-.hit{fill:transparent;cursor:default}
-.hit:focus{outline:none}
-.vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
-video{width:100%;border-radius:8px;background:#000;display:block}
-figcaption{font-size:13px;color:var(--ink2);margin-top:6px}
-figure{margin:0}
-ul{padding-left:20px;margin:0 0 14px;max-width:70ch}
-li{margin-bottom:6px}
-code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--wash);padding:1px 5px;border-radius:4px}
-pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
-.src{font-size:14px}
-.src li{margin-bottom:8px;overflow-wrap:anywhere}
-details summary{cursor:pointer;color:var(--ink2);font-size:14px;margin-top:12px}
+.legend i.dot{border-radius:50%;width:9px;height:9px;vertical-align:0}
+.hit{fill:transparent}.hit:focus{outline:none}
+#tip{position:fixed;pointer-events:none;background:#f2f1ee;color:#0a0b0e;font-size:13px;line-height:1.4;padding:8px 11px;border-radius:9px;opacity:0;transition:opacity .08s;z-index:60;max-width:300px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#tip b{display:block;font:600 14px var(--mono);margin-bottom:1px}
+
+/* tables */
+.scroll{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);white-space:nowrap;border-bottom-color:var(--line2)}
+td{color:var(--ink2)}
+td:first-child{color:var(--ink)}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n{font:400 13.5px var(--mono);color:var(--ink)}
+tr:last-child td{border-bottom:0}
+tr.me td{background:rgba(57,135,229,.09)}
+tr.me td:first-child{box-shadow:inset 2px 0 0 var(--s1)}
+td small{display:block;color:var(--ink3);font-size:12.5px;line-height:1.45;margin-top:2px}
+td a{font:400 13px var(--mono);color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--line2)}
+td a:hover{color:var(--ink)}
+details summary{cursor:pointer;color:var(--ink3);font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-top:18px}
+details[open] summary{margin-bottom:8px}
+
+/* videos */
+.vids{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
+.vid{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0}
+.vid video{width:100%;aspect-ratio:2/1;object-fit:cover;background:#000}
+.vid figcaption{padding:14px 18px 16px;font-size:14px;color:var(--ink2);line-height:1.5}
+.vid figcaption b{display:block;color:var(--ink);font-weight:500;margin-bottom:2px}
+@media (max-width:760px){.vids{grid-template-columns:1fr}}
+
+/* stage strip */
+.stages{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stage .n{font:500 11px var(--mono);color:var(--accent);letter-spacing:.1em}
+.stage h4{margin:10px 0 0;font:600 17px var(--sans);letter-spacing:-.01em}
+.stage p{margin:6px 0 0;font-size:14px;color:var(--ink2);line-height:1.5}
+.stage .m{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font:500 12px var(--mono);color:var(--ink)}
+@media (max-width:900px){.stages{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.stages{grid-template-columns:1fr}}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:28px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+.note h4{margin:0;font:600 17px/1.3 var(--sans);letter-spacing:-.01em}
+.note p{margin:8px 0 0;font-size:15px;color:var(--ink2);line-height:1.55}
+.notes.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.notes,.notes.three{grid-template-columns:1fr}}
+ul.plain{list-style:none;padding:0;margin:28px 0 0;max-width:var(--col);border-top:1px solid var(--line)}
+ul.plain li{padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink2);font-size:16px}
+ul.plain li b{color:var(--ink);font-weight:500}
+pre{margin:28px 0 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;overflow-x:auto;font:13px/1.7 var(--mono);color:#d7dae0}
+pre .c{color:var(--ink3)}
+ol.src{list-style:none;padding:0;margin:28px 0 0;counter-reset:s;border-top:1px solid var(--line)}
+ol.src li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--ink2);overflow-wrap:anywhere;scroll-margin-top:84px}
+ol.src li::before{content:"[" counter(s) "]";font:500 12px var(--mono);color:var(--ink3);padding-top:3px}
+ol.src a{font:400 12.5px var(--mono);color:var(--ink3);text-decoration:none;display:block;margin-top:2px}
+ol.src a:hover{color:var(--ink)}
+ol.src li:target{background:rgba(242,194,48,.07)}
+footer{margin-top:120px;border-top:1px solid var(--line);padding:32px 0 56px;color:var(--ink3);font:400 12.5px var(--mono);letter-spacing:.02em}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink2);text-decoration:none}
 </style>
 </head>
 <body>
-<main>
-<h1>Action-generation latency of a small VLA for real-time control</h1>
-<p class="lede">A 39.7 M-parameter vision-language-action model produces a 16-step action chunk in about 10 ms on an RTX 4090, and in under 7 ms once compiled. Published figures for generalist VLAs range from 27 ms to over 300 ms per inference; those models are 30 to 1,400 times larger and do far more.</p>
-<p class="meta">Measured 17 November 2026 · NVIDIA RTX 4090, Intel i9-14900K, PyTorch 2.15, MuJoCo 4.0.1 · checkpoint <code>m2_early/best.pt</code> · <a href="https://github.com/dhruvsirohi-arch/distill_frontier/tree/vla-mujoco">source</a></p>
+<nav class="nav"><div class="wrap">
+  <a class="logo" href="#top"><i></i>distill_frontier<span>/ vla-latency</span></a>
+  <ul><li><a href="#setup">Setup</a></li><li><a href="#distribution">Distribution</a></li><li><a href="#breakdown">Breakdown</a></li><li><a href="#settings">Settings</a></li><li><a href="#reaction">Reaction time</a></li><li><a href="#comparison">Comparison</a></li><li><a href="#limits">Limitations</a></li></ul>
+  <a class="btn" href="https://github.com/dhruvsirohi-arch/distill_frontier/tree/vla-mujoco" target="_blank" rel="noopener">GitHub</a>
+</div></nav>
 
-<div class="card">
-  <div class="hero"><b>10.3 ms</b><span>median time from camera frames to a 16-step action chunk, in closed loop, with the default settings</span></div>
-  <div class="tiles">
-    <div class="tile"><div class="v">11.2 ms</div><div class="l">99th percentile (18.2 ms worst of 3,329 inferences)</div></div>
-    <div class="tile"><div class="v">6.7 ms</div><div class="l">median with <code>torch.compile</code> and fp32</div></div>
-    <div class="tile"><div class="v">2.6 ms</div><div class="l">GPU time per 40 ms control tick, averaged (6.6% duty)</div></div>
-    <div class="tile"><div class="v">438 MB</div><div class="l">peak GPU memory at run time</div></div>
-    <div class="tile"><div class="v">100 / 100</div><div class="l">task success on the episodes these timings come from</div></div>
+<header class="hero" id="top"><div class="wrap">
+  <span class="eyebrow">Technical report · Latency characterization</span>
+  <h1>A vision-language-action model that acts in <em>ten milliseconds.</em></h1>
+  <p class="lede">A <b>39.7 M-parameter</b> VLA turns two camera frames and an instruction into a 16-step action chunk in about <b>10 ms</b> on an RTX 4090, and under <b>7 ms</b> once compiled. Published figures for generalist VLAs range from 27 ms to over 300 ms; those models are 30 to 1,400 times larger and do far more.</p>
+  <div class="byline"><span class="tag">17 Nov 2026</span><span class="tag">NVIDIA RTX 4090</span><span class="tag">Intel i9-14900K</span><span class="tag">PyTorch 2.15</span><span class="tag">MuJoCo 4.0.1</span><span class="tag">batch size 1</span></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">10.3<small>ms</small></div><div class="l">median inference in closed loop, default settings</div></div>
+    <div class="kpi"><div class="v">11.2<small>ms</small></div><div class="l">99th percentile; 18.2 ms worst of 3,329 inferences</div></div>
+    <div class="kpi"><div class="v">6.7<small>ms</small></div><div class="l">median with <code style="font:12.5px var(--mono)">torch.compile</code> and fp32</div></div>
+    <div class="kpi"><div class="v">100<small>/100</small></div><div class="l">task success on the episodes these timings come from</div></div>
   </div>
-</div>
 
-<h2>What was measured</h2>
-<p>The model takes two 224×224 camera images, six joint positions and a text instruction, and outputs joint position targets for a 6-DoF arm at 25 Hz. The task is to place a named bowl on a named moving pad in MuJoCo. One inference predicts 16 control ticks (0.64 s) of actions; by default the first 4 are executed and then the model replans.</p>
-<p>"Latency" here is the wall-clock time of one inference: copy the frames to the GPU, encode them, fuse with the cached instruction embedding and joint state, run the flow-matching action head, and copy the actions back to the CPU. Every timing brackets the work with <code>torch.cuda.synchronize()</code>, at batch size 1, with nothing else on the GPU. Camera capture, rendering and actuation are excluded.</p>
+  <div class="abstract"><div class="k">Abstract</div>
+  <p>We time every stage of action generation for a small VLA that places a named bowl on a named moving pad. Inference is tight around 10 ms with a short tail, the action head costs more than the vision encoder, and three settings cut latency further with no measured loss of success. The model sits in the latency class of the fast layer in two-level robot stacks, at a fraction of a generalist model's capability.</p></div>
+</div></header>
 
-<div class="vids">
-  <figure><video controls muted loop playsinline preload="metadata" src="media/m2_episode.mp4"></video><figcaption>A benchmark episode: scene camera (left) and wrist camera (right), exactly what the model sees.</figcaption></figure>
-  <figure><video controls muted loop playsinline preload="metadata" src="media/switch_episode.mp4"></video><figcaption>The instruction changes to the other pad ten ticks after the grasp; the next chunk already follows it.</figcaption></figure>
-</div>
+<section id="setup"><div class="wrap">
+  <div class="head"><span class="eyebrow">01 · Setup</span>
+  <h2>What was <em>measured</em></h2>
+  <p class="sub">The model takes two 224×224 camera images, six joint positions and a text instruction, and outputs joint targets for a 6-DoF arm at <b>25 Hz</b>. One inference predicts 16 control ticks (0.64 s); by default the first 4 are executed, then the model replans.</p></div>
+  <div class="vids">
+    <figure class="vid"><video controls muted loop playsinline autoplay preload="metadata" src="media/m2_episode.mp4"></video><figcaption><b>A benchmark episode</b>Scene camera on the left, wrist camera on the right: exactly what the model sees.</figcaption></figure>
+    <figure class="vid"><video controls muted loop playsinline autoplay preload="metadata" src="media/switch_episode.mp4"></video><figcaption><b>Instruction changed mid-carry</b>Ten ticks after the grasp the instruction names the other pad; the next chunk follows it.</figcaption></figure>
+  </div>
+  <div class="stages">
+    <div class="stage"><div class="n">01</div><h4>Upload</h4><p>Two uint8 frames and the joint state are copied to the GPU.</p><div class="m">0.20 ms</div></div>
+    <div class="stage"><div class="n">02</div><h4>See</h4><p>DINOv2-S encodes the two new frames. Tokens for the earlier frame are cached.</p><div class="m">2.76 ms · 22.1 M params</div></div>
+    <div class="stage"><div class="n">03</div><h4>Fuse</h4><p>A 4-layer transformer mixes 281 image, text and joint tokens.</p><div class="m">1.13 ms · 7.1 M params</div></div>
+    <div class="stage"><div class="n">04</div><h4>Act</h4><p>Four flow-matching steps refine a 16-tick action chunk, then it returns to the CPU.</p><div class="m">5.68 ms · 9.5 M params</div></div>
+  </div>
+  <div class="prose" style="margin-top:28px"><p>"Latency" is the wall-clock time of all four stages. Every timing brackets the work with <code>torch.cuda.synchronize()</code>, at batch size 1, with nothing else on the GPU. Camera capture, rendering and actuation are excluded. The instruction is encoded once by a frozen CLIP text model and cached, so it adds nothing per tick.</p></div>
+</div></section>
 
-<h2>Latency is tight around 10 ms, with a short tail</h2>
-<p>Across 100 closed-loop episodes the model ran 3,329 inferences. Ninety percent fall between 9.9 and 10.8 ms. Five took longer than 12 ms, and the slowest took 18.2 ms, still under half of the 40 ms control tick.</p>
-<div class="card">
-  <h3>Inference latency in closed loop</h3>
-  <p class="sub">Number of inferences per 0.1 ms bin · default settings (bf16, 4 flow steps, replan every 4 ticks) · n = 3,329</p>
-  <div id="hist"></div>
-  <div class="scroll"><table style="margin-top:14px">
-    <tr><th>Statistic</th><th class="n">mean</th><th class="n">p50</th><th class="n">p90</th><th class="n">p99</th><th class="n">p99.9</th><th class="n">max</th></tr>
-    <tr><td>Latency (ms)</td><td class="n">10.34</td><td class="n">10.31</td><td class="n">10.72</td><td class="n">11.17</td><td class="n">12.67</td><td class="n">18.21</td></tr>
-  </table></div>
-</div>
-<p>The very first inference after loading the model is the exception: 175 ms, as CUDA kernels initialize. Loading the checkpoint takes 2.4 s. A deployment should run one throw-away inference before the control loop starts.</p>
+<section id="distribution"><div class="wrap">
+  <div class="head"><span class="eyebrow">02 · Distribution</span>
+  <h2>Tight around 10 ms, with a <em>short tail</em></h2>
+  <p class="sub">Across 100 closed-loop episodes the model ran 3,329 inferences. Ninety percent fall between <b>9.9 and 10.8 ms</b>. Five took longer than 12 ms; the slowest took 18.2 ms, under half of the 40 ms control tick.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 1</b> · Inference latency in closed loop</span><span>n = 3,329</span></div>
+    <h3>Almost every inference lands within one millisecond of the median</h3>
+    <p class="d">Inferences per 0.1 ms bin · bf16, 4 flow steps, replan every 4 ticks</p>
+    <div id="hist"></div>
+    <div class="scroll" style="margin-top:18px"><table>
+      <tr><th>Latency</th><th class="n">mean</th><th class="n">p50</th><th class="n">p90</th><th class="n">p99</th><th class="n">p99.9</th><th class="n">max</th></tr>
+      <tr><td>milliseconds</td><td class="n">10.34</td><td class="n">10.31</td><td class="n">10.72</td><td class="n">11.17</td><td class="n">12.67</td><td class="n">18.21</td></tr>
+    </table></div>
+  </div>
+  <div class="notes three">
+    <div class="note"><h4>First call: 175 ms</h4><p>The first inference after loading initializes CUDA kernels. Run one throw-away inference before the control loop starts.</p></div>
+    <div class="note"><h4>Load: 2.4 s</h4><p>Time to read the checkpoint and build the model, including the text encoder that is used only for new instructions.</p></div>
+    <div class="note"><h4>Memory: 438 MB</h4><p>Peak GPU memory at run time. The model leaves the rest of a 24 GB card free for a reasoning model.</p></div>
+  </div>
+</div></section>
 
-<h2>More than half of the time is the action head</h2>
-<p>The vision encoder (DINOv2-S on two images) is not the bottleneck. The four flow-matching steps take 5.6 ms, about 1.4 ms each, for a 9.5 M-parameter decoder working on 16 tokens. At this size the cost is per-call overhead, not arithmetic: encoding four images takes the same 2.5 ms as encoding two.</p>
-<div class="card">
-  <h3>Where one inference goes</h3>
-  <p class="sub">Median milliseconds per stage · default settings · 1,000 timed inferences on recorded frames · total 9.9 ms</p>
-  <div class="legend" id="bdlegend"></div>
-  <div id="breakdown"></div>
-  <details><summary>Table view</summary><div class="scroll"><table>
-    <tr><th>Stage</th><th class="n">p50 (ms)</th><th class="n">p99 (ms)</th><th>What it does</th></tr>
-    <tr><td>Vision encoder</td><td class="n">2.76</td><td class="n">3.10</td><td>DINOv2-S on the two current frames (the earlier frame's tokens are cached)</td></tr>
-    <tr><td>Fusion</td><td class="n">1.13</td><td class="n">1.30</td><td>4-layer transformer over 281 image, text and joint tokens</td></tr>
-    <tr><td>Flow-matching head</td><td class="n">5.61</td><td class="n">6.12</td><td>4 Euler steps of a 4-layer decoder</td></tr>
-    <tr><td>Transfer and post-processing</td><td class="n">0.27</td><td class="n">0.35</td><td>Frames to GPU, actions un-normalized and back to CPU</td></tr>
-  </table></div></details>
-</div>
-<p>The instruction never enters this path as text. It is encoded once by a frozen CLIP text model (3.0 ms for a new sentence, then cached), so changing the instruction costs one dictionary lookup plus the next ordinary inference.</p>
+<section id="breakdown"><div class="wrap">
+  <div class="head"><span class="eyebrow">03 · Breakdown</span>
+  <h2>More than half the time is the <em>action head</em></h2>
+  <p class="sub">The vision encoder is not the bottleneck. Four flow-matching steps take 5.6 ms, about 1.4 ms each, for a 9.5 M-parameter decoder working on 16 tokens.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 2</b> · Where one inference goes</span><span>total 9.9 ms</span></div>
+    <h3>Flow matching costs twice what vision does</h3>
+    <p class="d">Median milliseconds per stage · default settings · 1,000 timed inferences on recorded frames</p>
+    <div class="legend" id="bdlegend"></div>
+    <div id="breakdown-chart"></div>
+    <details><summary>Table view</summary><div class="scroll"><table>
+      <tr><th>Stage</th><th class="n">p50</th><th class="n">p99</th><th>What it does</th></tr>
+      <tr><td>Vision encoder</td><td class="n">2.76 ms</td><td class="n">3.10 ms</td><td>DINOv2-S on the two current frames</td></tr>
+      <tr><td>Fusion</td><td class="n">1.13 ms</td><td class="n">1.30 ms</td><td>4-layer transformer over 281 tokens</td></tr>
+      <tr><td>Flow-matching head</td><td class="n">5.61 ms</td><td class="n">6.12 ms</td><td>4 Euler steps of a 4-layer decoder</td></tr>
+      <tr><td>Transfer and post-processing</td><td class="n">0.27 ms</td><td class="n">0.35 ms</td><td>Frames to GPU, actions un-normalized and back to CPU</td></tr>
+    </table></div></details>
+  </div>
+  <div class="prose" style="margin-top:28px"><p>At this size the cost is per-call overhead, not arithmetic: encoding four images takes the same 2.5 ms as encoding two. That is why the remedies in the next section are about removing overhead, not shrinking the model.</p>
+  <p>The instruction never enters this path as text. A new sentence takes <b>3.0 ms</b> to encode once, so changing the instruction costs a dictionary lookup plus the next ordinary inference.</p></div>
+</div></section>
 
-<h2>Three settings trade latency, none of them cost accuracy here</h2>
-<p>Fewer flow steps, full precision and compilation each cut latency, and task success stayed at 100% (50 episodes per setting) through all of them, down to a single flow step.</p>
-<div class="card">
-  <h3>Latency against number of flow steps</h3>
-  <p class="sub">Median milliseconds per inference · default is 4 steps in bf16</p>
-  <div class="legend"><span><i class="line" style="background:var(--s1)"></i>bf16 autocast (default)</span><span><i class="line" style="background:var(--s2)"></i>fp32</span><span><i class="line" style="background:var(--s3)"></i>fp32 + torch.compile</span></div>
-  <div id="flow"></div>
-  <p class="note">The two uncompiled lines are timed on recorded frames; the compiled line is from closed-loop runs, which read about 0.3 ms higher. Compiled runs were not measured at 8 steps.</p>
-</div>
-<ul>
-  <li><b>bf16 is slower than fp32</b> at this size (10.2 against 8.0 ms in closed loop). The autocast casts cost more than the half-width arithmetic saves. bf16 was chosen for training and left on by habit.</li>
-  <li><b><code>torch.compile</code></b> removes most of the per-call overhead: 6.7 ms at 4 steps, 4.5 ms at 1 step. It costs 5 to 15 s of warm-up at start.</li>
-  <li><b>On the CPU alone</b> (i9-14900K, 24 threads, fp32) one inference takes 65 ms. That is too slow to replan every tick but enough to replan every 2 ticks.</li>
-</ul>
+<section id="settings"><div class="wrap">
+  <div class="head"><span class="eyebrow">04 · Settings</span>
+  <h2>Three settings cut latency, <em>none</em> cost accuracy</h2>
+  <p class="sub">Fewer flow steps, full precision and compilation each help. Task success stayed at <b>100%</b> (50 episodes per setting) through all of them, down to a single flow step.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 3</b> · Latency against flow steps</span><span>median ms</span></div>
+    <h3>Compiled, the model runs at 4.5 to 6.7 ms</h3>
+    <p class="d">Median milliseconds per inference · the default is 4 steps in bf16</p>
+    <div class="legend"><span><i class="line" style="background:var(--s1)"></i>bf16 autocast (default)</span><span><i class="line" style="background:var(--s2)"></i>fp32</span><span><i class="line" style="background:var(--s3)"></i>fp32 + torch.compile</span></div>
+    <div id="flow"></div>
+    <p class="cap">The two uncompiled lines are timed on recorded frames; the compiled line is from closed-loop runs, which read about 0.3 ms higher. Compiled runs were not measured at 8 steps.</p>
+  </div>
+  <div class="notes three">
+    <div class="note"><h4>bf16 is slower than fp32</h4><p>10.2 against 8.0 ms in closed loop. The autocast casts cost more than half-width arithmetic saves at this size. bf16 was chosen for training and left on.</p></div>
+    <div class="note"><h4>Compilation removes overhead</h4><p>6.7 ms at 4 steps and 4.5 ms at 1 step, for 5 to 15 s of warm-up at start.</p></div>
+    <div class="note"><h4>CPU only: 65 ms</h4><p>On the i9-14900K with 24 threads in fp32. Too slow to replan every tick, enough to replan every 2 ticks.</p></div>
+  </div>
+</div></section>
 
-<h2>How often to replan sets the real reaction time</h2>
-<p>Inference latency is not the delay the robot experiences. With action chunking, the last action executed from a chunk was computed from an observation several ticks old. Replanning every 4 ticks, that observation is up to 130 ms old; replanning every tick it is 10 ms old and uses a quarter of the GPU.</p>
-<div class="card">
-  <h3>Replan interval</h3>
-  <p class="sub">Closed loop, bf16, 4 flow steps · 50 episodes per row (100 for the default)</p>
-  <div class="scroll"><table>
-    <tr><th>Replan every</th><th class="n">Success</th><th class="n">Inference p50</th><th class="n">GPU time per tick</th><th class="n">GPU duty</th><th class="n">Oldest observation acted on</th></tr>
-    <tr><td>1 tick</td><td class="n">100%</td><td class="n">10.1 ms</td><td class="n">10.2 ms</td><td class="n">25.6%</td><td class="n">10 ms</td></tr>
-    <tr><td>2 ticks</td><td class="n">100%</td><td class="n">10.3 ms</td><td class="n">5.3 ms</td><td class="n">13.2%</td><td class="n">50 ms</td></tr>
-    <tr class="me"><td>4 ticks (default)</td><td class="n">100%</td><td class="n">10.3 ms</td><td class="n">2.6 ms</td><td class="n">6.6%</td><td class="n">130 ms</td></tr>
-    <tr><td>8 ticks</td><td class="n">100%</td><td class="n">13.3 ms</td><td class="n">1.7 ms</td><td class="n">4.3%</td><td class="n">293 ms</td></tr>
-    <tr><td>16 ticks (whole chunk)</td><td class="n">98%</td><td class="n">13.3 ms</td><td class="n">0.9 ms</td><td class="n">2.2%</td><td class="n">613 ms</td></tr>
-  </table></div>
-  <p class="note">"Oldest observation acted on" is (interval − 1) × 40 ms plus the inference time. Inference is slower at 8 and 16 ticks because the earlier frame is no longer in the token cache and is encoded in a second call.</p>
-</div>
-<p>The pads here move at 1 to 3 cm/s, which is slow enough that even open-loop chunks mostly succeed. A faster target would separate these rows. At 10 ms per inference the model could replan at up to about 90 Hz, so the control rate is limited by the 25 Hz simulation setting, not by the model.</p>
+<section id="reaction"><div class="wrap">
+  <div class="head"><span class="eyebrow">05 · Reaction time</span>
+  <h2>How often it replans sets the <em>real</em> delay</h2>
+  <p class="sub">Inference latency is not the delay the robot experiences. With action chunking, the last action executed from a chunk was computed from an observation several ticks old: up to <b>130 ms</b> when replanning every 4 ticks, <b>10 ms</b> when replanning every tick.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Table 1</b> · Replan interval</span><span>bf16 · 4 flow steps</span></div>
+    <h3>Replanning every tick costs a quarter of the GPU</h3>
+    <p class="d">Closed loop · 50 episodes per row, 100 for the default</p>
+    <div class="scroll"><table>
+      <tr><th>Replan every</th><th class="n">Success</th><th class="n">Inference p50</th><th class="n">GPU time / tick</th><th class="n">GPU duty</th><th class="n">Oldest observation acted on</th></tr>
+      <tr><td>1 tick</td><td class="n">100%</td><td class="n">10.1 ms</td><td class="n">10.2 ms</td><td class="n">25.6%</td><td class="n">10 ms</td></tr>
+      <tr><td>2 ticks</td><td class="n">100%</td><td class="n">10.3 ms</td><td class="n">5.3 ms</td><td class="n">13.2%</td><td class="n">50 ms</td></tr>
+      <tr class="me"><td>4 ticks · default</td><td class="n">100%</td><td class="n">10.3 ms</td><td class="n">2.6 ms</td><td class="n">6.6%</td><td class="n">130 ms</td></tr>
+      <tr><td>8 ticks</td><td class="n">100%</td><td class="n">13.3 ms</td><td class="n">1.7 ms</td><td class="n">4.3%</td><td class="n">293 ms</td></tr>
+      <tr><td>16 ticks · whole chunk</td><td class="n">98%</td><td class="n">13.3 ms</td><td class="n">0.9 ms</td><td class="n">2.2%</td><td class="n">613 ms</td></tr>
+    </table></div>
+    <p class="cap">"Oldest observation acted on" is (interval − 1) × 40 ms plus the inference time. Inference is slower at 8 and 16 ticks because the earlier frame is no longer in the token cache and is encoded in a second call.</p>
+  </div>
+  <div class="prose" style="margin-top:28px"><p>The pads move at 1 to 3 cm/s, slow enough that even open-loop chunks mostly succeed; a faster target would separate these rows. At 10 ms per inference the model could replan at up to about <b>90 Hz</b>, so the control rate is limited by the 25 Hz simulation setting, not by the model.</p></div>
+</div></section>
 
-<h2>Comparison with published VLA latencies</h2>
-<p>The chart puts this model next to latency figures published for well-known systems. Read it as a map of where different designs sit, not as a ranking: the other models are generalists trained on many robots and tasks, most are measured on real hardware pipelines, and each number comes from its own authors' setup.</p>
-<div class="card">
-  <h3>Time for one inference</h3>
-  <p class="sub">Milliseconds per forward pass, log scale · each figure as reported by its source, on the hardware named</p>
-  <div class="legend"><span><i class="dot" style="background:var(--s1)"></i>This work (RTX 4090)</span><span><i class="dot" style="background:var(--other)"></i>Published figure</span></div>
-  <div id="compare"></div>
-  <p class="note">The 25 Hz line is this task's control period. RT-2 is drawn as its reported range. OpenVLA's 4090 figure is converted from "approximately 6 Hz". ACT and Diffusion Policy are small single-task policies without language, included as reference points.</p>
-</div>
+<section id="comparison"><div class="wrap">
+  <div class="head"><span class="eyebrow">06 · Comparison</span>
+  <h2>Against <em>published</em> VLA latencies</h2>
+  <p class="sub">Read this as a map of where different designs sit, not as a ranking. The other models are generalists trained on many robots and tasks, and each number comes from its own authors' setup. <b>Only the blue rows were measured here.</b></p></div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 4</b> · Time for one inference</span><span>log scale</span></div>
+    <h3>A small task-specific model is 3 to 30 times faster per inference</h3>
+    <p class="d">Milliseconds per forward pass · each figure as reported by its source, on the hardware named</p>
+    <div class="legend"><span><i class="dot" style="background:var(--s1)"></i>This work, RTX 4090</span><span><i class="dot" style="background:var(--other)"></i>Published figure</span></div>
+    <div id="compare"></div>
+    <p class="cap">The vertical line is this task's 40 ms control period. RT-2 is drawn as its reported range. OpenVLA's 4090 figure is converted from "approximately 6 Hz". ACT and Diffusion Policy are small single-task policies without language, included as reference points.</p>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Table 2</b> · The same figures with their conditions</span><span>22 rows + 3 unreported</span></div>
+    <h3>Parameters, hardware and chunk length differ, which is most of the story</h3>
+    <p class="d">"Actions out" is the chunk length predicted by one inference; most systems execute only part of it. n/s = not stated in the source.</p>
+    <div class="scroll"><table id="cmp">
+      <tr><th>System</th><th class="n">Parameters</th><th>Hardware</th><th class="n">Per inference</th><th class="n">Actions out</th><th>Source</th></tr>
+    </table></div>
+  </div>
+  <div class="notes">
+    <div class="note"><h4>It shows a latency class</h4><p>At 7 to 10 ms this model sits with the fast "System 1" layer of two-level designs. Figure's Helix reports an 80 M-parameter S1 emitting actions at 200 Hz under a 7 B-parameter S2 at 7 to 9 Hz; GR00T N1 describes a 10 Hz VLM under a 120 Hz action module. Neither publishes a per-inference S1 latency, so they are in the table but not on the chart.</p></div>
+    <div class="note"><h4>It does not show equal capability</h4><p>This model knows two bowl colours and two pad colours in one simulated scene. π0, GR00T and OpenVLA handle open vocabulary, many embodiments and real camera images. Their latency pays for a multi-billion-parameter language backbone that this model does not have.</p></div>
+    <div class="note"><h4>The numbers share no protocol</h4><p>Hardware ranges from a Jetson to an A100, image counts from one to three, and chunk lengths from 1 to 63. None of the other models were re-run here.</p></div>
+    <div class="note"><h4>Throughput flatters chunked models</h4><p>Several sources quote "Hz" as chunk length divided by latency (π0 at 291 Hz, for example). That is how fast actions can be played back, not how fast a model reacts. By that definition this model produces 1,550 actions per second; the honest reaction figure is 10 ms.</p></div>
+  </div>
+</div></section>
 
-<div class="card">
-  <h3>The same figures with their conditions</h3>
-  <p class="sub">Parameters, hardware and actions per inference differ, which is most of the story</p>
-  <div class="scroll"><table id="cmp">
-    <tr><th>System</th><th class="n">Parameters</th><th>Hardware</th><th class="n">Per inference</th><th class="n">Actions out</th><th>Source</th></tr>
-  </table></div>
-</div>
+<section id="implications"><div class="wrap">
+  <div class="head"><span class="eyebrow">07 · Implications</span>
+  <h2>For a <em>reasoning layer</em> on top</h2></div>
+  <div class="notes three" style="margin-top:0">
+    <div class="note"><h4>Latency is not the constraint</h4><p>The model uses 6.6% of one GPU at 25 Hz. A slower reasoning model can share the device or run remotely, and only needs to send a sentence.</p></div>
+    <div class="note"><h4>New instructions land in one tick</h4><p><code style="font:12.5px var(--mono)">set_instruction()</code> clears the queued actions, so the next tick replans: 3 ms to encode a new sentence, then one inference. 30 of 30 mid-carry changes ended at the newly named pad.</p></div>
+    <div class="note"><h4>The cheapest speed-up is unused</h4><p>Compiling and dropping to 2 flow steps gives 5.3 ms with no measured loss, and would allow replanning every tick at 13% GPU duty.</p></div>
+  </div>
+</div></section>
 
-<h3 style="margin-top:28px">What the comparison does and does not show</h3>
-<ul>
-  <li><b>It shows a latency class.</b> At 7 to 10 ms this model sits with the fast "System 1" layer of two-level designs, not with single large VLAs. Figure's Helix reports an 80 M-parameter S1 emitting actions at 200 Hz under a 7 B-parameter S2 running at 7 to 9 Hz; GR00T N1 describes a 10 Hz VLM under a 120 Hz action module. Neither publishes a per-inference S1 latency, so they are in the table but not on the chart.</li>
-  <li><b>It does not show equal capability.</b> This model knows two bowl colours and two pad colours in one simulated scene. π0, GR00T and OpenVLA handle open vocabulary, many embodiments and real camera images. Their latency pays for a multi-billion-parameter language backbone that this model does not have.</li>
-  <li><b>The numbers are not measured under one protocol.</b> Hardware ranges from a Jetson to an A100, image counts from one to three, and chunk sizes from 1 to 63. Only this work's rows were measured here. None of the other models were re-run here.</li>
-  <li><b>Throughput figures flatter chunked models.</b> Several sources quote "Hz" as chunk size divided by latency (π0 at 291 Hz, for example). That is how fast actions can be played back, not how fast the model reacts. By that definition this model produces 1,550 actions per second; the honest reaction figure is the 10 ms above.</li>
-</ul>
+<section id="limits"><div class="wrap">
+  <div class="head"><span class="eyebrow">08 · Limitations</span>
+  <h2>What these numbers <em>do not</em> cover</h2></div>
+  <ul class="plain">
+    <li><b>Inference time is not fed back into the simulation.</b> The simulator waits while the model computes, so an action is applied to the state it was computed from. On a real robot the world moves during those 10 ms; at these pad speeds, 0.3 mm.</li>
+    <li><b>One GPU, one machine, one day.</b> No thermal soak and no contention from other processes. The 99.9th percentile rests on three samples.</li>
+    <li><b>No camera or actuation latency.</b> Real cameras add tens of milliseconds, which would dominate this model's share.</li>
+    <li><b>Sweep rows use 50 episodes.</b> "100%" there means 50 of 50; a difference of 2 to 3 points between settings would not be visible.</li>
+    <li><b>The task is narrow.</b> Fewer flow steps and longer chunks are free here partly because the motion is slow and smooth.</li>
+  </ul>
+</div></section>
 
-<h2>What this means for a reasoning layer on top</h2>
-<ul>
-  <li><b>Latency budget is not the constraint.</b> The model uses 6.6% of one GPU at 25 Hz. A slower reasoning model can share the device or run remotely, and only needs to send a sentence.</li>
-  <li><b>An instruction change takes effect within one chunk boundary.</b> <code>set_instruction()</code> clears the queued actions, so the next tick replans: about 3 ms to encode a new sentence, then one 10 ms inference. In the benchmark, 30 of 30 mid-carry instruction changes ended at the newly named pad.</li>
-  <li><b>The cheapest speed-up is unused.</b> Compiling and dropping to 2 flow steps gives 5.3 ms with no measured loss, and would allow replanning every tick at 13% GPU duty.</li>
-</ul>
-
-<h2>Limitations</h2>
-<ul>
-  <li><b>Inference time is not fed back into the simulation.</b> The simulator waits while the model thinks, so an action is applied to the same state it was computed from. On a real robot the world moves during those 10 ms; at these pad speeds that is 0.3 mm.</li>
-  <li><b>One GPU, one machine, one day.</b> No thermal soak, no contention from other processes, and the 99.9th percentile rests on three samples.</li>
-  <li><b>No camera or actuation latency.</b> Real cameras add tens of milliseconds, which would dominate this model's share.</li>
-  <li><b>Sweep rows use 50 episodes.</b> "100%" there means 50 of 50; a 2 to 3 point difference between settings would not be visible.</li>
-  <li><b>Success is on a narrow task.</b> Fewer flow steps and longer chunks are free here partly because the motion is slow and smooth.</li>
-</ul>
-
-<h2>Reproduce</h2>
-<pre>git clone -b vla-mujoco git@github.com:dhruvsirohi-arch/distill_frontier.git
+<section id="reproduce"><div class="wrap">
+  <div class="head"><span class="eyebrow">Reproduce</span>
+  <h2>Run it <em>yourself</em></h2></div>
+<pre><span class="c"># code, configs and training commands are on the vla-mujoco branch (see RESULTS.md)</span>
+git clone -b vla-mujoco git@github.com:dhruvsirohi-arch/distill_frontier.git
 cd distill_frontier &amp;&amp; uv sync --frozen
-# train as described in RESULTS.md, then:
-.venv/bin/python -m vla.latency --ckpt outputs/vla/runs/m2_early/best.pt
-.venv/bin/python -m vla.latency_variants --ckpt outputs/vla/runs/m2_early/best.pt</pre>
-<p>Raw numbers, including every closed-loop latency sample, are in <code>outputs/vla/latency.json</code>.</p>
 
-<h2>Sources</h2>
-<ol class="src" id="sources"></ol>
-</main>
+.venv/bin/python -m vla.latency          --ckpt outputs/vla/runs/m2_early/best.pt
+.venv/bin/python -m vla.latency_variants --ckpt outputs/vla/runs/m2_early/best.pt
+<span class="c"># raw numbers, including every closed-loop sample: outputs/vla/latency.json</span></pre>
+</div></section>
+
+<section id="references"><div class="wrap">
+  <div class="head"><span class="eyebrow">References</span>
+  <h2>Sources</h2></div>
+  <ol class="src" id="sources"></ol>
+</div></section>
+
+<footer><div class="wrap"><span>distill_frontier · VLA latency report · measured 17 Nov 2026</span><a href="../">← project home</a></div></footer>
 <div id="tip" role="status"></div>
 
 <script>
@@ -222,78 +364,75 @@ const NS="http://www.w3.org/2000/svg";
 const el=(n,a={},t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e};
 const tip=document.getElementById("tip");
 function showTip(ev,title,body){tip.textContent="";const b=document.createElement("b");b.textContent=title;tip.append(b,document.createTextNode(body));tip.style.opacity=1;
-  let x,y;if(ev.clientX!==undefined&&ev.type!=="focus"){x=ev.clientX+14;y=ev.clientY+14}else{const r=ev.target.getBoundingClientRect();x=r.right+8;y=r.top}
+  let x,y;if(ev.clientX!==undefined&&ev.type!=="focus"){x=ev.clientX+14;y=ev.clientY+14}else{const r=ev.target.getBoundingClientRect();x=Math.min(r.right,innerWidth-320)+8;y=r.top}
   const w=tip.offsetWidth,h=tip.offsetHeight;if(x+w>innerWidth-8)x=Math.max(8,x-w-28);if(y+h>innerHeight-8)y=innerHeight-h-8;tip.style.left=x+"px";tip.style.top=y+"px"}
 function hideTip(){tip.style.opacity=0}
 function hover(node,title,body,mark){node.setAttribute("tabindex","0");
-  const on=e=>{showTip(e,title,body);if(mark)mark.style.opacity=.75},off=()=>{hideTip();if(mark)mark.style.opacity=1};
+  const on=e=>{showTip(e,title,body);if(mark)mark.style.filter="brightness(1.25)"},off=()=>{hideTip();if(mark)mark.style.filter=""};
   node.addEventListener("pointermove",on);node.addEventListener("pointerleave",off);node.addEventListener("focus",on);node.addEventListener("blur",off)}
 const css=v=>`var(--${v})`;
 
-/* ---------- histogram ---------- */
+/* ---------- Fig. 1: histogram ---------- */
 (function(){
   const d={edges:[9.5,9.6,9.7,9.8,9.9,10.0,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11.0,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12.0],
     counts:[0,10,31,110,215,406,453,414,372,365,301,271,161,95,55,24,17,12,3,3,3,1,0,2,5],p50:10.31,p99:11.17};
-  const W=820,H=260,L=44,R=14,T=26,B=40,pw=W-L-R,ph=H-T-B,n=d.counts.length,max=500;
+  const W=1060,H=300,L=48,R=16,T=30,B=44,pw=W-L-R,ph=H-T-B,n=d.counts.length,max=500;
   const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Histogram of inference latency, peaking near 10.1 ms"});
   const x=v=>L+(v-9.5)/2.5*pw,y=v=>T+ph-v/max*ph;
-  for(const g of [0,100,200,300,400,500]){s.append(el("line",{x1:L,x2:W-R,y1:y(g),y2:y(g),stroke:g?css("grid"):css("axis")}));s.append(el("text",{x:L-8,y:y(g)+4,"text-anchor":"end",class:"tick"},g))}
-  for(let v=9.5;v<=12.01;v+=.5)s.append(el("text",{x:x(v),y:H-B+18,"text-anchor":"middle",class:"tick"},v===12?"12+":v.toFixed(1)));
-  s.append(el("text",{x:L+pw/2,y:H-4,"text-anchor":"middle"},"latency (ms)"));
+  for(const g of [0,100,200,300,400,500]){s.append(el("line",{x1:L,x2:W-R,y1:y(g),y2:y(g),stroke:g?css("grid"):css("axis")}));s.append(el("text",{x:L-10,y:y(g)+4,"text-anchor":"end",class:"tick"},g))}
+  for(let v=9.5;v<=12.01;v+=.5)s.append(el("text",{x:x(v),y:H-B+20,"text-anchor":"middle",class:"tick"},v===12?"12+":v.toFixed(1)));
+  s.append(el("text",{x:L+pw/2,y:H-4,"text-anchor":"middle",class:"tick"},"latency (ms)"));
   const bw=pw/n;
-  d.counts.forEach((c,i)=>{const x0=L+i*bw,h=c/max*ph;
-    const r=el("path",{d:`M${x0+1},${T+ph}V${T+ph-h+Math.min(3,h)}q0,-${Math.min(3,h)} ${Math.min(3,h)},-${Math.min(3,h)}H${x0+bw-1-Math.min(3,h)}q${Math.min(3,h)},0 ${Math.min(3,h)},${Math.min(3,h)}V${T+ph}Z`,fill:css("s1")});
+  d.counts.forEach((c,i)=>{const x0=L+i*bw,h=c/max*ph,q=Math.min(4,h);
+    const r=el("path",{d:`M${x0+1},${T+ph}V${T+ph-h+q}q0,-${q} ${q},-${q}H${x0+bw-1-q}q${q},0 ${q},${q}V${T+ph}Z`,fill:css("s1")});
     if(c)s.append(r);
     const hit=el("rect",{x:x0,y:T,width:bw,height:ph,class:"hit"});
-    const lab=i===n-1?"11.9 ms and above":`${d.edges[i].toFixed(1)} to ${d.edges[i+1].toFixed(1)} ms`;
-    hover(hit,`${c} inferences`,lab,r);s.append(hit)});
-  for(const [v,name] of [[d.p50,"p50 10.3 ms"],[d.p99,"p99 11.2 ms"]]){s.append(el("line",{x1:x(v),x2:x(v),y1:T-6,y2:T+ph,stroke:css("ink2"),"stroke-width":1}));
-    s.append(el("text",{x:x(v)+5,y:T-2,class:"lab"},name))}
+    hover(hit,`${c} inferences`,i===n-1?"11.9 ms and above":`${d.edges[i].toFixed(1)} to ${d.edges[i+1].toFixed(1)} ms`,r);s.append(hit)});
+  for(const [v,name] of [[d.p50,"p50 · 10.3 ms"],[d.p99,"p99 · 11.2 ms"]]){s.append(el("line",{x1:x(v),x2:x(v),y1:T-8,y2:T+ph,stroke:css("ink2"),"stroke-width":1}));
+    s.append(el("text",{x:x(v)+7,y:T-2,class:"val"},name))}
   document.getElementById("hist").append(s);
 })();
 
-/* ---------- breakdown: tall segmented bar ---------- */
+/* ---------- Fig. 2: tall segmented bar ---------- */
 (function(){
-  const parts=[["Vision encoder",2.76,"s1"],["Fusion",1.13,"s2"],["Flow-matching head (4 steps)",5.61,"s3"],["Transfer and post-processing",0.27,"s4"]];
-  const tot=parts.reduce((a,p)=>a+p[1],0),W=820,H=30,s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Stage breakdown: vision 2.76 ms, fusion 1.13 ms, flow head 5.61 ms, transfer 0.27 ms"});
+  const parts=[["Vision encoder",2.76,"s1"],["Fusion",1.13,"s2"],["Flow-matching head, 4 steps",5.61,"s3"],["Transfer and post-processing",0.27,"other"]];
+  const tot=parts.reduce((a,p)=>a+p[1],0),W=1060,s=el("svg",{viewBox:`0 0 ${W} 30`,role:"img","aria-label":"Stage breakdown: vision 2.76 ms, fusion 1.13 ms, flow head 5.61 ms, transfer 0.27 ms"});
   const lg=document.getElementById("bdlegend");let x=0;
-  parts.forEach(([name,v,c],i)=>{const w=v/tot*(W-2*(parts.length-1));
+  parts.forEach(([name,v,c])=>{const w=v/tot*(W-2*(parts.length-1)),pc=Math.round(v/tot*100),txt=`${v.toFixed(2)} ms`;
     const r=el("rect",{x,y:1,width:w,height:28,rx:4,fill:css(c)});s.append(r);
-    const txt=`${v.toFixed(2)} ms`;
-    if(w>70)s.append(el("text",{x:x+8,y:20,style:`fill:${c==="s4"?"#0b0b0b":"#fff"};font-weight:600`},`${txt} · ${Math.round(v/tot*100)}%`));
-    const hit=el("rect",{x,y:0,width:w,height:30,class:"hit"});hover(hit,txt,`${name} · ${Math.round(v/tot*100)}% of the inference`,r);s.append(hit);
-    const sp=document.createElement("span"),sw=document.createElement("i");sw.style.background=css(c);sp.append(sw,document.createTextNode(w>70?name:`${name} · ${txt}`));lg.append(sp);
+    if(w>90)s.append(el("text",{x:x+10,y:20,style:"fill:#fff;font:500 12px var(--mono)"},`${txt} · ${pc}%`));
+    const hit=el("rect",{x,y:0,width:w,height:30,class:"hit"});hover(hit,txt,`${name} · ${pc}% of the inference`,r);s.append(hit);
+    const sp=document.createElement("span"),sw=document.createElement("i");sw.style.background=css(c);sp.append(sw,document.createTextNode(w>90?name:`${name} · ${txt}`));lg.append(sp);
     x+=w+2});
-  document.getElementById("breakdown").append(s);
+  document.getElementById("breakdown-chart").append(s);
 })();
 
-/* ---------- flow steps line chart ---------- */
+/* ---------- Fig. 3: flow steps ---------- */
 (function(){
   const steps=[1,2,4,8],series=[["bf16 autocast","s1",[5.86,7.22,9.89,15.11]],["fp32","s2",[4.51,5.62,7.75,12.14]],["fp32 + torch.compile","s3",[4.5,5.25,6.72]]];
-  const W=820,H=300,L=44,R=150,T=14,B=40,pw=W-L-R,ph=H-T-B;
+  const W=1060,H=340,L=56,R=190,T=14,B=44,pw=W-L-R,ph=H-T-B;
   const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Line chart of latency against flow steps for three settings"});
   const x=v=>L+(v-1)/7*pw,y=v=>T+ph-v/16*ph;
-  for(const g of [0,4,8,12,16]){s.append(el("line",{x1:L,x2:L+pw,y1:y(g),y2:y(g),stroke:g?css("grid"):css("axis")}));s.append(el("text",{x:L-8,y:y(g)+4,"text-anchor":"end",class:"tick"},g+" ms"))}
-  for(const v of steps)s.append(el("text",{x:x(v),y:H-B+18,"text-anchor":"middle",class:"tick"},v));
-  s.append(el("text",{x:L+pw/2,y:H-4,"text-anchor":"middle"},"flow-matching steps"));
-  const endY=[];
+  for(const g of [0,4,8,12,16]){s.append(el("line",{x1:L,x2:L+pw,y1:y(g),y2:y(g),stroke:g?css("grid"):css("axis")}));s.append(el("text",{x:L-10,y:y(g)+4,"text-anchor":"end",class:"tick"},g+" ms"))}
+  for(const v of steps)s.append(el("text",{x:x(v),y:H-B+20,"text-anchor":"middle",class:"tick"},v));
+  s.append(el("text",{x:L+pw/2,y:H-4,"text-anchor":"middle",class:"tick"},"flow-matching steps"));
+  const cross=el("line",{y1:T,y2:T+ph,stroke:css("axis"),"stroke-width":1,opacity:0});s.append(cross);
   series.forEach(([name,c,vals])=>{
     s.append(el("path",{d:vals.map((v,i)=>`${i?"L":"M"}${x(steps[i])},${y(v)}`).join(""),fill:"none",stroke:css(c),"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"}));
-    vals.forEach((v,i)=>s.append(el("circle",{cx:x(steps[i]),cy:y(v),r:4,fill:css(c),stroke:css("surface"),"stroke-width":2})));
-    const k=vals.length-1;let ly=y(vals[k])+4;endY.forEach(p=>{if(Math.abs(p-ly)<15)ly=p+15*(ly>=p?1:-1)});endY.push(ly);
-    s.append(el("text",{x:x(steps[k])+10,y:ly,class:"lab"},`${name} · ${vals[k].toFixed(1)}`))});
-  const cross=el("line",{y1:T,y2:T+ph,stroke:css("axis"),"stroke-width":1,opacity:0});s.insertBefore(cross,s.firstChild);
+    vals.forEach((v,i)=>s.append(el("circle",{cx:x(steps[i]),cy:y(v),r:4.5,fill:css(c),stroke:css("card"),"stroke-width":2})));
+    const k=vals.length-1;
+    s.append(el("text",{x:x(steps[k])+12,y:y(vals[k])+4,class:"lab"},name));
+    s.append(el("text",{x:x(steps[k])+12,y:y(vals[k])+19,class:"val"},`${vals[k].toFixed(1)} ms`))});
   steps.forEach((st,i)=>{const lo=i?(x(steps[i-1])+x(st))/2:L,hi=i<3?(x(st)+x(steps[i+1]))/2:L+pw+6;
-    const hit=el("rect",{x:lo,y:T,width:hi-lo,height:ph,class:"hit"});
-    const body=series.filter(q=>q[2][i]!==undefined).map(q=>`${q[2][i].toFixed(2)} ms  ${q[0]}`).join("\n");
-    hit.setAttribute("tabindex","0");
-    const on=e=>{showTip(e,`${st} flow step${st>1?"s":""}`,"");tip.style.whiteSpace="pre";tip.lastChild.textContent=body;cross.setAttribute("x1",x(st));cross.setAttribute("x2",x(st));cross.setAttribute("opacity",1)};
+    const hit=el("rect",{x:lo,y:T,width:hi-lo,height:ph,class:"hit",tabindex:0});
+    const body=series.filter(q=>q[2][i]!==undefined).map(q=>`${q[2][i].toFixed(2)} ms   ${q[0]}`).join("\n");
+    const on=e=>{showTip(e,`${st} flow step${st>1?"s":""}`,body);tip.style.whiteSpace="pre";cross.setAttribute("x1",x(st));cross.setAttribute("x2",x(st));cross.setAttribute("opacity",1)};
     const off=()=>{hideTip();tip.style.whiteSpace="";cross.setAttribute("opacity",0)};
     hit.addEventListener("pointermove",on);hit.addEventListener("pointerleave",off);hit.addEventListener("focus",on);hit.addEventListener("blur",off);s.append(hit)});
   document.getElementById("flow").append(s);
 })();
 
-/* ---------- comparison ---------- */
+/* ---------- Fig. 4 + Table 2: comparison ---------- */
 const SRC={
   pi0:["π0: A Vision-Language-Action Flow Model for General Robot Control (Black et al., 2024), Appendix D, Table I","https://arxiv.org/abs/2410.24164"],
   rtvla:["Running VLAs at Real-time Speed (2025), Table 1","https://arxiv.org/abs/2510.26742"],
@@ -335,23 +474,25 @@ const ROWS=[
  ["RT-2 (55 B)",[333,1000],"55 B","cloud TPUs","1","rt2","\"1-3 Hz\""]
 ];
 (function(){
-  const W=820,rowH=24,L=310,R=70,T=30,B=8,H=T+ROWS.length*rowH+B,pw=W-L-R;
+  const W=1060,rowH=27,L=330,R=80,T=34,B=10,H=T+ROWS.length*rowH+B,pw=W-L-R;
   const s=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Dot plot of per-inference latency for this work and published VLAs"});
   const lx=v=>L+(Math.log10(v)-Math.log10(3))/(3-Math.log10(3))*pw;
-  for(const g of [5,10,20,50,100,200,500,1000]){s.append(el("line",{x1:lx(g),x2:lx(g),y1:T-4,y2:H-B,stroke:css("grid")}));s.append(el("text",{x:lx(g),y:T-10,"text-anchor":"middle",class:"tick"},g+(g===1000?" ms":"")))}
-  s.append(el("line",{x1:lx(40),x2:lx(40),y1:T-4,y2:H-B,stroke:css("ink2"),"stroke-width":1}));
-  s.append(el("text",{x:lx(40)+5,y:T+2*rowH+4,class:"lab"},"40 ms = 25 Hz tick"));
+  s.append(el("rect",{x:0,y:T,width:W,height:3*rowH,rx:8,fill:"rgba(57,135,229,.09)"}));
+  for(const g of [5,10,20,50,100,200,500,1000]){s.append(el("line",{x1:lx(g),x2:lx(g),y1:T-4,y2:H-B,stroke:css("grid")}));s.append(el("text",{x:lx(g),y:T-12,"text-anchor":"middle",class:"tick"},g+(g===1000?" ms":"")))}
+  s.append(el("line",{x1:lx(40),x2:lx(40),y1:T-4,y2:H-B,stroke:css("axis"),"stroke-width":1}));
+  s.append(el("text",{x:lx(40)+7,y:T+1.5*rowH+4,class:"tick",style:"fill:var(--ink2)"},"40 ms · one 25 Hz tick"));
   ROWS.forEach((r,i)=>{const y=T+i*rowH+rowH/2,[name,ms,par,hw,act,src,note,mine]=r,c=css(mine?"s1":"other");
-    s.append(el("text",{x:L-12,y:y+4,"text-anchor":"end",class:"lab",style:mine?"font-weight:600":""},mine?name:`${name} · ${hw}`));
-    const lo=Array.isArray(ms)?ms[0]:ms,hi=Array.isArray(ms)?ms[1]:ms;
-    const g=el("g");
+    const t=el("text",{x:L-14,y:y+4,"text-anchor":"end",class:"lab",style:mine?"font-weight:600":""},name);
+    if(!mine){const ts=el("tspan",{style:"fill:var(--ink3);font-weight:400"},"  "+hw);t.append(ts)}
+    s.append(t);
+    const lo=Array.isArray(ms)?ms[0]:ms,hi=Array.isArray(ms)?ms[1]:ms,g=el("g");
     if(hi>lo)g.append(el("line",{x1:lx(lo),x2:lx(hi),y1:y,y2:y,stroke:c,"stroke-width":2,"stroke-linecap":"round"}));
-    g.append(el("circle",{cx:lx(lo),cy:y,r:5,fill:c,stroke:css("surface"),"stroke-width":2}));
-    if(hi>lo)g.append(el("circle",{cx:lx(hi),cy:y,r:5,fill:c,stroke:css("surface"),"stroke-width":2}));
+    g.append(el("circle",{cx:lx(lo),cy:y,r:mine?6:5,fill:c,stroke:css("card"),"stroke-width":2}));
+    if(hi>lo)g.append(el("circle",{cx:lx(hi),cy:y,r:5,fill:c,stroke:css("card"),"stroke-width":2}));
     s.append(g);
     const vt=hi>lo?`${lo}–${hi.toLocaleString()}`:String(ms);
-    if(hi>lo)s.append(el("text",{x:lx(lo)-10,y:y+4,"text-anchor":"end",class:"val"},vt));
-    else s.append(el("text",{x:lx(hi)+10,y:y+4,class:"val"},vt));
+    if(hi>lo)s.append(el("text",{x:lx(lo)-11,y:y+4,"text-anchor":"end",class:"val"},vt));
+    else s.append(el("text",{x:lx(hi)+11,y:y+4,class:"val"},vt));
     const hit=el("rect",{x:0,y:y-rowH/2,width:W,height:rowH,class:"hit"});
     hover(hit,`${vt} ms`,`${name} · ${par} parameters · ${hw} · ${note}`,g);s.append(hit)});
   document.getElementById("compare").append(s);
@@ -359,16 +500,15 @@ const ROWS=[
   const tb=document.getElementById("cmp");
   const add=(cells,mine)=>{const tr=document.createElement("tr");if(mine)tr.className="me";cells.forEach(([t,cls,small,href])=>{const td=document.createElement("td");if(cls)td.className=cls;
     if(href){const a=document.createElement("a");a.href=href;a.textContent=t;td.append(a)}else td.append(document.createTextNode(t));
-    if(small){td.append(document.createElement("br"));const sm=document.createElement("small");sm.textContent=small;td.append(sm)}tr.append(td)});tb.append(tr)};
+    if(small){const sm=document.createElement("small");sm.textContent=small;td.append(sm)}tr.append(td)});tb.append(tr)};
   ROWS.forEach(([name,ms,par,hw,act,src,note,mine])=>{const vt=Array.isArray(ms)?`${ms[0]}–${ms[1].toLocaleString()} ms`:`${ms} ms`;
     add([[name,"",note],[par,"n"],[hw,""],[vt,"n"],[act,"n"],src?[`[${ref(src)}]`,"",null,"#src-"+src]:["measured here",""]],mine)});
   add([["Helix System 1","","actions at 200 Hz under a 7 B S2 at 7–9 Hz; no latency published"],["80 M","n"],["embedded GPUs",""],["not reported","n"],["35-DoF","n"],[`[${ref("helix")}]`,"",null,"#src-helix"]]);
-  add([["GR00T N1 two-level rates","","VLM at 10 Hz, action module at 120 Hz, as described by the authors"],["2.2 B","n"],["L40",""],["see above","n"],["16","n"],[`[${ref("groot")}]`,"",null,"#src-groot"]]);
+  add([["GR00T N1, two-level rates","","VLM at 10 Hz, action module at 120 Hz, as described by the authors"],["2.2 B","n"],["L40",""],["see above","n"],["16","n"],[`[${ref("groot")}]`,"",null,"#src-groot"]]);
   add([["SmolVLA","","built for consumer GPUs and CPUs with asynchronous inference"],["450 M","n"],["n/s",""],["not reported","n"],["50","n"],[`[${ref("smol")}]`,"",null,"#src-smol"]]);
-  const cap=document.createElement("p");cap.className="note";cap.textContent="n/s = not stated in the source. \"Actions out\" is the chunk length predicted by one inference; most systems execute only part of it before replanning.";tb.parentNode.after(cap);
 
   const ol=document.getElementById("sources");
-  order.forEach(k=>{const li=document.createElement("li");li.id="src-"+k;const a=document.createElement("a");a.href=SRC[k][1];a.textContent=SRC[k][1];li.append(document.createTextNode(SRC[k][0]+". "),a);ol.append(li)});
+  order.forEach(k=>{const li=document.createElement("li");li.id="src-"+k;const d=document.createElement("div");const a=document.createElement("a");a.href=SRC[k][1];a.textContent=SRC[k][1];a.target="_blank";a.rel="noopener";d.append(document.createTextNode(SRC[k][0]),a);li.append(d);ol.append(li)});
 })();
 </script>
 </body>

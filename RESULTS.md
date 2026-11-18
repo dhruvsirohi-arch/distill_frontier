@@ -98,3 +98,9 @@ Drop `--config` for M1. Numbers are in `outputs/vla/results_*.json`, videos in `
 
 Text-only state in, about ten JSON macro-actions per episode out, static target: 92/100 against the
 expert's 100/100. See `outputs/results.json`.
+
+## Latency report
+
+A full latency characterization with a comparison against published VLA figures is in
+`docs/index.html` (served by GitHub Pages). Regenerate the numbers with `python -m vla.latency`
+and `python -m vla.latency_variants`; raw output is `outputs/vla/latency.json`.

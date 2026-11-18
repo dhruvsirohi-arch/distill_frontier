@@ -178,7 +178,7 @@ footer a{color:var(--ink2);text-decoration:none}
   <div class="byline"><span class="tag">17 Nov 2026</span><span class="tag">NVIDIA RTX 4090</span><span class="tag">Intel i9-14900K</span><span class="tag">PyTorch 2.15</span><span class="tag">MuJoCo 4.0.1</span><span class="tag">batch size 1</span></div>
 
   <div class="kpis">
-    <div class="kpi"><div class="v">10.3<small>ms</small></div><div class="l">median inference in closed loop, default settings</div></div>
+    <div class="kpi"><div class="v">10.3<small>ms</small></div><div class="l">median inference in closed loop, default settings, loop kept hot</div></div>
     <div class="kpi"><div class="v">11.2<small>ms</small></div><div class="l">99th percentile; 18.2 ms worst of 3,329 inferences</div></div>
     <div class="kpi"><div class="v">6.7<small>ms</small></div><div class="l">median with <code style="font:12.5px var(--mono)">torch.compile</code> and fp32</div></div>
     <div class="kpi"><div class="v">100<small>/100</small></div><div class="l">task success on the episodes these timings come from</div></div>
@@ -223,6 +223,19 @@ footer a{color:var(--ink2);text-decoration:none}
     <div class="note"><h4>First call: 175 ms</h4><p>The first inference after loading initializes CUDA kernels. Run one throw-away inference before the control loop starts.</p></div>
     <div class="note"><h4>Load: 2.4 s</h4><p>Time to read the checkpoint and build the model, including the text encoder that is used only for new instructions.</p></div>
     <div class="note"><h4>Memory: 438 MB</h4><p>Peak GPU memory at run time. The model leaves the rest of a 24 GB card free for a reasoning model.</p></div>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Table 1</b> · How the loop waits for the next tick</span><span>20 episodes per row</span></div>
+    <h3>Sleeping between ticks more than doubles inference time</h3>
+    <p class="d">Same model and settings; only the way the control loop waits out the rest of each 40 ms tick changes</p>
+    <div class="scroll"><table>
+      <tr><th>Loop pacing</th><th class="n">p50</th><th class="n">p90</th><th class="n">p99</th><th class="n">max</th><th class="n">Success</th></tr>
+      <tr><td>Back to back, no waiting<small>how every other number in this report was measured</small></td><td class="n">10.2 ms</td><td class="n">10.6 ms</td><td class="n">11.0 ms</td><td class="n">27.1 ms</td><td class="n">100%</td></tr>
+      <tr class="me"><td>25 Hz, busy-wait to the next tick<small>one CPU core kept spinning</small></td><td class="n">10.7 ms</td><td class="n">11.1 ms</td><td class="n">11.5 ms</td><td class="n">14.0 ms</td><td class="n">100%</td></tr>
+      <tr><td>25 Hz, sleep until 5 ms before the tick, then spin</td><td class="n">19.2 ms</td><td class="n">21.7 ms</td><td class="n">30.8 ms</td><td class="n">46.5 ms</td><td class="n">100%</td></tr>
+      <tr><td>25 Hz, <code style="font:12.5px var(--mono)">time.sleep</code> to the next tick</td><td class="n">23.2 ms</td><td class="n">26.3 ms</td><td class="n">35.7 ms</td><td class="n">41.6 ms</td><td class="n">100%</td></tr>
+    </table></div>
+    <p class="cap">On this machine (Linux, <code>powersave</code> CPU governor) the hardware idles while the loop sleeps and the next inference starts cold; whether the CPU or the GPU is responsible was not isolated. A real-time deployment gets the 10 ms figure only if it keeps the core busy or pins the power state; with a plain sleep the worst case exceeded the 40 ms tick.</p>
   </div>
 </div></section>
 
@@ -272,7 +285,7 @@ footer a{color:var(--ink2);text-decoration:none}
   <h2>How often it replans sets the <em>real</em> delay</h2>
   <p class="sub">Inference latency is not the delay the robot experiences. With action chunking, the last action executed from a chunk was computed from an observation several ticks old: up to <b>130 ms</b> when replanning every 4 ticks, <b>10 ms</b> when replanning every tick.</p></div>
   <div class="fig">
-    <div class="t"><span><b>Table 1</b> · Replan interval</span><span>bf16 · 4 flow steps</span></div>
+    <div class="t"><span><b>Table 2</b> · Replan interval</span><span>bf16 · 4 flow steps</span></div>
     <h3>Replanning every tick costs a quarter of the GPU</h3>
     <p class="d">Closed loop · 50 episodes per row, 100 for the default</p>
     <div class="scroll"><table>
@@ -301,7 +314,7 @@ footer a{color:var(--ink2);text-decoration:none}
     <p class="cap">The vertical line is this task's 40 ms control period. RT-2 is drawn as its reported range. OpenVLA's 4090 figure is converted from "approximately 6 Hz". ACT and Diffusion Policy are small single-task policies without language, included as reference points.</p>
   </div>
   <div class="fig">
-    <div class="t"><span><b>Table 2</b> · The same figures with their conditions</span><span>22 rows + 3 unreported</span></div>
+    <div class="t"><span><b>Table 3</b> · The same figures with their conditions</span><span>22 rows + 3 unreported</span></div>
     <h3>Parameters, hardware and chunk length differ, which is most of the story</h3>
     <p class="d">"Actions out" is the chunk length predicted by one inference; most systems execute only part of it. n/s = not stated in the source.</p>
     <div class="scroll"><table id="cmp">
@@ -331,6 +344,7 @@ footer a{color:var(--ink2);text-decoration:none}
   <h2>What these numbers <em>do not</em> cover</h2></div>
   <ul class="plain">
     <li><b>Inference time is not fed back into the simulation.</b> The simulator waits while the model computes, so an action is applied to the state it was computed from. On a real robot the world moves during those 10 ms; at these pad speeds, 0.3 mm.</li>
+    <li><b>The headline assumes a hot loop.</b> All figures except Table 1 come from back-to-back inference. Paced with a plain sleep, the median rises to 23 ms on this machine.</li>
     <li><b>One GPU, one machine, one day.</b> No thermal soak and no contention from other processes. The 99.9th percentile rests on three samples.</li>
     <li><b>No camera or actuation latency.</b> Real cameras add tens of milliseconds, which would dominate this model's share.</li>
     <li><b>Sweep rows use 50 episodes.</b> "100%" there means 50 of 50; a difference of 2 to 3 points between settings would not be visible.</li>
@@ -347,6 +361,7 @@ cd distill_frontier &amp;&amp; uv sync --frozen
 
 .venv/bin/python -m vla.latency          --ckpt outputs/vla/runs/m2_early/best.pt
 .venv/bin/python -m vla.latency_variants --ckpt outputs/vla/runs/m2_early/best.pt
+.venv/bin/python -m vla.latency_paced    --ckpt outputs/vla/runs/m2_early/best.pt
 <span class="c"># raw numbers, including every closed-loop sample: outputs/vla/latency.json</span></pre>
 </div></section>
 

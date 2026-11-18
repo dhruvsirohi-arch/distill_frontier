@@ -102,5 +102,5 @@ expert's 100/100. See `outputs/results.json`.
 ## Latency report
 
 A full latency characterization with a comparison against published VLA figures is in
-`docs/index.html` (served by GitHub Pages). Regenerate the numbers with `python -m vla.latency`
+`docs/vla-latency/index.html` (GitHub Pages: `/vla-latency/`). Regenerate the numbers with `python -m vla.latency`
 and `python -m vla.latency_variants`; raw output is `outputs/vla/latency.json`.

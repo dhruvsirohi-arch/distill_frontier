@@ -75,7 +75,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;padding:16p
 .lbl{font-size:12.5px;color:var(--ink3);margin:12px 0 6px}
 .lbl:first-of-type{margin-top:0}
 .text{display:flex;gap:8px;margin-top:12px}
-.text input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
+.text input{flex:1;width:100%;min-width:0;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
 .text input:focus{border-color:var(--blue)}
 .btn{border:1px solid var(--line2);background:rgba(255,255,255,.03);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap;transition:background .15s,border-color .15s}
 .btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28)}
@@ -84,6 +84,30 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;padding:16p
 .btn.sm{padding:6px 11px;font-size:12.5px;border-radius:999px}
 .btn.on{border-color:var(--accent);color:var(--accent)}
 .grow{flex:1}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn:disabled:hover{background:rgba(255,255,255,.03);border-color:var(--line2)}
+.chips{grid-template-columns:repeat(3,1fr)}
+.chip{padding:9px 10px;font-size:14px;white-space:nowrap}
+.chip.rand i{background:conic-gradient(var(--red),var(--yellow),var(--green),var(--padblue),var(--red))}
+.chips.dim .chip{opacity:.45}
+.preview{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--bg2);border:1px dashed var(--line2);font-size:14px;color:var(--ink2)}
+.preview b{color:var(--ink);font-weight:500}
+.hint b{color:var(--ink2);font-weight:500}
+.toggle{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.toggle input{position:absolute;opacity:0;pointer-events:none}
+.toggle .sw{flex:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;transition:background .15s;margin-top:1px}
+.toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.toggle input:checked+.sw{background:var(--accent)}
+.toggle input:checked+.sw::after{transform:translateX(16px);background:#0a0b0e}
+.toggle input:focus-visible+.sw{outline:2px solid var(--blue);outline-offset:2px}
+.toggle b{display:block;font-weight:500}
+.toggle small{display:block;font-size:12.5px;color:var(--ink3);line-height:1.45}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;border:1px solid var(--line2);border-radius:10px}
+.seg button{border:0;background:transparent;border-radius:7px;padding:6px 0;cursor:pointer;font:500 13px var(--sans);color:var(--ink2)}
+.seg button:hover{background:rgba(255,255,255,.07)}
+.seg button.sel{background:var(--ink);color:#0a0b0e}
+.badge.ready i,.badge.stopped i{background:var(--ink3)}
+.res.stopped,.res.unscored{color:var(--ink3)}
 
 .slider{margin-top:6px}
 .slider .head{display:flex;justify-content:space-between;align-items:baseline}
@@ -161,13 +185,18 @@ tr:last-child td{border-bottom:0}
 
   <aside class="side">
     <div class="card pad">
-      <div class="t"><span>Instruction</span></div>
+      <div class="t"><span>Instruction</span><span id="draft-note"></span></div>
       <div class="lbl">Pick up</div>
       <div class="chips" id="bowls"></div>
       <div class="lbl">Place on</div>
       <div class="chips" id="pads"></div>
-      <div class="text"><input id="text" type="text" maxlength="160" placeholder="or type your own phrasing" aria-label="Instruction text"><button class="btn primary" id="send">Send</button></div>
-      <div class="hint">Sending while the arm is moving changes the goal mid-attempt.</div>
+      <div class="text"><input id="text" type="text" maxlength="160" placeholder="or type your own phrasing" aria-label="Instruction text"></div>
+      <div class="preview" id="preview"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary grow" id="run">Run</button>
+        <button class="btn" id="switch" disabled title="Only while an episode is running">Change goal now</button>
+      </div>
+      <div class="hint"><b>Run</b> starts a new episode with this instruction. <b>Change goal now</b> swaps the instruction of the episode in progress without restarting it.</div>
     </div>
 
     <div class="card pad">
@@ -193,16 +222,17 @@ tr:last-child td{border-bottom:0}
     </div>
 
     <div class="card pad">
-      <div class="t"><span>Run</span><span id="ep">attempt –</span></div>
+      <div class="t"><span>Scene</span><span id="ep">episode –</span></div>
       <div class="row">
         <button class="btn grow" id="new">New scene</button>
         <button class="btn grow" id="retry">Retry scene</button>
         <button class="btn" id="pause">Pause</button>
       </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn grow on" id="auto">Auto-run: on</button>
-      </div>
-      <div class="hint">Auto-run starts a new scene with a random instruction after each attempt, so results build up at the current settings.</div>
+      <hr>
+      <label class="toggle"><input type="checkbox" id="auto"><span class="sw"></span><span><b>Auto-run</b><small>After each episode, load a new scene and run the same instruction again.</small></span></label>
+      <div class="lbl" style="margin-top:14px">Time limit per episode</div>
+      <div class="seg" id="limit"><button data-v="10">10 s</button><button data-v="20">20 s</button><button data-v="40">40 s</button><button data-v="0">None</button></div>
+      <div class="hint">An episode that has not succeeded within the limit is recorded as failed. With no limit it runs until it succeeds or you start something else.</div>
     </div>
   </aside>
 
@@ -211,16 +241,16 @@ tr:last-child td{border-bottom:0}
       <div class="t"><span>Success by setting</span><button class="btn sm" id="clear">Clear</button></div>
       <div class="kv" style="margin-bottom:12px">
         <div><b id="k-rate">–</b><span>success at current setting</span></div>
-        <div><b id="k-n">0</b><span>attempts at current setting</span></div>
-        <div><b id="k-all">0</b><span>attempts in total</span></div>
+        <div><b id="k-n">0</b><span>scored episodes at current setting</span></div>
+        <div><b id="k-all">0</b><span>scored episodes in total</span></div>
       </div>
-      <div class="scroll"><table id="by"><tr><th>Speed</th><th>Travel</th><th>Success</th><th class="n">Attempts</th></tr></table>
-      <div class="empty" id="by-empty">No finished attempts yet.</div></div>
+      <div class="scroll"><table id="by"><tr><th>Speed</th><th>Travel</th><th>Success</th><th class="n">Episodes</th></tr></table>
+      <div class="empty" id="by-empty">No scored episodes yet.</div></div>
     </div>
     <div class="card pad">
-      <div class="t"><span>Attempt log</span><span id="log-n"></span></div>
+      <div class="t"><span>Episode log</span><span id="log-n"></span></div>
       <div class="scroll"><table id="log"><tr><th class="n">#</th><th>Instruction</th><th class="n">cm/s</th><th class="n">± cm</th><th class="n">Time</th><th>Result</th></tr></table>
-      <div class="empty" id="log-empty">Attempts appear here as they finish.</div></div>
+      <div class="empty" id="log-empty">Episodes appear here as they finish.</div></div>
     </div>
   </div>
 </main>
@@ -229,17 +259,19 @@ tr:last-child td{border-bottom:0}
 const $=id=>document.getElementById(id);
 const COLORS={red:"var(--red)",green:"var(--green)",blue:"var(--padblue)",yellow:"var(--yellow)"};
 const post=o=>fetch("/cmd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).catch(()=>{});
-let st=null,sel={bowl:null,pad:null},built=false,dragging={speed:false,travel:false},histLen=-1;
+let st=null,built=false,dragging={speed:false,travel:false},histLen=-1;
+/* The draft is what the Run button will send. It lives in the browser and is never overwritten by the server. */
+const draft={bowl:"random",pad:"random",text:""};
 
 function buildChips(s){
   for(const [box,names,key,cls] of [[$("bowls"),s.bowls,"bowl",""],[$("pads"),s.pads,"pad"," pad"]]){
     box.textContent="";
-    names.forEach(n=>{const b=document.createElement("button");b.className="chip"+cls;b.dataset.name=n;
-      const i=document.createElement("i");i.style.background=COLORS[n]||"var(--ink3)";
-      b.append(i,document.createTextNode(`${n} ${key}`));
-      b.onclick=()=>{sel[key]=n;paintChips();sendChips()};box.append(b)});
+    [...names,"random"].forEach(n=>{const b=document.createElement("button");b.className="chip"+cls+(n==="random"?" rand":"");b.dataset.name=n;b.dataset.key=key;
+      const i=document.createElement("i");if(n!=="random")i.style.background=COLORS[n]||"var(--ink3)";
+      b.append(i,document.createTextNode(n==="random"?"random":n));
+      b.onclick=()=>{draft[key]=n;draft.text="";$("text").value="";paintDraft()};box.append(b)});
   }
-  sel.bowl=s.target_bowl;sel.pad=s.target_pad;paintChips();
+  Object.assign(draft,s.spec);$("text").value=draft.text||"";paintDraft();
   const sp=$("speed"),tr=$("travel");
   const pct=(el,v)=>(v-el.min)/(el.max-el.min)*100;
   const lo=s.train_speed[0]*100,hi=s.train_speed[1]*100,tt=s.train_travel*100;
@@ -248,10 +280,20 @@ function buildChips(s){
   $("tr-speed").textContent=`trained ${lo}–${hi}`;$("tr-travel").textContent=`trained ±${tt}`;
   built=true;
 }
-function paintChips(){document.querySelectorAll(".chip").forEach(c=>{const key=c.classList.contains("pad")?"pad":"bowl";c.classList.toggle("sel",sel[key]===c.dataset.name)})}
-function sendChips(){if(!sel.bowl||!sel.pad)return;const t=`put the ${sel.bowl} bowl on the ${sel.pad} pad`;$("text").value="";post({type:"instruction",text:t})}
-$("send").onclick=()=>{const t=$("text").value.trim();if(t)post({type:"instruction",text:t})};
-$("text").addEventListener("keydown",e=>{if(e.key==="Enter")$("send").click()});
+function paintDraft(){
+  const custom=!!draft.text;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("sel",!custom&&draft[c.dataset.key]===c.dataset.name));
+  $("bowls").classList.toggle("dim",custom);$("pads").classList.toggle("dim",custom);
+  const pv=$("preview");pv.textContent="";
+  const b=document.createElement("b");
+  if(custom){b.textContent=draft.text;pv.append(b)}
+  else{b.textContent=`put the ${draft.bowl==="random"?"(random)":draft.bowl} bowl on the ${draft.pad==="random"?"(random)":draft.pad} pad`;pv.append(b);
+    if(draft.bowl==="random"||draft.pad==="random")pv.append(document.createTextNode(" · drawn fresh each episode"))}
+}
+$("text").addEventListener("input",()=>{draft.text=$("text").value.trim();paintDraft()});
+$("text").addEventListener("keydown",e=>{if(e.key==="Enter")$("run").click()});
+$("run").onclick=()=>post({type:"run",spec:draft});
+$("switch").onclick=()=>post({type:"switch",spec:draft});
 
 function bindSlider(id,scale){const el=$(id);
   el.addEventListener("input",()=>{dragging[id]=true;$("v-"+id).textContent=(+el.value).toFixed(1);post({type:id,value:el.value/scale});paintFactor(+$("speed").value,+$("travel").value)});
@@ -261,7 +303,8 @@ $("presets").onclick=e=>{const b=e.target.closest("button");if(!b)return;post({t
 $("new").onclick=()=>post({type:"new_scene"});
 $("retry").onclick=()=>post({type:"retry"});
 $("pause").onclick=()=>post({type:"pause",value:!(st&&st.paused)});
-$("auto").onclick=()=>post({type:"auto",value:!(st&&st.auto)});
+$("auto").onchange=e=>post({type:"auto",value:e.target.checked});
+$("limit").onclick=e=>{const b=e.target.closest("button");if(b)post({type:"limit",value:+b.dataset.v})};
 $("clear").onclick=()=>post({type:"clear"});
 $("cams").onclick=e=>{const b=e.target.closest("button");if(b)post({type:"camera",preset:b.dataset.c})};
 
@@ -283,28 +326,34 @@ function paintFactor(speedCm,travelCm){
 const key=h=>`${h.speed}|${h.travel}`;
 function render(s){
   if(!built)buildChips(s);
-  $("say").textContent=s.instruction;
-  const b=$("badge"),state=s.paused?"paused":s.phase==="running"?"running":s.result;
-  b.className="badge "+state;
-  $("badge-t").textContent=state==="running"?`running · ${s.t.toFixed(1)} s`:state==="success"?"success":state==="failed"?`failed · ${s.failure.replace(/_/g," ")}`:state==="unscored"?"finished · not scored":"paused";
-  $("prog").style.width=(s.phase==="running"?Math.min(100,s.t/s.t_max*100):100)+"%";
-  $("prog").style.background=state==="success"?"var(--good)":state==="failed"?"var(--bad)":"var(--blue)";
-  const done=s.result==="success",placed=s.on_pad&&!s.grasped;
-  $("s-reach").className="step "+(s.grasped||placed||done?"ok":s.phase==="running"?"on":"");
-  $("s-grasp").className="step "+(placed||done?"ok":s.grasped?"on":"");
-  $("s-place").className="step "+(done||s.hold>0?"ok":placed?"on":"");
+  const state=s.phase==="running"?"running":s.phase==="ready"?"ready":s.result;
+  $("say").textContent=s.phase==="ready"?(s.auto?"starting…":"Ready. Choose an instruction and press Run."):s.instruction;
+  const label=state==="running"?`running · ${s.t.toFixed(1)} s`:state==="ready"?"ready":state==="success"?`success · ${s.t.toFixed(1)} s`:state==="failed"?`failed · ${s.failure.replace(/_/g," ")}`:state==="stopped"?"stopped":"finished · not scored";
+  $("badge").className="badge "+(s.paused?"paused":state);
+  $("badge-t").textContent=s.paused?`paused · ${label}`:label;
+  const pr=$("prog");
+  pr.style.width=(state==="ready"?0:s.phase==="running"?(s.limit_s?Math.min(100,s.t/s.limit_s*100):0):100)+"%";
+  pr.style.background=state==="success"?"var(--good)":state==="failed"?"var(--bad)":state==="running"?"var(--blue)":"var(--ink3)";
+  const done=s.result==="success",active=s.phase!=="ready",placed=active&&s.on_pad&&!s.grasped;
+  $("s-reach").className="step "+(!active?"":s.grasped||placed||done?"ok":s.phase==="running"?"on":"");
+  $("s-grasp").className="step "+(!active?"":placed||done?"ok":s.grasped?"on":"");
+  $("s-place").className="step "+(!active?"":done||s.hold>0?"ok":placed?"on":"");
   $("s-hold").className="step "+(done?"ok":s.hold>0?"on":"");
   $("hold-t").textContent=s.hold>0&&!done?`${s.hold.toFixed(1)} of ${s.hold_needed} s`:`rides the pad for ${s.hold_needed} s`;
-  if(sel.bowl!==s.target_bowl||sel.pad!==s.target_pad){sel.bowl=s.target_bowl;sel.pad=s.target_pad;paintChips()}
   const sc=s.speed*100,tc=s.travel*100;
   if(!dragging.speed){$("speed").value=sc;$("v-speed").textContent=sc.toFixed(1)}
   if(!dragging.travel){$("travel").value=tc;$("v-travel").textContent=tc.toFixed(1)}
   paintFactor(sc,tc);
   $("m-lat").textContent=s.latency_p50.toFixed(1)+" ms";$("m-hz").textContent=s.loop_hz+" Hz";$("m-scene").textContent="#"+s.scene;
-  $("ep").textContent="attempt "+s.episode;
-  $("pause").textContent=s.paused?"Resume":"Pause";
-  $("auto").textContent="Auto-run: "+(s.auto?"on":"off");$("auto").classList.toggle("on",s.auto);
-  const H=s.history.filter(h=>h.result!=="unscored");
+  $("ep").textContent=s.episode?"episode "+s.episode:"no episode yet";
+  $("pause").textContent=s.paused?"Resume":"Pause";$("pause").classList.toggle("on",s.paused);
+  $("auto").checked=s.auto;
+  $("switch").disabled=s.phase!=="running";
+  $("run").textContent=s.phase==="running"?"Run as new episode":"Run";
+  document.querySelectorAll("#limit button").forEach(b=>b.classList.toggle("sel",+b.dataset.v===s.limit_s));
+  const same=s.spec.text===draft.text&&(draft.text||(s.spec.bowl===draft.bowl&&s.spec.pad===draft.pad));
+  $("draft-note").textContent=s.episode&&!same?"not sent yet":"";
+  const H=s.history.filter(h=>h.result==="success"||h.result==="failed");
   const cur=H.filter(h=>h.speed===+sc.toFixed(2)&&h.travel===+tc.toFixed(2)),ok=cur.filter(h=>h.result==="success").length;
   $("k-rate").textContent=cur.length?Math.round(ok/cur.length*100)+"%":"–";$("k-n").textContent=cur.length;$("k-all").textContent=H.length;
   if(s.history.length!==histLen){histLen=s.history.length;tables(s.history,H)}
@@ -320,8 +369,8 @@ function tables(all,H){
     td.append(bar,document.createTextNode(`${Math.round(g.ok/g.n*100)}%  (${g.ok}/${g.n})`));cell(tr,g.n,"n")});
   $("by-empty").style.display=groups.size?"none":"";
   [...all].reverse().forEach(h=>{const tr=log.insertRow();cell(tr,h.episode,"n");cell(tr,h.instruction);cell(tr,h.speed.toFixed(1),"n");cell(tr,h.travel.toFixed(1),"n");cell(tr,h.seconds.toFixed(1)+" s","n");
-    const td=cell(tr,""),r=document.createElement("span");r.className="res "+h.result;r.textContent=h.result==="failed"?h.failure.replace(/_/g," "):h.result;td.append(r)});
-  $("log-empty").style.display=all.length?"none":"";$("log-n").textContent=all.length?all.length+" attempts":"";
+    const td=cell(tr,""),r=document.createElement("span");r.className="res "+h.result;r.textContent=(h.result==="failed"?h.failure.replace(/_/g," "):h.result)+(h.switched?" · goal changed":"");td.append(r)});
+  $("log-empty").style.display=all.length?"none":"";$("log-n").textContent=all.length?all.length+" episodes":"";
 }
 /* video: MJPEG streams by default; ?static polls single frames instead */
 if(new URLSearchParams(location.search).has("static")){const tick=()=>{const q="?"+Date.now();$("view").src="/view.jpg"+q;$("inputs").src="/inputs.jpg"+q};tick();setInterval(tick,250)}

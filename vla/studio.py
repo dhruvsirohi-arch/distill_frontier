@@ -4,8 +4,14 @@
   .venv/bin/python -m vla.studio --host 0.0.0.0        # reachable from another machine
 
 The page shows a live view of the simulation and the two images the model sees, and lets you set
-the instruction, pad speed and pad travel while the policy runs. Each attempt is scored and logged
-against the settings it ran under.
+the instruction, pad speed and pad travel while the policy runs.
+
+How it behaves:
+  Run           starts an episode with your instruction (and resumes if paused). If the scene on
+                screen has already been used, a new scene is loaded first.
+  New scene     loads a new layout. It only starts running if Auto-run is on.
+  Auto-run      when on, every finished episode is followed by a new scene and the same instruction.
+  Time limit    an episode that has not succeeded by then is recorded as failed; "none" disables it.
 """
 from __future__ import annotations
 
@@ -139,64 +145,109 @@ def main():
     main_stream, input_stream = Stream(), Stream()
     cmds: queue.Queue = queue.Queue()
     lock = threading.Lock()
-    S = {"phase": "running", "result": None, "failure": "", "auto": True, "paused": False, "scored": True,
-         "episode": 0, "history": [], "hz": 0.0, "seed": args.seed}
     snapshot = {}
 
-    def make_instruction(bi, pi, k=None):
-        k = int(np.random.randint(len(TEMPLATES))) if k is None else k
-        return TEMPLATES[k % len(TEMPLATES)].format(bowl=bowls[bi], pad=pads[pi])
+    # ------------------------------------------------------------------ state
+    # phase: "ready"   scene loaded, no episode yet (arm holds, pads move)
+    #        "running" an episode is in progress
+    #        "done"    the episode ended; result says how
+    # `spec` is the user's instruction and stays until they change it. "random" fields are drawn
+    # again for every episode. Pause only freezes time; commands still apply.
+    S = {"phase": "ready", "result": None, "failure": "", "auto": False, "paused": False, "scored": True,
+         "episode": 0, "history": [], "hz": 0.0, "seed": args.seed, "dirty": False, "limit_s": 20.0,
+         "spec": {"bowl": "random", "pad": "random", "text": ""}, "final_t": 0.0, "t_done": 0.0,
+         "max_speed": 0.0, "max_travel": 0.0, "switched": False}
 
-    def start_attempt(text):
-        """(Re)start scoring in the current scene against `text`."""
+    def resolve(spec):
+        """Instruction text for one episode from the sticky spec."""
+        if spec.get("text"):
+            return spec["text"]
+        b = spec["bowl"] if spec["bowl"] in bowls else bowls[int(np.random.randint(len(bowls)))]
+        p = spec["pad"] if spec["pad"] in pads else pads[int(np.random.randint(len(pads)))]
+        return TEMPLATES[0].format(bowl=b, pad=p)
+
+    def clean_spec(c):
+        sp = c.get("spec") or {}
+        return {"bowl": sp.get("bowl") if sp.get("bowl") in bowls else "random",
+                "pad": sp.get("pad") if sp.get("pad") in pads else "random",
+                "text": str(sp.get("text") or "").strip()[:160]}
+
+    def set_goal(text):
         env.instruction = text
         tgt = parse_target(text, bowls, pads)
         if tgt:
             env.target_bowl, env.target_pad = tgt
-        env.tick, env._hold, env.stats = 0, 0, TickStats(seed=env.seed)
-        S.update(phase="running", result=None, failure="", scored=tgt is not None, t_start=time.time(),
-                 max_speed=env.speed, max_travel=env.travel)
+        S["scored"] = tgt is not None
+        env._hold = 0
         pol.set_instruction(text)
-        pol.queue = []                             # replan now, even if the text is unchanged
+        pol.queue = []                              # replan on the next tick
 
-    def new_scene(seed=None, text=None):
-        S["seed"] = S["seed"] + 1 if seed is None else seed
-        S["episode"] += 1
-        obs = env.reset(v["seeds"]["eval_start"] + 40000 + S["seed"])
-        pol.reset(S["seed"])
-        start_attempt(text or env.instruction)
-        return obs
-
-    def finish(info):
-        ok = bool(info.get("success")) and S["scored"]
-        S.update(phase="done", result="success" if ok else ("unscored" if not S["scored"] else "failed"),
-                 failure="" if ok else info.get("failure_type", ""), t_done=time.time())
+    def log(result, failure=""):
         S["history"].append({"episode": S["episode"], "instruction": env.instruction, "speed": round(S["max_speed"] * 100, 2),
-                             "travel": round(S["max_travel"] * 100, 2), "result": S["result"], "failure": S["failure"],
-                             "seconds": round(env.tick * env.dt, 1)})
+                             "travel": round(S["max_travel"] * 100, 2), "result": result, "failure": failure,
+                             "seconds": round(env.tick * env.dt, 1), "switched": S["switched"]})
         S["history"] = S["history"][-400:]
 
-    def handle(c):
+    def end_episode(result, failure=""):
+        S.update(phase="done", result=result, failure=failure, t_done=time.time(), final_t=env.tick * env.dt)
+        log(result, failure)
+
+    def load_scene(seed=None):
+        """Put a fresh layout on screen. Does not start an episode."""
         nonlocal obs
+        if S["phase"] == "running":
+            end_episode("stopped")
+        S["seed"] = S["seed"] + 1 if seed is None else seed
+        obs = env.reset(v["seeds"]["eval_start"] + 40000 + S["seed"])
+        pol.reset(S["seed"])
+        env.instruction = ""
+        S.update(phase="ready", result=None, failure="", dirty=False, final_t=0.0)
+
+    def start_episode(same_scene=False):
+        """Run the user's instruction: in the scene on screen if it is untouched, otherwise in a new one."""
+        if S["phase"] == "running":
+            end_episode("stopped")
+        if S["dirty"]:
+            load_scene(seed=S["seed"] if same_scene else None)
+        env.v["max_ticks"] = int(round(S["limit_s"] * v["control_hz"])) if S["limit_s"] else 10 ** 9
+        env.tick, env._hold, env.stats = 0, 0, TickStats(seed=env.seed)
+        pol.reset(S["seed"])
+        set_goal(resolve(S["spec"]))
+        S["episode"] += 1
+        S.update(phase="running", result=None, failure="", dirty=True, switched=False,
+                 max_speed=env.speed, max_travel=env.travel)
+
+    def handle(c):
         k = c.get("type")
-        if k == "instruction":
-            text = str(c.get("text", "")).strip()[:160]
-            if text:
-                start_attempt(text)
-        elif k == "speed":
-            env.speed = float(np.clip(float(c["value"]), 0.0, 0.30))
-            S["max_speed"] = max(S.get("max_speed", 0.0), env.speed)
-        elif k == "travel":
-            env.set_travel(float(np.clip(float(c["value"]), 0.01, 0.10)))
-            S["max_travel"] = max(S.get("max_travel", 0.0), env.travel)
-        elif k == "new_scene":
-            obs = new_scene()
+        if k == "run":                              # the Run button: always starts an episode, and resumes
+            S["spec"] = clean_spec(c)
+            S["paused"] = False
+            start_episode()
+        elif k == "switch":                         # change the goal of the episode that is running
+            if S["phase"] == "running":
+                S["spec"] = clean_spec(c)
+                set_goal(resolve(S["spec"]))
+                S["switched"] = True
         elif k == "retry":
-            obs = new_scene(seed=S["seed"], text=env.instruction)
+            S["paused"] = False
+            start_episode(same_scene=True)
+        elif k == "new_scene":
+            load_scene()
+            if S["auto"]:
+                start_episode()
         elif k == "auto":
             S["auto"] = bool(c["value"])
         elif k == "pause":
             S["paused"] = bool(c["value"])
+        elif k == "limit":
+            S["limit_s"] = float(np.clip(float(c["value"]), 0.0, 600.0))
+            env.v["max_ticks"] = int(round(S["limit_s"] * v["control_hz"])) if S["limit_s"] else 10 ** 9
+        elif k == "speed":
+            env.speed = float(np.clip(float(c["value"]), 0.0, 0.30))
+            S["max_speed"] = max(S["max_speed"], env.speed)
+        elif k == "travel":
+            env.set_travel(float(np.clip(float(c["value"]), 0.01, 0.10)))
+            S["max_travel"] = max(S["max_travel"], env.travel)
         elif k == "clear":
             S["history"] = []
         elif k == "camera":
@@ -219,18 +270,18 @@ def main():
             self.wfile.write(body)
 
         def do_GET(self):
-            if self.path.startswith("/view.mjpg"):
+            path = self.path.split("?")[0]
+            if path == "/view.mjpg":
                 main_stream.serve(self)
-            elif self.path.startswith("/inputs.mjpg"):
+            elif path == "/inputs.mjpg":
                 input_stream.serve(self)
-            elif self.path.startswith("/view.jpg") or self.path.startswith("/inputs.jpg"):
-                st = main_stream if self.path.startswith("/view") else input_stream
-                self._send(st.jpeg or b"", "image/jpeg")
-            elif self.path.startswith("/state"):
+            elif path in ("/view.jpg", "/inputs.jpg"):
+                self._send((main_stream if path == "/view.jpg" else input_stream).jpeg or b"", "image/jpeg")
+            elif path == "/state":
                 with lock:
                     body = json.dumps(snapshot).encode()
                 self._send(body, "application/json")
-            elif self.path.split("?")[0] in ("/", "/index.html"):
+            elif path in ("/", "/index.html"):
                 self._send(PAGE.read_bytes(), "text/html; charset=utf-8")
             else:
                 self.send_error(404)
@@ -248,8 +299,12 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     print(f"VLA studio: http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/   (Ctrl-C to stop)", flush=True)
 
-    obs = new_scene(seed=args.seed)
-    S["episode"] = 1
+    obs = None
+    load_scene(seed=args.seed)
+    obs["instruction"] = "warm up"
+    pol.act(obs)                                    # first CUDA call is slow; do it before anyone watches
+    pol.reset(args.seed)
+    pol.latencies_ms.clear()
     dts = []
     try:
         while True:
@@ -264,26 +319,32 @@ def main():
                     obs["instruction"] = env.instruction
                     obs, done, info = env.step(pol.act(obs))
                     if done:
-                        finish(info)
-                else:                                   # hold the arm, keep the pads moving
+                        ok = bool(info.get("success"))
+                        if not S["scored"]:
+                            end_episode("unscored")
+                        else:
+                            end_episode("success" if ok else "failed", "" if ok else info.get("failure_type", ""))
+                else:                               # ready / done: hold the arm, keep the pads moving
                     obs, _, _ = env.step(env.ctrl)
-                    if S["auto"] and time.time() - S["t_done"] > 1.2:
-                        obs = new_scene()
-                        start_attempt(make_instruction(int(np.random.randint(len(bowls))), int(np.random.randint(len(pads)))))
+                    if S["auto"] and (S["phase"] == "ready" or time.time() - S["t_done"] > 1.2):
+                        start_episode()
             view.update_scene(env.d, camera=cam)
             main_stream.push(view.render())
             input_stream.push(np.concatenate([obs["images"][c] for c in pol.cams], axis=1), quality=88)
 
             lat = np.array(pol.latencies_ms[-200:] or [0.0])
             bi, pi = env.target_bowl, env.target_pad
-            rel, resting = env.on_pad(bi, pi)
+            _, resting = env.on_pad(bi, pi)
+            running = S["phase"] == "running"
             snap = {"phase": S["phase"], "result": S["result"], "failure": S["failure"], "auto": S["auto"],
                     "paused": S["paused"], "scored": S["scored"], "episode": S["episode"], "scene": S["seed"],
-                    "instruction": env.instruction, "bowls": bowls, "pads": pads, "target_bowl": bowls[bi], "target_pad": pads[pi],
-                    "t": round(env.tick * env.dt, 2), "t_max": v["max_ticks"] * env.dt,
-                    "hold": round(env._hold * env.dt, 2), "hold_needed": v["success"]["hold_time"],
-                    "grasped": bool(env.grasped(bi)), "on_pad": bool(resting),
-                    "speed": env.speed, "travel": env.travel, "pad_speed_measured": [round(float(np.linalg.norm(env.pad_vel(i))), 4) for i in range(len(pads))], "train_speed": train_speed, "train_travel": train_travel,
+                    "spec": S["spec"], "instruction": env.instruction, "bowls": bowls, "pads": pads,
+                    "target_bowl": bowls[bi], "target_pad": pads[pi],
+                    "t": round(env.tick * env.dt if running else S["final_t"], 2), "limit_s": S["limit_s"],
+                    "hold": round(env._hold * env.dt, 2) if running else 0.0, "hold_needed": v["success"]["hold_time"],
+                    "grasped": bool(env.grasped(bi)) if S["phase"] != "ready" else False,
+                    "on_pad": bool(resting) if S["phase"] != "ready" else False,
+                    "speed": env.speed, "travel": env.travel, "train_speed": train_speed, "train_travel": train_travel,
                     "latency_p50": float(np.percentile(lat, 50)), "latency_max": float(lat.max()), "loop_hz": S["hz"],
                     "control_hz": v["control_hz"], "exec_horizon": pol.exec_horizon, "history": S["history"]}
             with lock:

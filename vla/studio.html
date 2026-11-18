@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VLA studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0e;--bg2:#0f1115;--card:#13151a;--card2:#1b1e25;
+  --line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
+  --ink:#f2f1ee;--ink2:#b4b7bf;--ink3:#7c818c;
+  --accent:#f2c230;--blue:#3987e5;
+  --good:#0ca30c;--goodtx:#6fdc8c;--bad:#d03b3b;--badtx:#f2a49b;--warn:#fab219;
+  --red:#d9362f;--green:#1fae3f;--padblue:#2f55e0;--yellow:#f0c81e;
+  --sans:"Inter Tight",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:16px;height:56px;padding:0 20px;border-bottom:1px solid var(--line)}
+.logo{font:500 14px var(--mono);display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo i{width:9px;height:9px;border-radius:2px;background:var(--accent);box-shadow:0 0 14px rgba(242,194,48,.7)}
+.logo span{color:var(--ink3)}
+.meta{margin-left:auto;display:flex;gap:18px;font:400 12px var(--mono);color:var(--ink3);white-space:nowrap;overflow:hidden}
+.meta b{color:var(--ink);font-weight:500}
+.conn{display:flex;align-items:center;gap:7px}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--good)}
+.conn.off i{background:var(--bad)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;padding:16px 20px 28px;max-width:1500px;margin:0 auto}
+@media (max-width:1020px){main{grid-template-columns:1fr}.meta span.opt{display:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0}
+.pad{padding:16px 18px}
+.t{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+
+/* viewer */
+.viewer{position:relative;overflow:hidden;background:#000;aspect-ratio:960/600;border-radius:14px 14px 0 0}
+.viewer img{width:100%;height:100%;object-fit:cover;display:block;cursor:grab;user-select:none;-webkit-user-drag:none}
+.viewer img:active{cursor:grabbing}
+.badge{position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:9px;font:500 12px var(--mono);letter-spacing:.04em;padding:8px 13px;border-radius:999px;background:rgba(10,11,14,.72);border:1px solid var(--line2);backdrop-filter:blur(8px)}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.badge.success{border-color:rgba(12,163,12,.6)}.badge.success i{background:var(--good)}
+.badge.failed{border-color:rgba(208,59,59,.6)}.badge.failed i{background:var(--bad)}
+.badge.paused i,.badge.unscored i{background:var(--ink3)}
+.say{position:absolute;left:14px;right:14px;bottom:14px;padding:11px 15px;border-radius:12px;background:rgba(10,11,14,.72);border:1px solid var(--line2);backdrop-filter:blur(10px);font:500 15px var(--sans);display:flex;gap:12px;align-items:baseline}
+.say small{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);white-space:nowrap}
+.cams{position:absolute;top:14px;right:14px;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(10,11,14,.72);border:1px solid var(--line2);backdrop-filter:blur(8px)}
+.cams button{border:0;background:transparent;font:500 11.5px var(--mono);color:var(--ink2);padding:5px 10px;border-radius:999px;cursor:pointer}
+.cams button:hover{background:rgba(255,255,255,.1);color:var(--ink)}
+.progress{height:3px;background:var(--line)}
+.progress div{height:100%;width:0;background:var(--blue);transition:width .2s linear}
+.under{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.inputs img{display:block;width:300px;max-width:100%;border-radius:8px;border:1px solid var(--line);background:#000;aspect-ratio:2/1}
+.inputs small{display:block;margin-top:6px;font:400 11px var(--mono);color:var(--ink3)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink3);font-size:13px;transition:all .2s}
+.step b{display:block;font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.step.on{border-color:rgba(57,135,229,.55);background:rgba(57,135,229,.10);color:var(--ink)}
+.step.ok{border-color:rgba(12,163,12,.55);background:rgba(12,163,12,.10);color:var(--ink)}
+@media (max-width:760px){.under{grid-template-columns:1fr}.steps{grid-template-columns:repeat(2,1fr)}}
+
+/* controls */
+.side{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{display:flex;align-items:center;gap:9px;border:1px solid var(--line2);background:rgba(255,255,255,.02);border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:500;transition:background .15s,border-color .15s}
+.chip:hover{background:rgba(255,255,255,.06)}
+.chip i{width:14px;height:14px;border-radius:50%;flex:none}
+.chip.pad i{border-radius:3px}
+.chip.sel{border-color:var(--ink);background:rgba(255,255,255,.09)}
+.lbl{font-size:12.5px;color:var(--ink3);margin:12px 0 6px}
+.lbl:first-of-type{margin-top:0}
+.text{display:flex;gap:8px;margin-top:12px}
+.text input{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
+.text input:focus{border-color:var(--blue)}
+.btn{border:1px solid var(--line2);background:rgba(255,255,255,.03);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28)}
+.btn.primary{background:var(--ink);color:#0a0b0e;border-color:var(--ink)}
+.btn.primary:hover{background:#fff}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:999px}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.grow{flex:1}
+
+.slider{margin-top:6px}
+.slider .head{display:flex;justify-content:space-between;align-items:baseline}
+.slider .head span{font-size:14px;color:var(--ink2)}
+.slider .head b{font:500 22px var(--sans);letter-spacing:-.02em}
+.slider .head b small{font:500 12px var(--mono);color:var(--ink3);margin-left:4px}
+.track{position:relative;height:30px;margin-top:4px}
+.track .band{position:absolute;top:12px;height:6px;border-radius:3px;background:rgba(12,163,12,.45)}
+.track input{position:absolute;inset:0;width:100%;margin:0;background:transparent;-webkit-appearance:none;appearance:none}
+.track input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:rgba(255,255,255,.10)}
+.track input::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.10)}
+.track input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ink);border:3px solid var(--card);box-shadow:0 0 0 1px var(--line2);margin-top:-6px;cursor:pointer}
+.track input::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:3px solid var(--card);cursor:pointer}
+.scale{display:flex;justify-content:space-between;font:400 11px var(--mono);color:var(--ink3)}
+.scale em{font-style:normal;color:var(--goodtx)}
+.factor{font:500 11.5px var(--mono);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2)}
+.factor.hot{border-color:rgba(250,178,25,.6);color:var(--warn)}
+.factor.max{border-color:rgba(208,59,59,.7);color:var(--badtx)}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.kv div{background:var(--bg2);padding:10px 12px}
+.kv b{display:block;font:600 20px var(--sans);letter-spacing:-.02em}
+.kv span{font-size:11.5px;color:var(--ink3)}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+td.n,th.n{text-align:right;font-family:var(--mono);font-size:12.5px}
+tr:last-child td{border-bottom:0}
+.bar{display:inline-block;width:70px;height:6px;border-radius:3px;background:rgba(208,59,59,.55);vertical-align:middle;margin-right:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good)}
+.res{font:500 11.5px var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--line2);white-space:nowrap}
+.res.success{color:var(--goodtx);border-color:rgba(12,163,12,.5)}
+.res.failed{color:var(--badtx);border-color:rgba(208,59,59,.5)}
+.empty{color:var(--ink3);font-size:13.5px;padding:6px 0}
+.below{grid-column:1/-1;display:grid;grid-template-columns:1fr 1.4fr;gap:16px}
+@media (max-width:1020px){.below{grid-template-columns:1fr}}
+.scroll{max-height:300px;overflow:auto}
+.hint{font-size:12.5px;color:var(--ink3);margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i></i>distill_frontier<span>/ vla studio</span></div>
+  <div class="meta">
+    <span class="opt">inference <b id="m-lat">–</b></span>
+    <span class="opt">loop <b id="m-hz">–</b></span>
+    <span class="opt">scene <b id="m-scene">–</b></span>
+    <span class="conn" id="conn"><i></i><span id="conn-t">live</span></span>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="card">
+      <div class="viewer">
+        <img id="view" alt="Live view of the simulation" draggable="false">
+        <div class="badge" id="badge"><i></i><span id="badge-t">starting</span></div>
+        <div class="cams" id="cams"><button data-c="overview">Overview</button><button data-c="top">Top</button><button data-c="front">Front</button><button data-c="side">Side</button></div>
+        <div class="say"><small>Instruction</small><span id="say">–</span></div>
+      </div>
+      <div class="progress"><div id="prog"></div></div>
+      <div class="pad under">
+        <div class="inputs"><img id="inputs" alt="The two camera images the model receives"><small>what the model sees · scene + wrist · 224 px</small></div>
+        <div class="steps">
+          <div class="step" id="s-reach"><b>1 · Reach</b>go to the named bowl</div>
+          <div class="step" id="s-grasp"><b>2 · Grasp</b>bowl held</div>
+          <div class="step" id="s-place"><b>3 · Place</b>bowl on the named pad</div>
+          <div class="step" id="s-hold"><b>4 · Hold</b><span id="hold-t">rides the pad for 2 s</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="card pad">
+      <div class="t"><span>Instruction</span></div>
+      <div class="lbl">Pick up</div>
+      <div class="chips" id="bowls"></div>
+      <div class="lbl">Place on</div>
+      <div class="chips" id="pads"></div>
+      <div class="text"><input id="text" type="text" maxlength="160" placeholder="or type your own phrasing" aria-label="Instruction text"><button class="btn primary" id="send">Send</button></div>
+      <div class="hint">Sending while the arm is moving changes the goal mid-attempt.</div>
+    </div>
+
+    <div class="card pad">
+      <div class="t"><span>Pad motion</span><span class="factor" id="factor">in training range</span></div>
+      <div class="slider">
+        <div class="head"><span>Speed</span><b><span id="v-speed">2.0</span><small>cm/s</small></b></div>
+        <div class="track"><div class="band" id="band-speed"></div><input id="speed" type="range" min="0" max="20" step="0.5" value="2" aria-label="Pad speed in centimetres per second"></div>
+        <div class="scale"><span>0</span><em id="tr-speed">trained 1–3</em><span>20</span></div>
+      </div>
+      <div class="slider" style="margin-top:16px">
+        <div class="head"><span>Travel</span><b>±<span id="v-travel">4.0</span><small>cm</small></b></div>
+        <div class="track"><div class="band" id="band-travel"></div><input id="travel" type="range" min="1" max="10" step="0.5" value="4" aria-label="Pad travel in centimetres each way"></div>
+        <div class="scale"><span>±1</span><em id="tr-travel">trained ±4</em><span>±10</span></div>
+      </div>
+      <hr>
+      <div class="row" id="presets">
+        <button class="btn sm" data-s="2" data-t="4">Training</button>
+        <button class="btn sm" data-s="5" data-t="6">Brisk</button>
+        <button class="btn sm" data-s="9" data-t="8">Fast</button>
+        <button class="btn sm" data-s="15" data-t="10">Extreme</button>
+        <button class="btn sm" data-s="0" data-t="4">Still</button>
+      </div>
+    </div>
+
+    <div class="card pad">
+      <div class="t"><span>Run</span><span id="ep">attempt –</span></div>
+      <div class="row">
+        <button class="btn grow" id="new">New scene</button>
+        <button class="btn grow" id="retry">Retry scene</button>
+        <button class="btn" id="pause">Pause</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn grow on" id="auto">Auto-run: on</button>
+      </div>
+      <div class="hint">Auto-run starts a new scene with a random instruction after each attempt, so results build up at the current settings.</div>
+    </div>
+  </aside>
+
+  <div class="below">
+    <div class="card pad">
+      <div class="t"><span>Success by setting</span><button class="btn sm" id="clear">Clear</button></div>
+      <div class="kv" style="margin-bottom:12px">
+        <div><b id="k-rate">–</b><span>success at current setting</span></div>
+        <div><b id="k-n">0</b><span>attempts at current setting</span></div>
+        <div><b id="k-all">0</b><span>attempts in total</span></div>
+      </div>
+      <div class="scroll"><table id="by"><tr><th>Speed</th><th>Travel</th><th>Success</th><th class="n">Attempts</th></tr></table>
+      <div class="empty" id="by-empty">No finished attempts yet.</div></div>
+    </div>
+    <div class="card pad">
+      <div class="t"><span>Attempt log</span><span id="log-n"></span></div>
+      <div class="scroll"><table id="log"><tr><th class="n">#</th><th>Instruction</th><th class="n">cm/s</th><th class="n">± cm</th><th class="n">Time</th><th>Result</th></tr></table>
+      <div class="empty" id="log-empty">Attempts appear here as they finish.</div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const COLORS={red:"var(--red)",green:"var(--green)",blue:"var(--padblue)",yellow:"var(--yellow)"};
+const post=o=>fetch("/cmd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}).catch(()=>{});
+let st=null,sel={bowl:null,pad:null},built=false,dragging={speed:false,travel:false},histLen=-1;
+
+function buildChips(s){
+  for(const [box,names,key,cls] of [[$("bowls"),s.bowls,"bowl",""],[$("pads"),s.pads,"pad"," pad"]]){
+    box.textContent="";
+    names.forEach(n=>{const b=document.createElement("button");b.className="chip"+cls;b.dataset.name=n;
+      const i=document.createElement("i");i.style.background=COLORS[n]||"var(--ink3)";
+      b.append(i,document.createTextNode(`${n} ${key}`));
+      b.onclick=()=>{sel[key]=n;paintChips();sendChips()};box.append(b)});
+  }
+  sel.bowl=s.target_bowl;sel.pad=s.target_pad;paintChips();
+  const sp=$("speed"),tr=$("travel");
+  const pct=(el,v)=>(v-el.min)/(el.max-el.min)*100;
+  const lo=s.train_speed[0]*100,hi=s.train_speed[1]*100,tt=s.train_travel*100;
+  $("band-speed").style.left=pct(sp,lo)+"%";$("band-speed").style.width=(pct(sp,hi)-pct(sp,lo))+"%";
+  $("band-travel").style.left="0%";$("band-travel").style.width=pct(tr,tt)+"%";
+  $("tr-speed").textContent=`trained ${lo}–${hi}`;$("tr-travel").textContent=`trained ±${tt}`;
+  built=true;
+}
+function paintChips(){document.querySelectorAll(".chip").forEach(c=>{const key=c.classList.contains("pad")?"pad":"bowl";c.classList.toggle("sel",sel[key]===c.dataset.name)})}
+function sendChips(){if(!sel.bowl||!sel.pad)return;const t=`put the ${sel.bowl} bowl on the ${sel.pad} pad`;$("text").value="";post({type:"instruction",text:t})}
+$("send").onclick=()=>{const t=$("text").value.trim();if(t)post({type:"instruction",text:t})};
+$("text").addEventListener("keydown",e=>{if(e.key==="Enter")$("send").click()});
+
+function bindSlider(id,scale){const el=$(id);
+  el.addEventListener("input",()=>{dragging[id]=true;$("v-"+id).textContent=(+el.value).toFixed(1);post({type:id,value:el.value/scale});paintFactor(+$("speed").value,+$("travel").value)});
+  el.addEventListener("change",()=>{setTimeout(()=>dragging[id]=false,400)});}
+bindSlider("speed",100);bindSlider("travel",100);
+$("presets").onclick=e=>{const b=e.target.closest("button");if(!b)return;post({type:"speed",value:b.dataset.s/100});post({type:"travel",value:b.dataset.t/100})};
+$("new").onclick=()=>post({type:"new_scene"});
+$("retry").onclick=()=>post({type:"retry"});
+$("pause").onclick=()=>post({type:"pause",value:!(st&&st.paused)});
+$("auto").onclick=()=>post({type:"auto",value:!(st&&st.auto)});
+$("clear").onclick=()=>post({type:"clear"});
+$("cams").onclick=e=>{const b=e.target.closest("button");if(b)post({type:"camera",preset:b.dataset.c})};
+
+/* orbit the viewer camera by dragging, zoom with the wheel */
+(function(){const v=$("view");let last=null,acc={daz:0,del:0},timer=null;
+  const flush=()=>{if(acc.daz||acc.del)post({type:"camera",daz:acc.daz,del:acc.del});acc={daz:0,del:0};timer=null};
+  v.addEventListener("pointerdown",e=>{last=[e.clientX,e.clientY];v.setPointerCapture(e.pointerId)});
+  v.addEventListener("pointermove",e=>{if(!last)return;acc.daz-=(e.clientX-last[0])*.35;acc.del-=(e.clientY-last[1])*.25;last=[e.clientX,e.clientY];if(!timer)timer=setTimeout(flush,50)});
+  v.addEventListener("pointerup",()=>{last=null});
+  v.addEventListener("wheel",e=>{e.preventDefault();post({type:"camera",zoom:e.deltaY>0?1.08:.93})},{passive:false});
+})();
+
+function paintFactor(speedCm,travelCm){
+  if(!st)return;const hi=st.train_speed[1]*100,tt=st.train_travel*100,f=Math.max(speedCm/hi,travelCm/tt),el=$("factor");
+  const inside=speedCm<=hi&&speedCm>=st.train_speed[0]*100&&travelCm<=tt;
+  el.className="factor"+(f>=3?" max":f>1?" hot":"");
+  el.textContent=inside?"in training range":speedCm===0?"pads still":f<=1?"easier than training":`${f.toFixed(1)}× beyond training`;
+}
+const key=h=>`${h.speed}|${h.travel}`;
+function render(s){
+  if(!built)buildChips(s);
+  $("say").textContent=s.instruction;
+  const b=$("badge"),state=s.paused?"paused":s.phase==="running"?"running":s.result;
+  b.className="badge "+state;
+  $("badge-t").textContent=state==="running"?`running · ${s.t.toFixed(1)} s`:state==="success"?"success":state==="failed"?`failed · ${s.failure.replace(/_/g," ")}`:state==="unscored"?"finished · not scored":"paused";
+  $("prog").style.width=(s.phase==="running"?Math.min(100,s.t/s.t_max*100):100)+"%";
+  $("prog").style.background=state==="success"?"var(--good)":state==="failed"?"var(--bad)":"var(--blue)";
+  const done=s.result==="success",placed=s.on_pad&&!s.grasped;
+  $("s-reach").className="step "+(s.grasped||placed||done?"ok":s.phase==="running"?"on":"");
+  $("s-grasp").className="step "+(placed||done?"ok":s.grasped?"on":"");
+  $("s-place").className="step "+(done||s.hold>0?"ok":placed?"on":"");
+  $("s-hold").className="step "+(done?"ok":s.hold>0?"on":"");
+  $("hold-t").textContent=s.hold>0&&!done?`${s.hold.toFixed(1)} of ${s.hold_needed} s`:`rides the pad for ${s.hold_needed} s`;
+  if(sel.bowl!==s.target_bowl||sel.pad!==s.target_pad){sel.bowl=s.target_bowl;sel.pad=s.target_pad;paintChips()}
+  const sc=s.speed*100,tc=s.travel*100;
+  if(!dragging.speed){$("speed").value=sc;$("v-speed").textContent=sc.toFixed(1)}
+  if(!dragging.travel){$("travel").value=tc;$("v-travel").textContent=tc.toFixed(1)}
+  paintFactor(sc,tc);
+  $("m-lat").textContent=s.latency_p50.toFixed(1)+" ms";$("m-hz").textContent=s.loop_hz+" Hz";$("m-scene").textContent="#"+s.scene;
+  $("ep").textContent="attempt "+s.episode;
+  $("pause").textContent=s.paused?"Resume":"Pause";
+  $("auto").textContent="Auto-run: "+(s.auto?"on":"off");$("auto").classList.toggle("on",s.auto);
+  const H=s.history.filter(h=>h.result!=="unscored");
+  const cur=H.filter(h=>h.speed===+sc.toFixed(2)&&h.travel===+tc.toFixed(2)),ok=cur.filter(h=>h.result==="success").length;
+  $("k-rate").textContent=cur.length?Math.round(ok/cur.length*100)+"%":"–";$("k-n").textContent=cur.length;$("k-all").textContent=H.length;
+  if(s.history.length!==histLen){histLen=s.history.length;tables(s.history,H)}
+}
+function cell(tr,text,cls){const td=document.createElement("td");if(cls)td.className=cls;td.textContent=text;tr.append(td);return td}
+function tables(all,H){
+  const by=$("by"),log=$("log");
+  while(by.rows.length>1)by.deleteRow(1);while(log.rows.length>1)log.deleteRow(1);
+  const groups=new Map();H.forEach(h=>{const g=groups.get(key(h))||{speed:h.speed,travel:h.travel,n:0,ok:0};g.n++;g.ok+=h.result==="success";groups.set(key(h),g)});
+  [...groups.values()].sort((a,b)=>a.speed-b.speed||a.travel-b.travel).forEach(g=>{const tr=by.insertRow();
+    cell(tr,g.speed.toFixed(1)+" cm/s");cell(tr,"±"+g.travel.toFixed(1)+" cm");
+    const td=cell(tr,""),bar=document.createElement("span"),fill=document.createElement("i");bar.className="bar";fill.style.width=(g.ok/g.n*100)+"%";bar.append(fill);
+    td.append(bar,document.createTextNode(`${Math.round(g.ok/g.n*100)}%  (${g.ok}/${g.n})`));cell(tr,g.n,"n")});
+  $("by-empty").style.display=groups.size?"none":"";
+  [...all].reverse().forEach(h=>{const tr=log.insertRow();cell(tr,h.episode,"n");cell(tr,h.instruction);cell(tr,h.speed.toFixed(1),"n");cell(tr,h.travel.toFixed(1),"n");cell(tr,h.seconds.toFixed(1)+" s","n");
+    const td=cell(tr,""),r=document.createElement("span");r.className="res "+h.result;r.textContent=h.result==="failed"?h.failure.replace(/_/g," "):h.result;td.append(r)});
+  $("log-empty").style.display=all.length?"none":"";$("log-n").textContent=all.length?all.length+" attempts":"";
+}
+/* video: MJPEG streams by default; ?static polls single frames instead */
+if(new URLSearchParams(location.search).has("static")){const tick=()=>{const q="?"+Date.now();$("view").src="/view.jpg"+q;$("inputs").src="/inputs.jpg"+q};tick();setInterval(tick,250)}
+else{$("view").src="/view.mjpg";$("inputs").src="/inputs.mjpg"}
+async function poll(){
+  try{const r=await fetch("/state",{cache:"no-store"});st=await r.json();if(st.phase)render(st);$("conn").className="conn";$("conn-t").textContent="live"}
+  catch(e){$("conn").className="conn off";$("conn-t").textContent="disconnected"}
+  setTimeout(poll,150);
+}
+poll();
+</script>
+</body>
+</html>

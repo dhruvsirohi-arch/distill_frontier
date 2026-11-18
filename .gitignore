@@ -16,3 +16,5 @@ outputs/vla/data/
 outputs/vla/runs/
 outputs/vla/videos/
 outputs/vla/data_m2/
+outputs/vla/models/**/*.pt
+outputs/vla/data_v2/

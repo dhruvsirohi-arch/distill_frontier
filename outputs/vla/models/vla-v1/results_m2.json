@@ -1,0 +1,957 @@
+{
+  "summary": {
+    "checkpoint": "outputs/vla/runs/m2_early/best.pt",
+    "train_step": 6000,
+    "n": 100,
+    "success_rate": 1.0,
+    "failures": {},
+    "by_pad_speed": {
+      "1.0-1.7 cm/s": {
+        "n": 30,
+        "success": 1.0
+      },
+      "1.7-2.3 cm/s": {
+        "n": 35,
+        "success": 1.0
+      },
+      "2.3-3.0 cm/s": {
+        "n": 35,
+        "success": 1.0
+      }
+    },
+    "mean_ticks_success": 131.46,
+    "latency_ms": {
+      "p50": 10.35809849963698,
+      "p90": 10.8230885989542,
+      "p99": 11.18778175983607,
+      "max": 34.61128600065422,
+      "n_inferences": 3330
+    },
+    "control": {
+      "tick_ms": 40.0,
+      "exec_horizon": 4,
+      "flow_steps": 4,
+      "chunk": 16,
+      "fits_in_tick": true,
+      "max_policy_hz_if_replanning_every_tick": 89.38322372268482
+    },
+    "params_M": 39.686026,
+    "wall_time_s": 53.6,
+    "expert": {
+      "success_rate": 1.0,
+      "mean_ticks": 131.52
+    },
+    "language_counterfactual": {
+      "n": 150,
+      "success": 148,
+      "wrong_bowl": 2,
+      "success_rate": 0.9866666666666667
+    },
+    "unseen_phrasing": {
+      "n": 30,
+      "success_rate": 1.0
+    }
+  },
+  "episodes": [
+    {
+      "seed": 1000000,
+      "success": true,
+      "failure_type": "",
+      "ticks": 143,
+      "pad_speed": 0.016892998246845734,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000001,
+      "success": true,
+      "failure_type": "",
+      "ticks": 121,
+      "pad_speed": 0.01950640416934915,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000002,
+      "success": true,
+      "failure_type": "",
+      "ticks": 117,
+      "pad_speed": 0.022159331385403082,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000003,
+      "success": true,
+      "failure_type": "",
+      "ticks": 130,
+      "pad_speed": 0.011605406759082839,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000004,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.015526137522154032,
+      "instruction": "move the green bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000005,
+      "success": true,
+      "failure_type": "",
+      "ticks": 133,
+      "pad_speed": 0.028152692668195547,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000006,
+      "success": true,
+      "failure_type": "",
+      "ticks": 139,
+      "pad_speed": 0.0159936304724389,
+      "instruction": "put the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000007,
+      "success": true,
+      "failure_type": "",
+      "ticks": 125,
+      "pad_speed": 0.02676503433611855,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000008,
+      "success": true,
+      "failure_type": "",
+      "ticks": 135,
+      "pad_speed": 0.010244774615255194,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000009,
+      "success": true,
+      "failure_type": "",
+      "ticks": 123,
+      "pad_speed": 0.01475294943497893,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000010,
+      "success": true,
+      "failure_type": "",
+      "ticks": 120,
+      "pad_speed": 0.01655966754911643,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000011,
+      "success": true,
+      "failure_type": "",
+      "ticks": 117,
+      "pad_speed": 0.010437794029268518,
+      "instruction": "pick up the green bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000012,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.01694713385191954,
+      "instruction": "put the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000013,
+      "success": true,
+      "failure_type": "",
+      "ticks": 136,
+      "pad_speed": 0.020374353866702305,
+      "instruction": "the red bowl goes on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000014,
+      "success": true,
+      "failure_type": "",
+      "ticks": 143,
+      "pad_speed": 0.01792492251069073,
+      "instruction": "move the red bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000015,
+      "success": true,
+      "failure_type": "",
+      "ticks": 139,
+      "pad_speed": 0.022492408994067688,
+      "instruction": "set the green bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000016,
+      "success": true,
+      "failure_type": "",
+      "ticks": 143,
+      "pad_speed": 0.0276616366798575,
+      "instruction": "set the green bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000017,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.02548837604322307,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000018,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.016176961579258485,
+      "instruction": "move the red bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000019,
+      "success": true,
+      "failure_type": "",
+      "ticks": 129,
+      "pad_speed": 0.010406459971346349,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000020,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.02340693613567726,
+      "instruction": "move the green bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000021,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.01934718053139506,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000022,
+      "success": true,
+      "failure_type": "",
+      "ticks": 129,
+      "pad_speed": 0.02503857899830321,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000023,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.025172632347823902,
+      "instruction": "move the green bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000024,
+      "success": true,
+      "failure_type": "",
+      "ticks": 145,
+      "pad_speed": 0.01944349785539904,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000025,
+      "success": true,
+      "failure_type": "",
+      "ticks": 135,
+      "pad_speed": 0.029333082429691085,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000026,
+      "success": true,
+      "failure_type": "",
+      "ticks": 130,
+      "pad_speed": 0.019766213763245964,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000027,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.021254097176108763,
+      "instruction": "pick up the green bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000028,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.02356589895528484,
+      "instruction": "place the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000029,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.013750995424879675,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000030,
+      "success": true,
+      "failure_type": "",
+      "ticks": 133,
+      "pad_speed": 0.01972587808128015,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000031,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.01688845169762173,
+      "instruction": "pick up the green bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000032,
+      "success": true,
+      "failure_type": "",
+      "ticks": 138,
+      "pad_speed": 0.020502697416648223,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000033,
+      "success": true,
+      "failure_type": "",
+      "ticks": 127,
+      "pad_speed": 0.015029261886783243,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000034,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.013986042894596592,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000035,
+      "success": true,
+      "failure_type": "",
+      "ticks": 112,
+      "pad_speed": 0.02463763300754345,
+      "instruction": "pick up the green bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000036,
+      "success": true,
+      "failure_type": "",
+      "ticks": 138,
+      "pad_speed": 0.025454996008096132,
+      "instruction": "pick up the red bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000037,
+      "success": true,
+      "failure_type": "",
+      "ticks": 145,
+      "pad_speed": 0.02285615264494199,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000038,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.02726178627943833,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000039,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.016618803675847303,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000040,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.018450509895916237,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000041,
+      "success": true,
+      "failure_type": "",
+      "ticks": 119,
+      "pad_speed": 0.026200757348340965,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000042,
+      "success": true,
+      "failure_type": "",
+      "ticks": 133,
+      "pad_speed": 0.01762680358255858,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000043,
+      "success": true,
+      "failure_type": "",
+      "ticks": 125,
+      "pad_speed": 0.029702841232180727,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000044,
+      "success": true,
+      "failure_type": "",
+      "ticks": 116,
+      "pad_speed": 0.025106866150470336,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000045,
+      "success": true,
+      "failure_type": "",
+      "ticks": 139,
+      "pad_speed": 0.0275408044302694,
+      "instruction": "put the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000046,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.015904232208622943,
+      "instruction": "set the red bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000047,
+      "success": true,
+      "failure_type": "",
+      "ticks": 121,
+      "pad_speed": 0.01895972271585746,
+      "instruction": "set the red bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000048,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.022524210954363313,
+      "instruction": "set the green bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000049,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.01493618025239318,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000050,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.025612721339431117,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000051,
+      "success": true,
+      "failure_type": "",
+      "ticks": 130,
+      "pad_speed": 0.021207185452668156,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000052,
+      "success": true,
+      "failure_type": "",
+      "ticks": 113,
+      "pad_speed": 0.01084601394458504,
+      "instruction": "set the red bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000053,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.02529493452676221,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000054,
+      "success": true,
+      "failure_type": "",
+      "ticks": 141,
+      "pad_speed": 0.01424549297897178,
+      "instruction": "put the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000055,
+      "success": true,
+      "failure_type": "",
+      "ticks": 125,
+      "pad_speed": 0.016352246623765113,
+      "instruction": "place the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000056,
+      "success": true,
+      "failure_type": "",
+      "ticks": 132,
+      "pad_speed": 0.0204652519921227,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000057,
+      "success": true,
+      "failure_type": "",
+      "ticks": 120,
+      "pad_speed": 0.01905371639034581,
+      "instruction": "move the red bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000058,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.029867202589197853,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000059,
+      "success": true,
+      "failure_type": "",
+      "ticks": 128,
+      "pad_speed": 0.01953072664613452,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000060,
+      "success": true,
+      "failure_type": "",
+      "ticks": 131,
+      "pad_speed": 0.029597205212402472,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000061,
+      "success": true,
+      "failure_type": "",
+      "ticks": 140,
+      "pad_speed": 0.017879314184166446,
+      "instruction": "pick up the green bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000062,
+      "success": true,
+      "failure_type": "",
+      "ticks": 125,
+      "pad_speed": 0.013741968761207774,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000063,
+      "success": true,
+      "failure_type": "",
+      "ticks": 132,
+      "pad_speed": 0.016113153979232714,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000064,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.014736162518454944,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000065,
+      "success": true,
+      "failure_type": "",
+      "ticks": 128,
+      "pad_speed": 0.02359721657552255,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000066,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.012534457272135164,
+      "instruction": "set the green bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000067,
+      "success": true,
+      "failure_type": "",
+      "ticks": 128,
+      "pad_speed": 0.012200810878775415,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000068,
+      "success": true,
+      "failure_type": "",
+      "ticks": 125,
+      "pad_speed": 0.025011070538756643,
+      "instruction": "place the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000069,
+      "success": true,
+      "failure_type": "",
+      "ticks": 123,
+      "pad_speed": 0.013827552997758015,
+      "instruction": "pick up the green bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000070,
+      "success": true,
+      "failure_type": "",
+      "ticks": 128,
+      "pad_speed": 0.026178722755444535,
+      "instruction": "pick up the green bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000071,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.028690081797661048,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000072,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.011430121764049951,
+      "instruction": "the red bowl goes on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000073,
+      "success": true,
+      "failure_type": "",
+      "ticks": 132,
+      "pad_speed": 0.026835191882087966,
+      "instruction": "set the red bowl down on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000074,
+      "success": true,
+      "failure_type": "",
+      "ticks": 121,
+      "pad_speed": 0.029379579789786454,
+      "instruction": "pick up the green bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000075,
+      "success": true,
+      "failure_type": "",
+      "ticks": 128,
+      "pad_speed": 0.029270433616271227,
+      "instruction": "move the red bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000076,
+      "success": true,
+      "failure_type": "",
+      "ticks": 117,
+      "pad_speed": 0.02267790722548125,
+      "instruction": "the red bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000077,
+      "success": true,
+      "failure_type": "",
+      "ticks": 132,
+      "pad_speed": 0.02685329729830708,
+      "instruction": "the red bowl goes on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000078,
+      "success": true,
+      "failure_type": "",
+      "ticks": 149,
+      "pad_speed": 0.02340733365408618,
+      "instruction": "pick up the red bowl and put it on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000079,
+      "success": true,
+      "failure_type": "",
+      "ticks": 138,
+      "pad_speed": 0.027019364663809685,
+      "instruction": "move the red bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000080,
+      "success": true,
+      "failure_type": "",
+      "ticks": 136,
+      "pad_speed": 0.02071220240300029,
+      "instruction": "the green bowl goes on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000081,
+      "success": true,
+      "failure_type": "",
+      "ticks": 124,
+      "pad_speed": 0.025378152130129443,
+      "instruction": "put the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000082,
+      "success": true,
+      "failure_type": "",
+      "ticks": 135,
+      "pad_speed": 0.019963974886228336,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000083,
+      "success": true,
+      "failure_type": "",
+      "ticks": 132,
+      "pad_speed": 0.02310512610299901,
+      "instruction": "place the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000084,
+      "success": true,
+      "failure_type": "",
+      "ticks": 130,
+      "pad_speed": 0.020513941931567702,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000085,
+      "success": true,
+      "failure_type": "",
+      "ticks": 143,
+      "pad_speed": 0.029140391589984375,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000086,
+      "success": true,
+      "failure_type": "",
+      "ticks": 129,
+      "pad_speed": 0.01108463444746212,
+      "instruction": "put the green bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000087,
+      "success": true,
+      "failure_type": "",
+      "ticks": 143,
+      "pad_speed": 0.017508631009377083,
+      "instruction": "place the green bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000088,
+      "success": true,
+      "failure_type": "",
+      "ticks": 123,
+      "pad_speed": 0.01138869065167567,
+      "instruction": "place the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000089,
+      "success": true,
+      "failure_type": "",
+      "ticks": 134,
+      "pad_speed": 0.015915339689234583,
+      "instruction": "move the red bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000090,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.022298002950958504,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000091,
+      "success": true,
+      "failure_type": "",
+      "ticks": 129,
+      "pad_speed": 0.019006361410173346,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000092,
+      "success": true,
+      "failure_type": "",
+      "ticks": 133,
+      "pad_speed": 0.019048976814383726,
+      "instruction": "set the green bowl down on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000093,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.02147199303200319,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000094,
+      "success": true,
+      "failure_type": "",
+      "ticks": 137,
+      "pad_speed": 0.02660716412407791,
+      "instruction": "put the red bowl on the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000095,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.02989963465337815,
+      "instruction": "the green bowl goes on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000096,
+      "success": true,
+      "failure_type": "",
+      "ticks": 133,
+      "pad_speed": 0.011673531532733277,
+      "instruction": "move the green bowl onto the blue pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000097,
+      "success": true,
+      "failure_type": "",
+      "ticks": 118,
+      "pad_speed": 0.011326194526758811,
+      "instruction": "place the red bowl on the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000098,
+      "success": true,
+      "failure_type": "",
+      "ticks": 142,
+      "pad_speed": 0.02617081515137807,
+      "instruction": "move the red bowl onto the yellow pad",
+      "robot_env_ticks": 0
+    },
+    {
+      "seed": 1000099,
+      "success": true,
+      "failure_type": "",
+      "ticks": 126,
+      "pad_speed": 0.018374603983649474,
+      "instruction": "pick up the red bowl and put it on the blue pad",
+      "robot_env_ticks": 0
+    }
+  ]
+}

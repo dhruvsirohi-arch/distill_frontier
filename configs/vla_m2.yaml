@@ -33,3 +33,11 @@ scene_camera:               # both pads must be in view
 paths:
   data: outputs/vla/data_m2
   runs: outputs/vla/runs
+
+model:
+  aux_dim: 4                # grounding head: xy of the named bowl and the named pad (training only)
+
+train:
+  aux_weight: 1.0
+  early_ticks: 6            # ticks where only the instruction says which bowl to go for
+  early_weight: 6.0         # sampled this many times more often (about 20% of every batch)

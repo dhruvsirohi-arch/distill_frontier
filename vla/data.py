@@ -11,6 +11,11 @@ import torch
 from PIL import Image
 
 
+# grounding targets: xy of the named bowl and the named pad, roughly unit scale
+AUX_CENTER = np.array([0.18, 0.0, 0.18, 0.0], np.float32)
+AUX_SCALE = 0.1
+
+
 def decode(buf) -> np.ndarray:
     return np.asarray(Image.open(io.BytesIO(bytes(buf))).convert("RGB"))
 
@@ -52,7 +57,8 @@ class EpisodeDataset(torch.utils.data.Dataset):
         self.index, self.text_id, self.arr = [], [], []
         for i, f in enumerate(self.files):
             with h5py.File(f, "r") as h:        # low-dimensional signals are small: keep them in RAM
-                self.arr.append((h["action"][:], h["proprio"][:]))
+                aux = np.concatenate([h["state/bowl"][:, :2], h["state/pad"][:, :2]], axis=1)
+                self.arr.append((h["action"][:], h["proprio"][:], ((aux - AUX_CENTER) / AUX_SCALE).astype(np.float32)))
                 self.text_id.append(text_ids[h.attrs["instruction"]])
             self.index.extend((i, t) for t in range(len(self.arr[-1][0])))
         self._h5 = {}                           # per-worker open file handles (opened lazily)
@@ -70,7 +76,7 @@ class EpisodeDataset(torch.utils.data.Dataset):
     def __getitem__(self, k):
         i, t = self.index[k]
         h, s = self._file(i), self.stats
-        action, proprio = self.arr[i]
+        action, proprio, aux = self.arr[i]
         ep = {"action": action, "proprio": proprio}
         tp = max(t - self.hist, 0)
         views = [decode(h[f"images/{c}"][t]) for c in self.cams] + [decode(h[f"images/{c}"][tp]) for c in self.cams]
@@ -79,4 +85,4 @@ class EpisodeDataset(torch.utils.data.Dataset):
         return {"images": images,
                 "proprio": torch.from_numpy((ep["proprio"][t] - s["proprio_mean"]) / s["proprio_std"]),
                 "action": torch.from_numpy((a - s["action_mean"]) / s["action_std"]),
-                "text_id": self.text_id[i]}
+                "aux": torch.from_numpy(aux[t]), "text_id": self.text_id[i]}

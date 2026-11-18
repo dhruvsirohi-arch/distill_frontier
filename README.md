@@ -105,4 +105,11 @@ uv sync --frozen          # creates .venv with the exact locked versions
 
 ## Results
 
-See `RESULTS.md` (written after the full run).
+See `RESULTS.md`.
+
+## VLA (branch `vla-mujoco`)
+
+`vla/` holds a second, independent pipeline: a small vision-language-action model (DINOv2-S vision,
+frozen CLIP text, flow-matching action chunks) that drives the arm at 25 Hz from two cameras and an
+instruction, and places a named bowl on a named moving pad. Config in `configs/vla.yaml` (M1) and
+`configs/vla_m2.yaml` (M2 overrides); commands and results in `RESULTS.md`.

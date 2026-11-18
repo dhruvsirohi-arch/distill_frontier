@@ -84,6 +84,10 @@ class VLA(nn.Module):
                                          batch_first=True, norm_first=True)
         self.decoder = nn.TransformerDecoder(dec, mcfg["dec_layers"])
         self.act_out = nn.Sequential(nn.LayerNorm(d), nn.Linear(d, action_dim))
+        # optional grounding head (training only): where are the named bowl and the named pad?
+        self.aux_dim = int(mcfg.get("aux_dim", 0))
+        if self.aux_dim:
+            self.aux_head = nn.Sequential(nn.Linear(d, d), nn.GELU(), nn.Linear(d, self.aux_dim))
         for p in (self.view_emb, self.patch_pos, self.text_pos, self.act_pos):
             nn.init.normal_(p, std=0.02)
         nn.init.zeros_(self.act_out[1].weight)
@@ -116,8 +120,11 @@ class VLA(nn.Module):
         return self.act_out(self.decoder(x, memory, memory_key_padding_mask=pad))
 
     # ------------------------------------------------------------------ training / inference
-    def loss(self, images, text, text_mask, proprio, actions, weight=None):
-        """images: [B, n_views, 3, H, W]; actions: [B, chunk, A] (normalized)."""
+    def loss(self, images, text, text_mask, proprio, actions, weight=None, aux=None):
+        """images: [B, n_views, 3, H, W]; actions: [B, chunk, A] (normalized).
+
+        With `aux` ([B, aux_dim], normalized positions of the named bowl and pad) also returns the
+        grounding loss, read from the proprio token so the encoder has to bind words to pixels."""
         b = images.shape[0]
         vis = self.encode_images(images.flatten(0, 1)).unflatten(0, (b, self.n_views))
         memory, pad = self.fuse(vis, text, text_mask, proprio)
@@ -128,6 +135,8 @@ class VLA(nn.Module):
         err = F.mse_loss(v.float(), actions - noise, reduction="none")
         if weight is not None:
             err = err * weight
+        if aux is not None and self.aux_dim:
+            return err.mean(), F.smooth_l1_loss(self.aux_head(memory[:, -1]).float(), aux)
         return err.mean()
 
     @torch.no_grad()

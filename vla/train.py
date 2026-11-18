@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--eval-every", type=int, default=None)
     ap.add_argument("--eval-episodes", type=int, default=None)
     ap.add_argument("--config", default=None)
+    ap.add_argument("--init", default=None, help="checkpoint to start from (weights only)")
     ap.add_argument("--no-history", action="store_true", help="ablation: previous frame = current frame")
     args = ap.parse_args()
     setup_gl("record")
@@ -98,7 +99,13 @@ def main():
 
     mk = lambda files: EpisodeDataset(files, v["cameras"], mc["chunk"], mc["history_offset"], stats, text_ids)
     train_ds, val_ds = mk(train_files), mk(val_files)
-    loader = torch.utils.data.DataLoader(train_ds, batch_size=tc["batch_size"], shuffle=True, drop_last=True,
+    # The instruction only decides the action in the first ticks; afterwards the arm's own motion
+    # gives the target away. Oversample those ticks or language grounding is never learned.
+    sampler = None
+    if tc.get("early_weight", 1.0) > 1.0:
+        w = torch.tensor([tc["early_weight"] if t < tc["early_ticks"] else 1.0 for _, t in train_ds.index], dtype=torch.double)
+        sampler = torch.utils.data.WeightedRandomSampler(w, num_samples=len(w), replacement=True)
+    loader = torch.utils.data.DataLoader(train_ds, batch_size=tc["batch_size"], shuffle=sampler is None, sampler=sampler, drop_last=True,
                                          num_workers=tc["workers"], persistent_workers=True, pin_memory=True,
                                          prefetch_factor=4)
     val_loader = torch.utils.data.DataLoader(val_ds, batch_size=tc["batch_size"], shuffle=True,
@@ -107,6 +114,9 @@ def main():
           f"{steps} steps", flush=True)
 
     model = VLA(mc, n_cams=len(v["cameras"])).to(dev)
+    if args.init:
+        missing, unexpected = model.load_state_dict(torch.load(args.init, map_location="cpu", weights_only=False)["model"], strict=False)
+        print(f"init from {args.init}: missing {list(missing)}, unexpected {list(unexpected)}", flush=True)
     ema = copy.deepcopy(model).eval().requires_grad_(False)
     vis_params = [p for p in model.vision.parameters() if p.requires_grad]
     vis_ids = {id(p) for p in vis_params}
@@ -120,12 +130,19 @@ def main():
             return (s + 1) / tc["warmup_steps"]
         return 0.5 * (1 + math.cos(math.pi * (s - tc["warmup_steps"]) / max(1, steps - tc["warmup_steps"]))) * 0.98 + 0.02
 
+    aux_w, last_aux = float(tc.get("aux_weight", 0.0)) if mc.get("aux_dim") else 0.0, [0.0]
+
     def batch_loss(m, b, train):
         img = b["images"].to(dev, non_blocking=True)
         img = augment(img, tc["aug_shift"], tc["aug_brightness"]) if train else img.float() / 255.0
         tid = b["text_id"].to(dev)
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            return m.loss(img, th[tid], tm[tid], b["proprio"].to(dev), b["action"].to(dev))
+            out = m.loss(img, th[tid], tm[tid], b["proprio"].to(dev), b["action"].to(dev),
+                         aux=b["aux"].to(dev) if aux_w else None)
+        if aux_w:
+            last_aux[0] = out[1].item()
+            return out[0] + aux_w * out[1] if train else out[0]
+        return out
 
     env = TickEnv(cfg, render=True)
     tb = SummaryWriter(run_dir / "tb")
@@ -178,7 +195,7 @@ def main():
                 history["train_loss"].append({"step": step, "loss": run_loss / 50})
                 tb.add_scalar("train/loss", run_loss / 50, step)
                 if step % 250 == 0:
-                    print(f"step {step}/{steps} loss {run_loss / 50:.4f} lr {opt.param_groups[0]['lr']:.2e} "
+                    print(f"step {step}/{steps} loss {run_loss / 50:.4f} aux {last_aux[0]:.4f} lr {opt.param_groups[0]['lr']:.2e} "
                           f"{(time.time() - t0) / step:.3f} s/step", flush=True)
                 run_loss = 0.0
             if step % eval_every == 0 or step == steps:

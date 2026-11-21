@@ -103,7 +103,7 @@ def main():
     lp = d / "latency_profile.json"
     if lp.exists():
         out["latency_profile"] = {k: {kk: vv for kk, vv in v.items() if kk != "samples_s"}
-                                  for k, v in json.loads(lp.read_text()).items()}
+                                  for k, v in json.loads(lp.read_text()).items() if v.get("n")}
     cal = d / "calibration.json"
     if cal.exists():
         out["calibration"] = {k: {kk: v[kk] for kk in ("caught", "drops", "catch_rate")}

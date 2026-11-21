@@ -51,20 +51,28 @@ def main():
     out = {}
     with Astra(effort="low") as astra:
         for name, (instr, make, schema, reuse) in configs.items():
-            lat, toks, th = [], [], None
+            lat, toks, th, errors = [], [], None, []
             for _ in range(args.n):
                 t0 = time.monotonic()
                 if th is None or not reuse:
                     th = astra.new_thread(instr)
-                _, info = astra.ask(th, make(), schema)
+                try:
+                    _, info = astra.ask(th, make(), schema)
+                except Exception as e:          # e.g. the model emits a non-message item
+                    errors.append(str(e)[:120])
+                    th = None
+                    continue
                 lat.append(time.monotonic() - t0)
                 toks.append((info["usage"] or {}).get("inputTokens"))
+            if not lat:
+                out[name] = {"n": 0, "errors": errors}
+                continue
             out[name] = {"n": len(lat), "median_s": round(float(np.median(lat)), 2),
                          "p10_s": round(float(np.percentile(lat, 10)), 2),
                          "p90_s": round(float(np.percentile(lat, 90)), 2),
                          "min_s": round(float(np.min(lat)), 2),
                          "input_tokens_median": float(np.median([t for t in toks if t])),
-                         "samples_s": [round(x, 2) for x in lat]}
+                         "errors": errors, "samples_s": [round(x, 2) for x in lat]}
             print(name, {k: v for k, v in out[name].items() if k != "samples_s"}, flush=True)
     with open(args.out, "w") as f:
         json.dump(out, f, indent=1)

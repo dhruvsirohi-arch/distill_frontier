@@ -371,13 +371,23 @@ fast_txt = (f"The fast profile (one 320×120 image, compact text, one cached thr
             f"decision to <b>{fast['latency_median_s']:.1f} s</b> and caught <b>{fast['caught']}/{fast['drops']}</b>."
             if fast else "The fast-profile run was still in progress when this page was built.")
 if sweep:
-    sweep_txt = (f"Slowing the world down is the only lever that moved the score. "
-                 + (f"The first catches appear at <b>{first_nonzero[0]:g}× slow motion</b> "
-                    f"({first_nonzero[1]['caught']}/{first_nonzero[1]['drops']}), when a decision costs "
-                    f"{first_nonzero[1].get('sim_latency_median_s', 0) * 1000:.0f} ms of game time. "
-                    if first_nonzero else "No slow-motion factor tested produced a catch. ")
-                 + f"At {best_sweep[0]:g}× Astra catches <b>{pct(best_sweep[2]['catch_rate'])}</b>, "
-                   f"against {pct(STD['catch_rate'])} with the world fully paused.")
+    sweep_txt = ("Slowing the world down is the only lever that moved the score. "
+                 + " ".join(f"At {k:g}× a decision costs {v.get('sim_latency_median_s', 0) * 1000:.0f} ms "
+                            f"of game time and Astra catches {v['caught']}/{v['drops']} ({pct(v['catch_rate'])})."
+                            for k, _, v in sweep)
+                 + f" With the world fully paused (Standard) it catches {pct(STD['catch_rate'])}.")
+    # where Astra's slow-motion points sit relative to the scripted reflex at the same latency
+    match = []
+    for k, _, v in sweep:
+        L = v.get("sim_latency_median_s")
+        ref = next((r for l, r in curve if abs(l - L) < 0.02), None) if L else None
+        if ref is not None:
+            match.append(f"{k:g}× ({L * 1000:.0f} ms): Astra {pct(v['catch_rate'])}, reflex {pct(ref)}")
+    if match:
+        sweep_txt += (" Against the scripted reflex at the same game-time latency: " + "; ".join(match)
+                      + ". Where time is scarce Astra tracks the reflex. Once time is plentiful it is held"
+                      " back by grasp skill instead, approaching its own paused-world ceiling rather than"
+                      " the reflex.")
 else:
     sweep_txt = "The slow-motion sweep was still in progress when this page was built."
 abstract_tail = []
@@ -385,9 +395,11 @@ if fast:
     abstract_tail.append(f"A leaner sensor payload with prompt caching brought decisions to "
                          f"{fast['latency_median_s']:.1f} s and caught {fast['caught']} of {fast['drops']}.")
 if sweep:
-    abstract_tail.append(f"Slowing the world down {first_nonzero[0]:g}× is where catches begin."
-                         if first_nonzero else "Even slowing the world down "
-                         f"{sweep[-1][0]:g}× did not produce a catch.")
+    k20 = next((v for k, _, v in sweep if k == 20), None)
+    abstract_tail.append(
+        f"Only slowing the world down helps: {sweep[-1][0]:g}× slower, Astra catches "
+        f"{pct(sweep[-1][2]['catch_rate'], 0)}"
+        + (f", while at 20× it catches {pct(k20['catch_rate'], 0)}" if k20 else "") + ".")
 abstract_tail = " ".join(abstract_tail)
 if prof_floor is not None:
     prof_cap = (f"The fastest configuration, a text-only question with a one-integer answer, still has a "
@@ -431,7 +443,7 @@ img.wide{{width:100%;border-radius:12px;border:1px solid var(--line);display:blo
     <div class="kpi"><div class="v">{ratio:.0f}<small>×</small></div><div class="l">too slow: median decision {RT['latency_median_s']:.1f} s vs. the ~{(L50 or .12) * 1000:.0f} ms at which a scripted reflex loses half its catches</div></div>
   </div>
   <div class="abstract"><div class="k">Abstract</div>
-  <p>The Reaction Ring drops sticks one at a time from an overhead bar; the player must catch each one in the half second before it lands. It isolates one question: can the agent close the loop from seeing to acting fast enough? Astra perceives and plans the task well, perfectly with privileged state and at {pct(STD['catch_rate'], 0)} from cameras alone when time stops, but its decision latency is two orders of magnitude above the task's budget, so in real time it catches nothing. {abstract_tail}</p></div>
+  <p>The Reaction Ring drops sticks one at a time from an overhead bar; the player must catch each one in the half second before it lands. It isolates one question: can the agent close the loop from seeing to acting fast enough? Astra perceives and plans the task well, perfectly with privileged state and at {pct(STD['catch_rate'], 0)} from cameras alone when time stops, but its decision latency is nearly two orders of magnitude above the task's budget, so in real time it catches nothing. {abstract_tail}</p></div>
 </div></header>
 
 <section id="intro"><div class="wrap">
@@ -501,7 +513,7 @@ img.wide{{width:100%;border-radius:12px;border:1px solid var(--line);display:blo
   </div>
   <div class="fig">
     <div class="t"><span><b>Fig. 2</b> · Catch rate vs. reaction latency</span><span>scripted reflex: 800 drops per point</span></div>
-    <h3>The budget is about a tenth of a second; Astra lives two orders of magnitude to the right</h3>
+    <h3>The budget is about a tenth of a second; Astra lives nearly two orders of magnitude to the right</h3>
     <p class="d">A reflex controller is told which stick fell after a fixed delay. Astra's points use the median game time per Realtime decision.</p>
     <div class="legend"><span><i class="line" style="background:{S1}"></i>Scripted reflex (event + delay)</span><span><i style="background:{S2}"></i>Astra Realtime variants</span><span><i class="line" style="background:{AXIS}"></i>Reference rates</span></div>
     {fig_curve()}
@@ -556,7 +568,7 @@ img.wide{{width:100%;border-radius:12px;border:1px solid var(--line);display:blo
     <p class="d">The simulator advances one 40 ms tick every 40 ms × k of wall time. k = 1 is Realtime; "paused" is Standard. Whiskers: 95% bootstrap CI.</p>
     {fig_sweep() if sweep else "<p class='cap'>Pending: the sweep was running when this page was built.</p>"}
     {"<details><summary>Table view</summary><div class='scroll'><table><tr><th>Slow-down</th><th class='n'>Games</th><th class='n'>Caught</th><th class='n'>Rate</th><th class='n'>Wall latency</th><th class='n'>Game-time latency</th><th class='n'>Decisions/game</th></tr>" + sweep_rows + "</table></div></details>" if sweep else ""}
-    <p class="cap">{sweep_txt} Read across Fig. 2, this converts Astra's score into an <b>effective reaction time</b>: the slow-motion factor at which it starts to catch, multiplied by its wall-clock latency, lands where the scripted reflex's curve does.</p>
+    <p class="cap">{sweep_txt} Fig. 2 plots these points by game-time latency. The slow-motion factor at which Astra reaches a given score is a continuous measure of how far it is from real time.</p>
   </div>
 </div></section>
 

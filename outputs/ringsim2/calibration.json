@@ -1,0 +1,72 @@
+{
+ "fps": 30,
+ "seeds": "50000-50099",
+ "controllers": {
+  "oracle": {
+   "caught": 794,
+   "drops": 800,
+   "latency_s": 0.0,
+   "catch_rate": 0.9925
+  },
+  "event@0.0000": {
+   "caught": 666,
+   "drops": 800,
+   "latency_s": 0.0,
+   "catch_rate": 0.8325
+  },
+  "event@0.0333": {
+   "caught": 769,
+   "drops": 800,
+   "latency_s": 0.03333333333333333,
+   "catch_rate": 0.9613
+  },
+  "event@0.0667": {
+   "caught": 674,
+   "drops": 800,
+   "latency_s": 0.06666666666666667,
+   "catch_rate": 0.8425
+  },
+  "event@0.1000": {
+   "caught": 372,
+   "drops": 800,
+   "latency_s": 0.1,
+   "catch_rate": 0.465
+  },
+  "event@0.1333": {
+   "caught": 155,
+   "drops": 800,
+   "latency_s": 0.13333333333333333,
+   "catch_rate": 0.1938
+  },
+  "event@0.1667": {
+   "caught": 73,
+   "drops": 800,
+   "latency_s": 0.16666666666666666,
+   "catch_rate": 0.0912
+  },
+  "event@0.2000": {
+   "caught": 38,
+   "drops": 800,
+   "latency_s": 0.2,
+   "catch_rate": 0.0475
+  },
+  "event@0.3000": {
+   "caught": 0,
+   "drops": 800,
+   "latency_s": 0.3,
+   "catch_rate": 0.0
+  },
+  "event@0.5000": {
+   "caught": 0,
+   "drops": 800,
+   "latency_s": 0.5,
+   "catch_rate": 0.0
+  },
+  "event@1.0000": {
+   "caught": 0,
+   "drops": 800,
+   "latency_s": 1.0,
+   "catch_rate": 0.0
+  }
+ }
+}

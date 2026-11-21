@@ -208,7 +208,9 @@ def fig_hist():
     n = std_hist
     top = max(int(n.max()), 1)
     s = [svg_open(W, H, "Sticks caught per Standard episode")]
-    for v in np.linspace(0, top, 5):
+    step = max(1, int(math.ceil(top / 4 / 5.0)) * 5) if top > 8 else 2
+    top = int(math.ceil(top / step) * step)
+    for v in range(0, top + 1, step):
         y = y1 - v / top * (y1 - y0)
         s.append(f'<line x1="{x0}" x2="{x1}" y1="{y:.1f}" y2="{y:.1f}" stroke="{GRID}"/>')
         s.append(f'<text class="tick" x="{x0 - 10}" y="{y + 4:.1f}" text-anchor="end">{v:.0f}</text>')
@@ -402,10 +404,18 @@ if sweep:
         + (f", while at 20× it catches {pct(k20['catch_rate'], 0)}" if k20 else "") + ".")
 abstract_tail = " ".join(abstract_tail)
 if prof_floor is not None:
-    prof_cap = (f"The fastest configuration, a text-only question with a one-integer answer, still has a "
-                f"median of <b>{prof_floor:.1f} s</b>. The full sensor turn takes {prof_full:.1f} s unloaded, "
-                f"against {RT['latency_median_s']:.1f} s inside the Realtime exam (which overlapped other runs). "
-                f"Payload size moves latency by seconds at most; the per-turn floor of the serving path dominates. ")
+    pv = list(PROF.items())
+    g = lambda pre: next((v for k, v in pv if k.startswith(pre)), None)
+    full_, small_, reuse_, text_ = (g("full"), g("1 RGB image 320x120 (fresh"), g("1 RGB image 320x120 (reused"),
+                                    g("text only"))
+    prof_cap = (f"Unloaded, the full sensor turn takes {full_['median_s']:.1f} s. Shrinking it to one small "
+                f"image saves {full_['median_s'] - small_['median_s']:.1f} s; reusing one cached thread brings the "
+                f"median to {reuse_['median_s']:.1f} s"
+                + (f" ({len(reuse_.get('errors', []))} of 20 calls failed when the model emitted a non-message item)"
+                   if reuse_.get("errors") else "")
+                + f"; a trivial text question with a one-integer answer still takes {text_['median_s']:.1f} s. "
+                f"Inside the Realtime exam, which overlapped other runs, the full turn took "
+                f"{RT['latency_median_s']:.1f} s. The per-turn floor of the serving path, not the payload, dominates. ")
 else:
     prof_cap = "The unloaded latency profile was still running when this page was built. "
 
@@ -540,8 +550,8 @@ img.wide{{width:100%;border-radius:12px;border:1px solid var(--line);display:blo
     </table></div>
   </div>
   <div class="prose" style="margin-top:28px">
-  <p><b>Privileged.</b> With the schedule in hand, the task reduces to placing a hand under the right stick and timing the close. Astra wrote keyframe plans, simulated once or twice, fixed whatever failed (typically a close that came too early or a hand that disturbed another), and submitted. {PRIV['caught']}/{PRIV['drops']} catches in the graded replays. Privileged mode is an upper bound here, and an easy one: it removes perception and time pressure together.</p>
-  <p><b>Standard.</b> Sensors only, but time stands still. Astra played the way a careful human would: it recorded pixel coordinates for every stick tip in its notes at the start, then polled in short steps ({pct(std_short, 0)} of its <code>advance_ms</code> choices were ≤ 80 ms), spotted a released stick within one or two frames, moved the nearest open hand under it, and closed. It got a jaw pad onto <b>{std_touch} of {STD['drops']}</b> falling sticks ({pct(std_touch / STD['drops'])}) and held {STD['caught']}. So detection and reaching work; the grasp is where it fails. First contact came {lat_c * 1000:.0f} ms after release for catches and {lat_m * 1000:.0f} ms for misses (medians), so missed sticks were not reached later. They were lost after contact: the jaws closed too early or too late for the stick to be held, or the stick slid out. {trapped_n} holds were "trapped", with the jaws already partly closed as the stick entered. It averaged {STD.get('decisions_per_episode', 0):.0f} decisions per 13.7 s game, a median {STD.get('latency_median_s', 0):.1f} s each, so one game takes about {STD.get('wall_s_median', 0) / 60:.0f} minutes of wall time.</p>
+  <p><b>Privileged.</b> With the schedule in hand, the task reduces to placing a hand under the right stick and timing the close. Astra wrote keyframe plans, simulated them (on average {PRIV.get('turns_mean', 0) - 1:.1f} simulations before submitting), revised from the per-drop outcome reports, and submitted. {PRIV['caught']}/{PRIV['drops']} catches in the graded replays. Privileged mode is an upper bound here, and an easy one: it removes perception and time pressure together.</p>
+  <p><b>Standard.</b> Sensors only, but time stands still. In the games we read, Astra played the way a careful human would: it noted the pixel coordinates of every stick tip at the start, then polled in short steps ({pct(std_short, 0)} of its <code>advance_ms</code> choices were ≤ 80 ms), spotted a released stick within one or two frames, moved the nearest open hand under it, and closed. It got a jaw pad onto <b>{std_touch} of {STD['drops']}</b> falling sticks ({pct(std_touch / STD['drops'])}) and held {STD['caught']}. So detection and reaching work; the grasp is where it fails. First contact came {lat_c * 1000:.0f} ms after release for catches and {lat_m * 1000:.0f} ms for misses (medians), so missed sticks were not reached later. They were lost after contact: the jaws closed too early or too late for the stick to be held, or the stick slid out. {trapped_n} holds were "trapped", with the jaws already partly closed as the stick entered. It averaged {STD.get('decisions_per_episode', 0):.0f} decisions per 13.7 s game, a median {STD.get('latency_median_s', 0):.1f} s each, so one game takes about {STD.get('wall_s_median', 0) / 60:.0f} minutes of wall time.</p>
   <p><b>Realtime.</b> The countdown gives 3 s before the first possible release, and a decision takes {RT['latency_median_s']:.1f} s at the median ({RT.get('latency_min_s', 0):.1f} s at best). In <b>{rt_late_first} of {len(rt_recs)}</b> games Astra's first command arrived after the first stick had already landed. It completed only {np.mean(rt_complete) if rt_complete else 0:.1f} commands per game. Across 800 drops, <b>{RT.get('drops_with_postrelease_command', 0)}</b> received a command based on an image taken after that stick's release before the stick was resolved. Nothing it did could react to a drop. The score of 0 is not noise: even the best pure guess (Table 1, timed close) would need a close timed to within about 0.1 s of a release it cannot see coming.</p>
   </div>
   <div class="fig">
@@ -576,7 +586,7 @@ img.wide{{width:100%;border-radius:12px;border:1px solid var(--line);display:blo
   <div class="head"><span class="eyebrow">07 · Discussion</span>
   <h2>What this exam measures, <em>and what it does not</em></h2></div>
   <div class="notes">
-    <div class="note"><h4>A clean latency probe</h4><p>Perception and planning are not what fails: Privileged is perfect and Standard reaches {pct(STD['catch_rate'], 0)}. The whole Standard-to-Realtime gap ({pct(STD['catch_rate'], 0)} → {pct(RT['catch_rate'], 0)}) is time. That makes the task a good discriminator between "can reason about it" and "can do it", and a poor one between two slow models: a controller above about 0.25 s of reaction latency scores essentially zero here (Fig. 2).</p></div>
+    <div class="note"><h4>A clean latency probe</h4><p>Seeing and reaching are not what fails: Privileged is perfect, and in Standard Astra touched {pct(std_touch / STD['drops'], 0)} of falling sticks and held {pct(STD['catch_rate'], 0)}. The whole Standard-to-Realtime gap ({pct(STD['catch_rate'], 0)} → {pct(RT['catch_rate'], 0)}) is time. That makes the task a good discriminator between "can reason about it" and "can do it", and a poor one between two slow models: a controller above about 0.25 s of reaction latency scores essentially zero here (Fig. 2).</p></div>
     <div class="note"><h4>Report a curve, not a point</h4><p>A single Realtime score saturates at 0 for every current foundation model. The slow-motion factor needed to reach a given fraction of the Standard score is a continuous, comparable number. We recommend reporting it alongside the 1× score, together with the scripted latency curve for the same seeds.</p></div>
     <div class="note"><h4>The exploit we closed</h4><p>Without the open-jaws rule a passive trap (a half-closed gripper parked under a stick) catches with no timing. A slow agent can then score about 25% by parking under two sticks, or more by re-parking under still-hanging ones. That would turn a latency test into a guessing game. Any physical version of this task needs the same rule, or a gripper that cannot be pre-shaped.</p></div>
     <div class="note"><h4>The architectural answer</h4><p>Humans pass this test with a reflex, not deliberation. A robot would too: a fast learned or scripted catch skill (Table 1's camera reflex runs in milliseconds) supervised by a slow planner that chooses where to wait. The exam then measures the fast layer. As posed here (the model is the only controller) it measures the model's raw loop time.</p></div>

@@ -16,3 +16,6 @@ outputs/eval_episodes_base.jsonl
 outputs/ringsim/*.mp4
 outputs/ringsim/*.log
 outputs/ringsim/summary.txt
+outputs/ringsim2/pilot/
+outputs/ringsim2/*.log
+outputs/ringsim2/rate_limits.json

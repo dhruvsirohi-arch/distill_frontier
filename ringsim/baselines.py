@@ -106,7 +106,7 @@ class Reactive:
             new = []
             for slot, t_seen in ready:
                 # the detector needs about 1 cm of fall (two frames) to see motion
-                new.append((slot, t_seen - 2 * TICK))
+                new.append((slot, t_seen - 2 * game.tick_dt))
         else:
             before = set(self.known)
             self._detect(game, obs)

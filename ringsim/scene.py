@@ -177,6 +177,20 @@ def build(machine: Machine = Machine()) -> mujoco.MjSpec:
         cam.alt.type = mujoco.mjtOrientation.mjORIENTATION_XYAXES
         cam.alt.xyaxes = _look_xyaxes(d)
 
+    # Phase 2 sensors (sites and sensors only: they do not change the dynamics).
+    # Head lidar: a Livox MID-360 mounted upright on top of the head, so its -7..+52 deg vertical
+    # field covers the hanging sticks. (The G1-D's own Lidar_Link sits on the base at 0.21 m and
+    # cannot see anything above about 0.9 m at the bar radius.)
+    head.add_site(name="head_lidar", pos=[0.03, 0, 0.53], size=[0.03, 0.03, 0.03], group=5)
+    # IMU in the torso (as on the G1, whose IMU board sits in the torso/pelvis)
+    torso = spec.body("torso_link")
+    torso.add_site(name="imu", pos=[0, 0, 0.05], size=[0.01] * 3, group=5)
+    for kind, sname in ((mujoco.mjtSensor.mjSENS_FRAMEQUAT, "imu_quat"),
+                        (mujoco.mjtSensor.mjSENS_GYRO, "imu_gyro"),
+                        (mujoco.mjtSensor.mjSENS_ACCELEROMETER, "imu_accel")):
+        sen = spec.add_sensor(name=sname, type=kind, objtype=mujoco.mjtObj.mjOBJ_SITE,
+                              objname="imu")
+
     # ---- actuators ------------------------------------------------------------------------------
     limits = {}
     for j in spec.joints:

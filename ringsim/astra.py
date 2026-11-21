@@ -35,11 +35,30 @@ class AstraError(RuntimeError):
     pass
 
 
+def _publish_limits(limits):
+    """Share the newest rate-limit reading with the run drivers (RINGSIM_LIMITS_FILE)."""
+    import os
+    path = os.environ.get("RINGSIM_LIMITS_FILE")
+    if not path or not limits:
+        return
+    tmp = f"{path}.{os.getpid()}.tmp"
+    try:
+        with open(tmp, "w") as f:
+            json.dump({"at": time.time(), **limits}, f)
+        os.replace(tmp, path)
+    except OSError:
+        pass
+
+
 class Astra:
     """One app-server process. Threads are cheap; create one per episode or per decision."""
 
-    def __init__(self, effort: str = "low", model: str = MODEL):
-        self.effort, self.model = effort, model
+    def __init__(self, effort: str = "low", model: str = MODEL, summary: str | None = None):
+        """summary: request reasoning summaries ("auto" | "concise" | "detailed"); every
+        reasoning item the server sends (summary text and, if ever provided, raw content) is
+        returned with each turn. None keeps the Phase 1 behaviour."""
+        self.effort, self.model, self.summary = effort, model, summary
+        self.rate_limits = None
         self.tmp = tempfile.TemporaryDirectory(prefix="ringsim-astra-")
         cmd = ["codex", "app-server", "--stdio", "-c", 'web_search="disabled"']
         for feature in ("shell_tool", "unified_exec", "apps", "plugins"):
@@ -99,7 +118,9 @@ class Astra:
             "model": self.model, "ephemeral": True, "baseInstructions": instructions,
             "developerInstructions": developer, "cwd": self.tmp.name,
             "approvalPolicy": "never", "sandbox": "read-only",
-            "config": {"model_reasoning_effort": self.effort, "mcp_servers": {}}})
+            "config": {"model_reasoning_effort": self.effort, "mcp_servers": {},
+                       **({"model_reasoning_summary": self.summary,
+                           "show_raw_agent_reasoning": True} if self.summary else {})}})
         if res.get("model") != self.model:
             raise AstraError(f"served model {res.get('model')!r}, expected {self.model!r}")
         return res["thread"]["id"]
@@ -107,13 +128,23 @@ class Astra:
     def ask(self, thread: str, inputs: list, schema: dict, timeout=TURN_TIMEOUT):
         """Run one turn; returns (parsed JSON, info) where info has latency and token usage."""
         t0 = time.monotonic()
-        self.rpc("turn/start", {"threadId": thread, "input": inputs, "effort": self.effort,
-                                "outputSchema": schema})
+        params = {"threadId": thread, "input": inputs, "effort": self.effort,
+                  "outputSchema": schema}
+        if self.summary:
+            params["summary"] = self.summary
+        self.rpc("turn/start", params)
+        t_sent = time.monotonic()
         deadline = t0 + timeout
-        reply, usage = None, None
+        reply, usage, reasoning, t_first = None, None, [], None
         while True:
             msg = self._next(deadline)
             method, params = msg.get("method"), msg.get("params", {})
+            if method == "account/rateLimits/updated":
+                self.rate_limits = params.get("rateLimits")
+                _publish_limits(self.rate_limits)
+            if t_first is None and method and method.startswith("item/") and \
+                    method.lower().endswith("delta"):
+                t_first = time.monotonic()          # first streamed token (reasoning or reply)
             if method == "model/rerouted":
                 raise AstraError("provider rerouted the request to another model")
             if method in ("item/started", "item/completed"):
@@ -122,13 +153,20 @@ class Astra:
                     raise AstraError("unexpected item: " + str(kind))
                 if method == "item/completed" and kind == "agentMessage":
                     reply = params["item"]["text"]
+                if method == "item/completed" and kind == "reasoning":
+                    it = params["item"]
+                    reasoning.append({"summary": it.get("summary", []),
+                                      "content": it.get("content", []),
+                                      "t_s": round(time.monotonic() - t0, 3)})
             if method == "thread/tokenUsage/updated":
                 usage = params.get("tokenUsage", {}).get("last")
             if method == "turn/completed":
                 turn = params["turn"]
                 if turn.get("status") != "completed" or reply is None:
                     raise AstraError("turn failed: " + str(turn.get("error")))
-                info = {"latency_s": round(time.monotonic() - t0, 3), "usage": usage}
+                info = {"latency_s": round(time.monotonic() - t0, 3), "usage": usage,
+                        "send_s": round(t_sent - t0, 3), "reasoning": reasoning, "raw": reply,
+                        "first_token_s": round(t_first - t0, 3) if t_first else None}
                 try:
                     return json.loads(reply), info
                 except json.JSONDecodeError as e:

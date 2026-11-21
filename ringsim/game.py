@@ -55,20 +55,26 @@ class Schedule:
     release_t: list[float]
 
     @classmethod
-    def sample(cls, seed: int, n: int):
+    def sample(cls, seed: int, n: int, tick: float = TICK):
         rng = np.random.default_rng(seed)
         order = rng.permutation(n).tolist()
         gaps = rng.uniform(*INTERVAL, size=n)
         t = COUNTDOWN + np.cumsum(gaps)
         # releases land on the control grid so every mode sees them at the same tick boundary
-        return cls(order=order, release_t=[round(round(x / TICK) * TICK, 4) for x in t])
+        return cls(order=order, release_t=[round(round(x / tick) * tick, 4) for x in t])
 
 
 class Game:
     def __init__(self, machine: Machine = Machine(), render: bool = True,
-                 img_size=(IMG_W, IMG_H)):
+                 img_size=(IMG_W, IMG_H), tick: float = TICK, phys_dt: float = PHYS_DT):
+        """tick: control/observation period (Phase 1: 40 ms; Phase 2: one 30 fps camera frame).
+        phys_dt: physics step; must divide tick."""
         self.machine = machine
         self.spec, self.m = compile_model(machine)
+        self.m.opt.timestep = phys_dt
+        self.tick_dt = tick
+        self.substeps = int(round(tick / phys_dt))
+        assert abs(self.substeps * phys_dt - tick) < 1e-9, "phys_dt must divide tick"
         self.d = mujoco.MjData(self.m)
         self.ctrl = Controller(self.m)
         self.n = machine.n_sticks
@@ -95,7 +101,7 @@ class Game:
     # ---- episode control --------------------------------------------------------------------------
     def reset(self, seed: int):
         self.seed = seed
-        self.schedule = Schedule.sample(seed, self.n)
+        self.schedule = Schedule.sample(seed, self.n, self.tick_dt)
         mujoco.mj_resetData(self.m, self.d)
         self.d.eq_active[:] = 1
         mujoco.mj_forward(self.m, self.d)
@@ -115,7 +121,7 @@ class Game:
 
     @property
     def t(self):
-        return self.tick * TICK
+        return self.tick * self.tick_dt
 
     @property
     def done(self):
@@ -129,7 +135,7 @@ class Game:
             if self.done:
                 break
             self.ctrl.set_command(self.d, action if k == 0 else None)
-            for _ in range(SUBSTEPS):
+            for _ in range(self.substeps):
                 self._release_due()
                 self.ctrl.drive(self.d)
                 mujoco.mj_step(self.m, self.d)

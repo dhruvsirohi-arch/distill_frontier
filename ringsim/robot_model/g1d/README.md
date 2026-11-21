@@ -1,0 +1,5 @@
+# Unitree G1-D with Dex1-1
+
+The URDF and 3D surfaces come from Unitree Robotics, revision `157ff950351e5f535e03c5d85a16b7d594b3dbcc`. Only meshes referenced by the Dex1-1 variant are included. Larger source meshes were reduced by quadric edge collapse to 5,500 triangles per part for interactive rendering. [Upstream robot package](https://github.com/unitreerobotics/unitree_ros/tree/157ff950351e5f535e03c5d85a16b7d594b3dbcc/robots/g1_d_description) · [BSD 3-Clause license](LICENSE)
+
+The MJCF builder reads the original link frames, inertias, axes, arm and finger travel, and actuator effort bounds from the URDF. Both powered wheels and all four swivel casters are articulated. The lift holds 0.12 m extension on each stage and the torso stays upright. The drive uses cylinder contacts with caster preload approximated by a vertical contact offset. Arm servos use gravity compensation. Dex1-1 pads use compliant frictional boxes with opposing finger slides, each with 41 mm travel. The viewing optics, finishes, lights, floor, gantry and sensors are simulation additions.

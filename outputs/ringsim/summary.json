@@ -1,0 +1,158 @@
+{
+ "model": "gpt-6.2-astra",
+ "seeds": "50000-50099",
+ "privileged": {
+  "episodes": 100,
+  "failed_episodes": 0,
+  "caught": 800,
+  "drops": 800,
+  "catch_rate": 1.0,
+  "catch_rate_ci95": [
+   1.0,
+   1.0
+  ],
+  "perfect_episodes": 100,
+  "outcomes": {
+   "caught": 800
+  },
+  "touched": 800,
+  "decisions": 213,
+  "decisions_per_episode": 2.1,
+  "latency_median_s": 22.84,
+  "latency_p95_s": 26.71,
+  "latency_min_s": 8.28,
+  "decision_errors": 0,
+  "submitted": 100,
+  "turns_mean": 2.13,
+  "tokens_total": 2371690,
+  "wall_s_median": 54.2
+ },
+ "standard": {
+  "episodes": 25,
+  "failed_episodes": 0,
+  "caught": 109,
+  "drops": 200,
+  "catch_rate": 0.545,
+  "catch_rate_ci95": [
+   0.485,
+   0.61
+  ],
+  "perfect_episodes": 0,
+  "outcomes": {
+   "floor": 81,
+   "caught": 109,
+   "timeout": 3,
+   "trapped": 7
+  },
+  "touched": 199,
+  "decisions": 2036,
+  "decisions_per_episode": 81.4,
+  "latency_median_s": 6.6,
+  "latency_p95_s": 14.46,
+  "latency_min_s": 4.34,
+  "decision_errors": 0,
+  "drops_with_postrelease_command": 200,
+  "tokens_total": 17370529,
+  "wall_s_median": 651.6
+ },
+ "realtime": {
+  "episodes": 100,
+  "failed_episodes": 0,
+  "caught": 0,
+  "drops": 800,
+  "catch_rate": 0.0,
+  "catch_rate_ci95": [
+   0.0,
+   0.0
+  ],
+  "perfect_episodes": 0,
+  "outcomes": {
+   "floor": 800
+  },
+  "touched": 12,
+  "decisions": 56,
+  "decisions_per_episode": 0.6,
+  "latency_median_s": 7.43,
+  "latency_p95_s": 10.09,
+  "latency_min_s": 4.74,
+  "sim_latency_median_s": 7.52,
+  "sim_latency_min_s": 4.8,
+  "decision_errors": 0,
+  "drops_with_postrelease_command": 0,
+  "tokens_total": 474934,
+  "wall_s_median": 13.3
+ },
+ "realtime_variants": {},
+ "calibration": {
+  "oracle": {
+   "caught": 790,
+   "drops": 800,
+   "catch_rate": 0.9875
+  },
+  "vision": {
+   "caught": 458,
+   "drops": 800,
+   "catch_rate": 0.5725
+  },
+  "parked": {
+   "caught": 200,
+   "drops": 800,
+   "catch_rate": 0.25
+  },
+  "parked_trap": {
+   "caught": 0,
+   "drops": 800,
+   "catch_rate": 0.0
+  },
+  "idle": {
+   "caught": 0,
+   "drops": 800,
+   "catch_rate": 0.0
+  },
+  "event@0.0": {
+   "caught": 617,
+   "drops": 800,
+   "catch_rate": 0.7712
+  },
+  "event@0.04": {
+   "caught": 691,
+   "drops": 800,
+   "catch_rate": 0.8638
+  },
+  "event@0.08": {
+   "caught": 623,
+   "drops": 800,
+   "catch_rate": 0.7788
+  },
+  "event@0.12": {
+   "caught": 187,
+   "drops": 800,
+   "catch_rate": 0.2338
+  },
+  "event@0.16": {
+   "caught": 145,
+   "drops": 800,
+   "catch_rate": 0.1812
+  },
+  "event@0.24": {
+   "caught": 1,
+   "drops": 800,
+   "catch_rate": 0.0013
+  },
+  "event@0.5": {
+   "caught": 0,
+   "drops": 800,
+   "catch_rate": 0.0
+  },
+  "event@1.0": {
+   "caught": 0,
+   "drops": 800,
+   "catch_rate": 0.0
+  },
+  "event@4.0": {
+   "caught": 0,
+   "drops": 800,
+   "catch_rate": 0.0
+  }
+ }
+}

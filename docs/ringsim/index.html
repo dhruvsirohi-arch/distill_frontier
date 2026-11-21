@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reaction Ring latency exam</title>
+<meta name="description" content="A simulated Reaction Ring drop-stick game as a reaction-time exam for GPT-6.2-Astra on a wheeled humanoid: privileged, standard and realtime protocols.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0e;--bg2:#0f1115;--card:#13151a;--card2:#181b21;
+  --line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
+  --ink:#f2f1ee;--ink2:#b4b7bf;--ink3:#7c818c;
+  --accent:#f2c230;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--other:#8b8f98;
+  --grid:rgba(255,255,255,.06);--axis:rgba(255,255,255,.22);
+  --r:16px;--maxw:1120px;--col:68ch;
+  --sans:"Inter Tight",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --serif:"Instrument Serif",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+video,svg{display:block;max-width:100%}
+a{color:inherit}
+::selection{background:rgba(242,194,48,.35)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+@media (max-width:640px){.wrap{padding:0 16px}}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto 0;z-index:50;backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);background:rgba(10,11,14,.66);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:60px}
+.logo{font:500 14px var(--mono);letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo i{width:9px;height:9px;border-radius:2px;background:var(--accent);box-shadow:0 0 14px rgba(242,194,48,.7)}
+.logo span{color:var(--ink3)}
+.nav ul{display:flex;gap:22px;list-style:none;margin:0 0 0 auto;padding:0}
+.nav ul a{font-size:14px;color:var(--ink2);text-decoration:none;transition:color .2s}
+.nav ul a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:500 14px var(--sans);text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);color:var(--ink);background:rgba(255,255,255,.03);transition:background .2s,border-color .2s}
+.btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28)}
+@media (max-width:900px){.nav ul{display:none}.nav .btn{margin-left:auto}}
+
+/* hero */
+.hero{position:relative;padding:150px 0 0;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto -10%;height:900px;pointer-events:none;
+  background:radial-gradient(620px 340px at 20% 16%,rgba(57,135,229,.20),transparent 70%),radial-gradient(520px 300px at 84% 6%,rgba(242,194,48,.09),transparent 70%)}
+.hero .wrap{position:relative}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.7}
+h1{font:600 clamp(40px,6.2vw,80px)/1.02 var(--sans);letter-spacing:-.035em;margin:22px 0 0;max-width:16ch;text-wrap:balance}
+h1 em,h2 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em;color:#fff}
+.lede{font-size:clamp(17px,1.6vw,20px);color:var(--ink2);max-width:62ch;margin:26px 0 0}
+.lede b{color:var(--ink);font-weight:500}
+.byline{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px}
+.tag{font:500 12px var(--mono);letter-spacing:.03em;color:var(--ink2);padding:7px 12px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.02);white-space:nowrap}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:56px}
+.kpi{background:var(--bg2);padding:26px 24px 24px}
+.kpi .v{font:600 clamp(34px,4vw,48px)/1 var(--sans);letter-spacing:-.03em}
+.kpi .v small{font-size:.5em;color:var(--ink3);font-weight:500;letter-spacing:-.01em;margin-left:4px}
+.kpi .l{margin-top:10px;font-size:14px;color:var(--ink2);line-height:1.45}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* abstract */
+.abstract{display:grid;grid-template-columns:160px 1fr;gap:24px;margin-top:72px;padding-top:28px;border-top:1px solid var(--line)}
+.abstract .k{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);padding-top:6px}
+.abstract p{margin:0;font:400 clamp(20px,2.1vw,26px)/1.45 var(--serif);color:var(--ink);max-width:46ch;letter-spacing:.005em}
+@media (max-width:720px){.abstract{grid-template-columns:1fr;gap:10px}}
+
+/* sections */
+section{padding:120px 0 0}
+@media (max-width:640px){section{padding-top:88px}}
+h2{font:600 clamp(30px,4vw,50px)/1.06 var(--sans);letter-spacing:-.03em;margin:18px 0 0;max-width:22ch;text-wrap:balance}
+.head{margin-bottom:40px}
+.sub{color:var(--ink2);max-width:62ch;margin:20px 0 0;font-size:18px}
+.sub b,.prose b{color:var(--ink);font-weight:500}
+.prose{max-width:var(--col);color:var(--ink2)}
+.prose p{margin:0 0 16px}
+.prose code,.sub code,li code,.cap code{font:13px var(--mono);color:#cfd3da;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+
+/* figures */
+.fig{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px 22px;margin:28px 0 0;min-width:0}
+.fig .t{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.fig .t b{color:var(--accent);font-weight:500}
+.fig h3{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;margin:12px 0 0}
+.fig .d{color:var(--ink2);font-size:14.5px;margin:6px 0 18px;max-width:none}
+.cap{color:var(--ink3);font-size:13.5px;line-height:1.55;margin:16px 0 0;max-width:86ch}
+svg{width:100%;height:auto;overflow:visible}
+svg text{font:500 12px var(--sans);fill:var(--ink2)}
+svg .tick{font:400 11px var(--mono);fill:var(--ink3)}
+svg .lab{fill:var(--ink)}
+svg .val{fill:var(--ink);font:500 11.5px var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13.5px;color:var(--ink2);margin:0 0 14px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.legend i.line{height:2px;width:16px;border-radius:1px;vertical-align:4px}
+.legend i.dot{border-radius:50%;width:9px;height:9px;vertical-align:0}
+.hit{fill:transparent}.hit:focus{outline:none}
+#tip{position:fixed;pointer-events:none;background:#f2f1ee;color:#0a0b0e;font-size:13px;line-height:1.4;padding:8px 11px;border-radius:9px;opacity:0;transition:opacity .08s;z-index:60;max-width:300px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#tip b{display:block;font:600 14px var(--mono);margin-bottom:1px}
+
+/* tables */
+.scroll{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);white-space:nowrap;border-bottom-color:var(--line2)}
+td{color:var(--ink2)}
+td:first-child{color:var(--ink)}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n{font:400 13.5px var(--mono);color:var(--ink)}
+tr:last-child td{border-bottom:0}
+tr.me td{background:rgba(57,135,229,.09)}
+tr.me td:first-child{box-shadow:inset 2px 0 0 var(--s1)}
+td small{display:block;color:var(--ink3);font-size:12.5px;line-height:1.45;margin-top:2px}
+td a{font:400 13px var(--mono);color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--line2)}
+td a:hover{color:var(--ink)}
+details summary{cursor:pointer;color:var(--ink3);font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-top:18px}
+details[open] summary{margin-bottom:8px}
+
+/* videos */
+.vids{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
+.vid{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0}
+.vid video{width:100%;aspect-ratio:2/1;object-fit:cover;background:#000}
+.vid figcaption{padding:14px 18px 16px;font-size:14px;color:var(--ink2);line-height:1.5}
+.vid figcaption b{display:block;color:var(--ink);font-weight:500;margin-bottom:2px}
+@media (max-width:760px){.vids{grid-template-columns:1fr}}
+
+/* stage strip */
+.stages{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stage .n{font:500 11px var(--mono);color:var(--accent);letter-spacing:.1em}
+.stage h4{margin:10px 0 0;font:600 17px var(--sans);letter-spacing:-.01em}
+.stage p{margin:6px 0 0;font-size:14px;color:var(--ink2);line-height:1.5}
+.stage .m{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font:500 12px var(--mono);color:var(--ink)}
+@media (max-width:900px){.stages{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.stages{grid-template-columns:1fr}}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:28px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+.note h4{margin:0;font:600 17px/1.3 var(--sans);letter-spacing:-.01em}
+.note p{margin:8px 0 0;font-size:15px;color:var(--ink2);line-height:1.55}
+.notes.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.notes,.notes.three{grid-template-columns:1fr}}
+ul.plain{list-style:none;padding:0;margin:28px 0 0;max-width:var(--col);border-top:1px solid var(--line)}
+ul.plain li{padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink2);font-size:16px}
+ul.plain li b{color:var(--ink);font-weight:500}
+pre{margin:28px 0 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;overflow-x:auto;font:13px/1.7 var(--mono);color:#d7dae0}
+pre .c{color:var(--ink3)}
+ol.src{list-style:none;padding:0;margin:28px 0 0;counter-reset:s;border-top:1px solid var(--line)}
+ol.src li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--ink2);overflow-wrap:anywhere;scroll-margin-top:84px}
+ol.src li::before{content:"[" counter(s) "]";font:500 12px var(--mono);color:var(--ink3);padding-top:3px}
+ol.src a{font:400 12.5px var(--mono);color:var(--ink3);text-decoration:none;display:block;margin-top:2px}
+ol.src a:hover{color:var(--ink)}
+ol.src li:target{background:rgba(242,194,48,.07)}
+footer{margin-top:120px;border-top:1px solid var(--line);padding:32px 0 56px;color:var(--ink3);font:400 12.5px var(--mono);letter-spacing:.02em}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink2);text-decoration:none}
+
+img.wide{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+.eq{font:400 15px var(--mono);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:20px 0;max-width:var(--col)}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+<nav class="nav"><div class="wrap"><a class="logo" href="../"><i></i>distill_frontier <span>/ reaction ring</span></a>
+<ul><li><a href="#task">Task</a></li><li><a href="#calibration">Calibration</a></li><li><a href="#results">Results</a></li><li><a href="#limit">Pushing realtime</a></li><li><a href="#discussion">Discussion</a></li><li><a href="#reproduce">Reproduce</a></li></ul>
+<a class="btn" href="https://github.com/dhruvsirohi-arch/distill_frontier/tree/main/ringsim">Code</a></div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="eyebrow">Technical report · Embodied latency exam · phase 1</span>
+  <h1>Too slow to <em>catch a falling stick.</em></h1>
+  <p class="lede">We built a MuJoCo version of the <b>Reaction Ring</b> arcade game for a wheeled humanoid and gave it to <b>GPT-6.2-Astra</b> under three protocols. With the world paused while it thinks, Astra catches <b>54.5%</b> of falling sticks. With the world running, it catches <b>0.0%</b>: a decision takes 7.4 s and a stick hits the floor in 0.56 s.</p>
+  <div class="byline"><span class="tag">gpt-6.2-astra</span><span class="tag">reasoning effort: low</span><span class="tag">Unitree G1-D + Dex1-1</span><span class="tag">MuJoCo 4.0.1</span><span class="tag">seeds 50000–50099</span><span class="tag">21 Nov 2026</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">100%</div><div class="l">Privileged: full state, planning with resets, replayed in a fresh simulator</div></div>
+    <div class="kpi"><div class="v">55%</div><div class="l">Standard: sensors only, the simulation pauses during every decision</div></div>
+    <div class="kpi"><div class="v">0%</div><div class="l">Realtime: same as Standard, but the world keeps running while Astra thinks</div></div>
+    <div class="kpi"><div class="v">74<small>×</small></div><div class="l">too slow: median decision 7.4 s vs. the ~100 ms at which a scripted reflex loses half its catches</div></div>
+  </div>
+  <div class="abstract"><div class="k">Abstract</div>
+  <p>The Reaction Ring drops sticks one at a time from an overhead bar; the player must catch each one in the half second before it lands. It isolates one question: can the agent close the loop from seeing to acting fast enough? Astra perceives and plans the task well, perfectly with privileged state and at 55% from cameras alone when time stops, but its decision latency is two orders of magnitude above the task's budget, so in real time it catches nothing. </p></div>
+</div></header>
+
+<section id="intro"><div class="wrap">
+  <div class="head"><span class="eyebrow">01 · Motivation</span>
+  <h2>A test where <em>time</em> is the whole difficulty</h2></div>
+  <div class="prose">
+  <p>Most embodied benchmarks let the environment wait for the model. That hides the cost of thinking: a policy that is correct but slow scores the same as one that is correct and fast. Our exam follows the three settings of the exam framework we evaluate under: <b>Privileged</b> (the agent reads the simulator and submits a trajectory that is replayed), <b>Standard</b> (sensors only, simulation paused between calls, live episode graded) and <b>Realtime</b> (as Standard, but the simulation keeps running during inference). Because Realtime is costly it is reserved for dynamic tasks. A dynamic task should make the gap between Standard and Realtime large and interpretable.</p>
+  <p>The Reaction Ring is about as dynamic as a manipulation task gets while staying simple to grade. Perception is easy (a pink stick moves), the motion is short (a hand moves a few tens of centimetres), and the only hard part is <b>doing it within a few hundred milliseconds</b>. The difference between the Standard and Realtime scores is therefore almost entirely the cost of latency.</p>
+  </div>
+</div></section>
+
+<section id="task"><div class="wrap">
+  <div class="head"><span class="eyebrow">02 · The task</span>
+  <h2>The game, the robot, and the <em>rules</em></h2>
+  <p class="sub">The machine follows the manufacturer's manual<a href="#r1">[1]</a>: a <b>2.05 m</b> stand whose curved overhead bar holds <b>8 sticks</b> (menu default; 10 or 12 optional) on electromagnets. At difficulty 1 sticks fall in random order <b>0.5–1.5 s</b> apart, after a 3-2-1 countdown, with hints off.</p></div>
+  <div class="vids">
+    <figure class='vid'><video controls muted loop playsinline autoplay preload='metadata' src='media/standard_best.mp4'></video><figcaption><b>Astra, Standard protocol, seed 50017 (7/8)</b>Replayed from its recorded commands. Spectator views on top; Astra's head cameras below. Score cells turn yellow while a stick falls, then green or red.</figcaption></figure>
+    <figure class='vid'><video controls muted loop playsinline autoplay preload='metadata' src='media/realtime_50000.mp4'></video><figcaption><b>Astra, Realtime protocol, seed 50000 (0/8)</b>The first command lands after the first stick has already fallen. Arms move only to a ready pose.</figcaption></figure>
+  </div>
+  <div class="stages">
+    <div class="stage"><div class="n">MACHINE</div><h4>Reaction Ring</h4><p>Half-circle bar of radius 0.5 m around the robot; foam sticks 40 cm × 3.2 cm, 120 g, hanging from 1.95 m to 1.55 m.</p><div class="m">8 sticks · random order</div></div>
+    <div class="stage"><div class="n">ROBOT</div><h4>Unitree G1-D</h4><p>Wheeled base, humanoid torso, two 7-DoF arms, Dex1-1 parallel grippers (80 mm, 20 N). Link inertias and limits from Unitree's URDF.</p><div class="m">25 Hz control · 2 ms physics</div></div>
+    <div class="stage"><div class="n">SENSORS</div><h4>Head RGB-D + joints</h4><p>Two 106° head cameras (2 × 320×240), metric depth, joint encoders, wheel odometry, measured pinch points.</p><div class="m">no object poses</div></div>
+    <div class="stage"><div class="n">ACTIONS</div><h4>Cartesian skills</h4><p>Base velocity, waist yaw, and a pinch-point target plus jaw opening per hand. An IK controller with joint rate limits executes them.</p><div class="m">hands move ~0.3 m in 0.2 s</div></div>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 1</b> · What the agent sees</span><span>seed 50000, t = 0</span></div>
+    <h3>Both head panels together cover all eight sticks</h3>
+    <p class="d">Left half looks forward-left, right half forward-right. The black post is the machine's column.</p>
+    <img class="wide" src="media/head_view.png" alt="Robot head camera view of eight pink sticks hanging from a curved bar">
+  </div>
+  <div class="prose" style="margin-top:28px">
+  <p><b>Judging</b> happens in the simulator and is never shown to sensor-mode agents. A stick counts as <b>caught</b> when both jaw pads of one gripper touch it continuously for 0.2 s before it touches the floor. It is a <b>miss</b> if it reaches the floor or is not caught within 1.5 s. Touching a stick before its magnet releases is a <b>foul</b>. Caught and missed sticks are cleared from the play area, as an attendant would.</p>
+  <p>One rule was added after calibration, and it matters for what the test measures. A hand parked under a stick with its jaws <i>half closed</i> catches it with no timing at all, because the stick wedges between the fingertips (Section 04). We therefore require the stick to fall into <b>open jaws</b>: if its bottom end enters a gripper whose gap is under 36 mm (the stick is 32 mm), the hold is "trapped" and does not score. Agents are told the rule in plain words. The thresholds stay hidden.</p>
+  </div>
+  <div class="eq">free fall from release: stick bottom passes the waiting hands (z ≈ 1.4 m) at 0.17 s, its top at 0.33 s, the floor at 0.56 s</div>
+</div></section>
+
+<section id="protocols"><div class="wrap">
+  <div class="head"><span class="eyebrow">03 · Protocols</span>
+  <h2>Three ways to <em>take the exam</em></h2></div>
+  <div class="notes three">
+    <div class="note"><h4>Privileged</h4><p>Astra reads the whole state: stick poses, the exact release schedule, and the judging rule. In up to 8 turns it may <b>simulate</b> a keyframe plan from the start (a reset) and see the outcome, then <b>submit</b>. The submission is replayed in a fresh simulator, and only the replay is graded.</p></div>
+    <div class="note"><h4>Standard</h4><p>The simulator is a separate service. Each turn Astra receives the head RGB and depth, the previous image, its own notes, and proprioception. It returns a command plus <code>advance_ms</code> (40–2000 ms). The simulation <b>pauses</b> while it thinks. No resets. The live game is graded.</p></div>
+    <div class="note"><h4>Realtime</h4><p>Same observations and commands, but the simulator runs on the wall clock at 25 Hz. One decision is in flight at a time. The previous command holds until a reply arrives, then a fresh frame goes out immediately. Inference time is game time.</p></div>
+  </div>
+  <div class="prose" style="margin-top:28px">
+  <p><b>Harness.</b> Astra is called through the locally authenticated Codex app-server with tools, shell, web search and plugins disabled, structured JSON output, and reasoning effort <code>low</code> (the lowest the model accepts; <code>minimal</code> and <code>none</code> are rejected). Sensor-mode turns are stateless: each decision opens a fresh ephemeral thread containing the instructions, the current sensors, the previous frame and up to 400 characters of notes Astra wrote to itself last turn. This keeps cost and latency constant over long episodes. All protocols use the same 100 seeds, which fix the drop order and timing. Every recorded game was re-simulated from its applied commands and reproduced exactly.</p>
+  </div>
+</div></section>
+
+<section id="calibration"><div class="wrap">
+  <div class="head"><span class="eyebrow">04 · Calibration</span>
+  <h2>What a fast controller <em>can</em> do on these seeds</h2>
+  <p class="sub">Scripted controllers on the same 100 seeds establish that the task is solvable, solvable from cameras alone, and where the latency budget lies.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Table 1</b> · Scripted controllers</span><span>800 drops each</span></div>
+    <h3>Solvable with knowledge, solvable from pixels, impossible by guessing</h3>
+    <div class="scroll"><table>
+      <tr><th>Controller</th><th class="n">Caught</th><th class="n">Rate</th></tr>
+      <tr><td>Schedule oracle<small>Knows the release schedule; parks the free hand under the next stick and closes 0.16 s after release.</small></td><td class='n'>790/800</td><td class='n'>98.8%</td></tr>
+      <tr><td>Camera-only reflex<small>Finds sticks in the first head image, flags a drop when pink pixels leave the magnet or appear below the tip (40–80 ms), then intercepts.</small></td><td class='n'>458/800</td><td class='n'>57.2%</td></tr>
+      <tr><td>Parked guess, timed close<small>Both hands wait under two fixed sticks all game and close at the right moment: the most pure guessing can earn.</small></td><td class='n'>200/800</td><td class='n'>25.0%</td></tr>
+      <tr><td>Parked guess, half-closed jaws<small>Same, but jaws held narrower than the stick with no timing at all. Would catch every stick that falls into it without the open-jaws rule.</small></td><td class='n'>0/800</td><td class='n'>0.0%</td></tr>
+      <tr><td>Idle<small>Never moves.</small></td><td class='n'>0/800</td><td class='n'>0.0%</td></tr>
+    </table></div>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 2</b> · Catch rate vs. reaction latency</span><span>scripted reflex: 800 drops per point</span></div>
+    <h3>The budget is about a tenth of a second; Astra lives two orders of magnitude to the right</h3>
+    <p class="d">A reflex controller is told which stick fell after a fixed delay. Astra's points use the median game time per Realtime decision.</p>
+    <div class="legend"><span><i class="line" style="background:#3987e5"></i>Scripted reflex (event + delay)</span><span><i style="background:#d95926"></i>Astra Realtime variants</span><span><i class="line" style="background:rgba(255,255,255,.22)"></i>Reference rates</span></div>
+    <svg viewBox="0 0 980 430" role="img" aria-label="Catch rate versus reaction latency"><line x1="70" x2="940" y1="370.0" y2="370.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="60" y="374.0" text-anchor="end">0%</text><line x1="70" x2="940" y1="285.0" y2="285.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="60" y="289.0" text-anchor="end">25%</text><line x1="70" x2="940" y1="200.0" y2="200.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="60" y="204.0" text-anchor="end">50%</text><line x1="70" x2="940" y1="115.0" y2="115.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="60" y="119.0" text-anchor="end">75%</text><line x1="70" x2="940" y1="30.0" y2="30.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="60" y="34.0" text-anchor="end">100%</text><line x1="70.0" x2="70.0" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="70.0" y="390" text-anchor="middle">0.03 s</text><line x1="221.6" x2="221.6" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="221.6" y="390" text-anchor="middle">0.1 s</text><line x1="360.0" x2="360.0" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="360.0" y="390" text-anchor="middle">0.3 s</text><line x1="511.6" x2="511.6" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="511.6" y="390" text-anchor="middle">1 s</text><line x1="650.0" x2="650.0" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="650.0" y="390" text-anchor="middle">3 s</text><line x1="801.6" x2="801.6" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="801.6" y="390" text-anchor="middle">10 s</text><line x1="940.0" x2="940.0" y1="30" y2="370" stroke="rgba(255,255,255,.06)"/><text class="tick" x="940.0" y="390" text-anchor="middle">30 s</text><text class="tick" x="505.0" y="426" text-anchor="middle">reaction latency in simulated time (log scale)</text><line x1="70" x2="940" y1="34.2" y2="34.2" stroke="rgba(255,255,255,.22)" stroke-dasharray="5 5"/><text class="tick" x="940" y="27.2" text-anchor="end">Privileged oracle (knows the schedule) · 98.8%</text><line x1="70" x2="940" y1="184.7" y2="184.7" stroke="rgba(255,255,255,.22)" stroke-dasharray="5 5"/><text class="tick" x="940" y="177.7" text-anchor="end">Astra Standard (world paused while it thinks) · 54.5%</text><path d="M106.2,76.3 L193.5,105.2 L244.6,290.5 L280.8,308.4 L331.9,369.6 L424.3,370.0 L511.6,370.0 L686.2,370.0" fill="none" stroke="#3987e5" stroke-width="2"/><circle cx="106.2" cy="76.3" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="106.2" cy="76.3" r="14" tabindex="0" data-tip="<b>86.4%</b>scripted reflex, told of each drop 40 ms late"/><circle cx="193.5" cy="105.2" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="193.5" cy="105.2" r="14" tabindex="0" data-tip="<b>77.9%</b>scripted reflex, told of each drop 80 ms late"/><circle cx="244.6" cy="290.5" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="244.6" cy="290.5" r="14" tabindex="0" data-tip="<b>23.4%</b>scripted reflex, told of each drop 120 ms late"/><circle cx="280.8" cy="308.4" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="280.8" cy="308.4" r="14" tabindex="0" data-tip="<b>18.1%</b>scripted reflex, told of each drop 160 ms late"/><circle cx="331.9" cy="369.6" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="331.9" cy="369.6" r="14" tabindex="0" data-tip="<b>0.1%</b>scripted reflex, told of each drop 240 ms late"/><circle cx="424.3" cy="370.0" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="424.3" cy="370.0" r="14" tabindex="0" data-tip="<b>0.0%</b>scripted reflex, told of each drop 500 ms late"/><circle cx="511.6" cy="370.0" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="511.6" cy="370.0" r="14" tabindex="0" data-tip="<b>0.0%</b>scripted reflex, told of each drop 1000 ms late"/><circle cx="686.2" cy="370.0" r="5" fill="#3987e5" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="686.2" cy="370.0" r="14" tabindex="0" data-tip="<b>0.0%</b>scripted reflex, told of each drop 4000 ms late"/><rect x="760.7" y="365.0" width="10" height="10" rx="2" fill="#d95926" stroke="#13151a" stroke-width="2"/><circle class="hit" cx="765.7" cy="370.0" r="14" tabindex="0" data-tip="<b>0.0%</b>Astra · Realtime, full sensors, 1× · median 7.52 s of game time per decision"/><text class="lab" x="121.1" y="53.8" fill="#3987e5">Scripted reflex</text><text class="lab" x="757.7" y="356.0" text-anchor="end">Astra</text></svg>
+    <details><summary>Table view</summary><div class="scroll"><table><tr><th>Delay</th><th class="n">Catch rate</th></tr><tr><td>0 ms</td><td class='n'>77.1%</td></tr><tr><td>40 ms</td><td class='n'>86.4%</td></tr><tr><td>80 ms</td><td class='n'>77.9%</td></tr><tr><td>120 ms</td><td class='n'>23.4%</td></tr><tr><td>160 ms</td><td class='n'>18.1%</td></tr><tr><td>240 ms</td><td class='n'>0.1%</td></tr><tr><td>500 ms</td><td class='n'>0.0%</td></tr><tr><td>1000 ms</td><td class='n'>0.0%</td></tr><tr><td>4000 ms</td><td class='n'>0.0%</td></tr></table></div></details>
+    <p class="cap">The reflex catches 86.4% at 40 ms and 77.9% at 80 ms of delay, falls to 23.4% at 120 ms and 0.1% at 240 ms. Half its catches are gone by about <b>100 ms</b>. The robot's own motion (about 0.2 s to reach a stick, 0.1 s to close) uses most of the 0.56 s fall. At 0 ms the scripted controller picks a high intercept and sometimes meets the stick side-on, which is why it scores slightly below its 40 ms result.</p>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 3</b> · Time scales</span><span>log scale</span></div>
+    <h3>Everything that matters happens before Astra's first token</h3>
+    <svg viewBox="0 0 980 346" role="img" aria-label="Time scales of the task versus the model"><line x1="391.2" x2="391.2" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="391.2" y="336" text-anchor="middle">0.1 s</text><line x1="488.2" x2="488.2" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="488.2" y="336" text-anchor="middle">0.3 s</text><line x1="594.5" x2="594.5" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="594.5" y="336" text-anchor="middle">1 s</text><line x1="691.6" x2="691.6" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="691.6" y="336" text-anchor="middle">3 s</text><line x1="797.9" x2="797.9" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="797.9" y="336" text-anchor="middle">10 s</text><line x1="894.9" x2="894.9" y1="30" y2="316" stroke="rgba(255,255,255,.06)"/><text class="tick" x="894.9" y="336" text-anchor="middle">30 s</text><text class="lab" x="316" y="59" text-anchor="end">Stick falls past the waiting hands</text><rect x="330" y="46" width="108.1" height="20" rx="4" fill="#199e70" data-tip="<b>0.17 s</b>Stick falls past the waiting hands" tabindex="0"/><text class="val" x="446.1" y="60">0.17 s</text><text class="lab" x="316" y="105" text-anchor="end">Stick reaches the floor</text><rect x="330" y="92" width="213.3" height="20" rx="4" fill="#199e70" data-tip="<b>0.56 s</b>Stick reaches the floor" tabindex="0"/><text class="val" x="551.3" y="106">0.56 s</text><text class="lab" x="316" y="151" text-anchor="end">Scripted reflex: 50% catch rate lost at</text><rect x="330" y="138" width="61.6" height="20" rx="4" fill="#3987e5" data-tip="<b>0.10 s</b>Scripted reflex: 50% catch rate lost at" tabindex="0"/><text class="val" x="399.6" y="152">0.10 s</text><text class="lab" x="316" y="197" text-anchor="end">Astra: fastest decision observed</text><rect x="330" y="184" width="402.0" height="20" rx="4" fill="#d95926" data-tip="<b>4.74 s</b>Astra: fastest decision observed" tabindex="0"/><text class="val" x="740.0" y="198">4.74 s</text><text class="lab" x="316" y="243" text-anchor="end">Astra: median Realtime decision</text><rect x="330" y="230" width="441.6" height="20" rx="4" fill="#d95926" data-tip="<b>7.43 s</b>Astra: median Realtime decision" tabindex="0"/><text class="val" x="779.6" y="244">7.43 s</text><text class="lab" x="316" y="289" text-anchor="end">Astra: median Privileged planning turn</text><rect x="330" y="276" width="540.8" height="20" rx="4" fill="#d95926" data-tip="<b>22.84 s</b>Astra: median Privileged planning turn" tabindex="0"/><text class="val" x="878.8" y="290">22.84 s</text></svg>
+  </div>
+</div></section>
+
+<section id="results"><div class="wrap">
+  <div class="head"><span class="eyebrow">05 · Results</span>
+  <h2>Perfect with state, competent when time stops, <em>zero</em> in real time</h2></div>
+  <div class="fig">
+    <div class="t"><span><b>Table 2</b> · GPT-6.2-Astra on 100 seeds per protocol</span><span>95% CI: bootstrap over episodes</span></div>
+    <div class="scroll"><table>
+      <tr><th>Protocol</th><th class="n">Caught</th><th class="n">Rate</th><th class="n">95% CI</th><th class="n">Perfect games</th><th class="n">Median decision</th></tr>
+      <tr><td>Privileged<small>Planning turns; 2.1 turns per game on average, all 100 games submitted</small></td><td class='n'>800/800</td><td class='n'>100.0%</td><td class='n'>100.0%–100.0%</td><td class='n'>100/100</td><td class='n'>22.8 s</td></tr>
+      <tr class=me><td>Standard<small>81 decisions per game; world paused during each</small></td><td class='n'>109/200</td><td class='n'>54.5%</td><td class='n'>48.5%–61.0%</td><td class='n'>0/25</td><td class='n'>6.6 s</td></tr>
+      <tr><td>Realtime<small>0.6 commands applied per 13.7 s game</small></td><td class='n'>0/800</td><td class='n'>0.0%</td><td class='n'>0.0%–0.0%</td><td class='n'>0/100</td><td class='n'>7.4 s</td></tr>
+    </table></div>
+  </div>
+  <div class="prose" style="margin-top:28px">
+  <p><b>Privileged.</b> With the schedule in hand, the task reduces to placing a hand under the right stick and timing the close. Astra wrote keyframe plans, simulated once or twice, fixed whatever failed (typically a close that came too early or a hand that disturbed another), and submitted. 800/800 catches in the graded replays. Privileged mode is an upper bound here, and an easy one: it removes perception and time pressure together.</p>
+  <p><b>Standard.</b> Sensors only, but time stands still. Astra played the way a careful human would: it recorded pixel coordinates for every stick tip in its notes at the start, then polled in short steps (54% of its <code>advance_ms</code> choices were ≤ 80 ms), spotted a released stick within one or two frames, moved the nearest open hand under it, and closed. It got a jaw pad onto <b>199 of 200</b> falling sticks (99.5%) and held 109. So detection and reaching work; the grasp is where it fails. First contact came 264 ms after release for catches and 257 ms for misses (medians), so missed sticks were not reached later. They were lost after contact: the jaws closed too early or too late for the stick to be held, or the stick slid out. 7 holds were "trapped", with the jaws already partly closed as the stick entered. It averaged 81 decisions per 13.7 s game, a median 6.6 s each, so one game takes about 11 minutes of wall time.</p>
+  <p><b>Realtime.</b> The countdown gives 3 s before the first possible release, and a decision takes 7.4 s at the median (4.7 s at best). In <b>100 of 100</b> games Astra's first command arrived after the first stick had already landed. It completed only 0.6 commands per game. Across 800 drops, <b>0</b> received a command based on an image taken after that stick's release before the stick was resolved. Nothing it did could react to a drop. The score of 0 is not noise: even the best pure guess (Table 1, timed close) would need a close timed to within about 0.1 s of a release it cannot see coming.</p>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 4</b> · Standard: sticks caught per game</span><span>25 games</span></div>
+    <h3>Competent but inconsistent when time is free</h3>
+    <svg viewBox="0 0 980 300" role="img" aria-label="Sticks caught per Standard episode"><line x1="60" x2="940" y1="250.0" y2="250.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="50" y="254.0" text-anchor="end">0</text><line x1="60" x2="940" y1="192.5" y2="192.5" stroke="rgba(255,255,255,.06)"/><text class="tick" x="50" y="196.5" text-anchor="end">2</text><line x1="60" x2="940" y1="135.0" y2="135.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="50" y="139.0" text-anchor="end">4</text><line x1="60" x2="940" y1="77.5" y2="77.5" stroke="rgba(255,255,255,.06)"/><text class="tick" x="50" y="81.5" text-anchor="end">6</text><line x1="60" x2="940" y1="20.0" y2="20.0" stroke="rgba(255,255,255,.06)"/><text class="tick" x="50" y="24.0" text-anchor="end">8</text><rect x="62.0" y="250.0" width="93.8" height="0.0" rx="4" fill="#3987e5" data-tip="<b>0 episodes</b>caught 0 of 8" tabindex="0"/><text class="tick" x="108.9" y="268" text-anchor="middle">0</text><rect x="159.8" y="250.0" width="93.8" height="0.0" rx="4" fill="#3987e5" data-tip="<b>0 episodes</b>caught 1 of 8" tabindex="0"/><text class="tick" x="206.7" y="268" text-anchor="middle">1</text><rect x="257.6" y="192.5" width="93.8" height="57.5" rx="4" fill="#3987e5" data-tip="<b>2 episodes</b>caught 2 of 8" tabindex="0"/><text class="val" x="304.4" y="186.5" text-anchor="middle">2</text><text class="tick" x="304.4" y="268" text-anchor="middle">2</text><rect x="355.3" y="135.0" width="93.8" height="115.0" rx="4" fill="#3987e5" data-tip="<b>4 episodes</b>caught 3 of 8" tabindex="0"/><text class="val" x="402.2" y="129.0" text-anchor="middle">4</text><text class="tick" x="402.2" y="268" text-anchor="middle">3</text><rect x="453.1" y="20.0" width="93.8" height="230.0" rx="4" fill="#3987e5" data-tip="<b>8 episodes</b>caught 4 of 8" tabindex="0"/><text class="val" x="500.0" y="14.0" text-anchor="middle">8</text><text class="tick" x="500.0" y="268" text-anchor="middle">4</text><rect x="550.9" y="77.5" width="93.8" height="172.5" rx="4" fill="#3987e5" data-tip="<b>6 episodes</b>caught 5 of 8" tabindex="0"/><text class="val" x="597.8" y="71.5" text-anchor="middle">6</text><text class="tick" x="597.8" y="268" text-anchor="middle">5</text><rect x="648.7" y="135.0" width="93.8" height="115.0" rx="4" fill="#3987e5" data-tip="<b>4 episodes</b>caught 6 of 8" tabindex="0"/><text class="val" x="695.6" y="129.0" text-anchor="middle">4</text><text class="tick" x="695.6" y="268" text-anchor="middle">6</text><rect x="746.4" y="221.2" width="93.8" height="28.8" rx="4" fill="#3987e5" data-tip="<b>1 episodes</b>caught 7 of 8" tabindex="0"/><text class="val" x="793.3" y="215.2" text-anchor="middle">1</text><text class="tick" x="793.3" y="268" text-anchor="middle">7</text><rect x="844.2" y="250.0" width="93.8" height="0.0" rx="4" fill="#3987e5" data-tip="<b>0 episodes</b>caught 8 of 8" tabindex="0"/><text class="tick" x="891.1" y="268" text-anchor="middle">8</text><text class="tick" x="500.0" y="296" text-anchor="middle">sticks caught out of 8</text></svg>
+  </div>
+</div></section>
+
+<section id="limit"><div class="wrap">
+  <div class="head"><span class="eyebrow">06 · Pushing Realtime to the limit</span>
+  <h2>Can Astra be made <em>fast enough?</em></h2>
+  <p class="sub">We attacked the latency in three ways: shrink what each decision has to read, cache what does not change, and, as a measurement device rather than a fix, slow the world down until Astra starts to catch.</p></div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 5</b> · Decision latency floor</span><span>20 calls per row, unloaded</span></div>
+    <h3>Where the seconds go</h3>
+    <p class="d">Median with p10–p90 range, from request to parsed JSON, reasoning effort low</p>
+    <svg viewBox="0 0 980 108" role="img" aria-label="Decision latency by input payload"><line x1="400.0" x2="400.0" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="400.0" y="98" text-anchor="middle">0 s</text><line x1="498.8" x2="498.8" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="498.8" y="98" text-anchor="middle">2 s</text><line x1="597.6" x2="597.6" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="597.6" y="98" text-anchor="middle">4 s</text><line x1="696.4" x2="696.4" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="696.4" y="98" text-anchor="middle">6 s</text><line x1="795.1" x2="795.1" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="795.1" y="98" text-anchor="middle">8 s</text><line x1="893.9" x2="893.9" y1="20" y2="78" stroke="rgba(255,255,255,.06)"/><text class="tick" x="893.9" y="98" text-anchor="middle">10 s</text><text class="lab" x="386" y="45" text-anchor="end">Realtime exam decisions, full sensors (in the loop)</text><rect x="400" y="33" width="367.0" height="18" rx="4" fill="#d95926" data-tip="<b>7.43 s median</b>p10 5.58 s · p90 9.58 s" tabindex="0"/><line x1="675.6" x2="873.2" y1="42" y2="42" stroke="var(--ink)" stroke-width="1.5"/><text class="val" x="881.2" y="46">7.43 s</text></svg>
+    <p class="cap">The unloaded latency profile was still running when this page was built. The fast-profile run was still in progress when this page was built.</p>
+  </div>
+  <div class="fig">
+    <div class="t"><span><b>Fig. 6</b> · Slow-motion sweep</span><span>Realtime protocol, full sensors</span></div>
+    <h3>How much slower must the world run before Astra can play?</h3>
+    <p class="d">The simulator advances one 40 ms tick every 40 ms × k of wall time. k = 1 is Realtime; "paused" is Standard. Whiskers: 95% bootstrap CI.</p>
+    <p class='cap'>Pending: the sweep was running when this page was built.</p>
+    
+    <p class="cap">The slow-motion sweep was still in progress when this page was built. Read across Fig. 2, this converts Astra's score into an <b>effective reaction time</b>: the slow-motion factor at which it starts to catch, multiplied by its wall-clock latency, lands where the scripted reflex's curve does.</p>
+  </div>
+</div></section>
+
+<section id="discussion"><div class="wrap">
+  <div class="head"><span class="eyebrow">07 · Discussion</span>
+  <h2>What this exam measures, <em>and what it does not</em></h2></div>
+  <div class="notes">
+    <div class="note"><h4>A clean latency probe</h4><p>Perception and planning are not what fails: Privileged is perfect and Standard reaches 55%. The whole Standard-to-Realtime gap (55% → 0%) is time. That makes the task a good discriminator between "can reason about it" and "can do it", and a poor one between two slow models: a controller above about 0.25 s of reaction latency scores essentially zero here (Fig. 2).</p></div>
+    <div class="note"><h4>Report a curve, not a point</h4><p>A single Realtime score saturates at 0 for every current foundation model. The slow-motion factor needed to reach a given fraction of the Standard score is a continuous, comparable number. We recommend reporting it alongside the 1× score, together with the scripted latency curve for the same seeds.</p></div>
+    <div class="note"><h4>The exploit we closed</h4><p>Without the open-jaws rule a passive trap (a half-closed gripper parked under a stick) catches with no timing. A slow agent can then score about 25% by parking under two sticks, or more by re-parking under still-hanging ones. That would turn a latency test into a guessing game. Any physical version of this task needs the same rule, or a gripper that cannot be pre-shaped.</p></div>
+    <div class="note"><h4>The architectural answer</h4><p>Humans pass this test with a reflex, not deliberation. A robot would too: a fast learned or scripted catch skill (Table 1's camera reflex runs in milliseconds) supervised by a slow planner that chooses where to wait. The exam then measures the fast layer. As posed here (the model is the only controller) it measures the model's raw loop time.</p></div>
+  </div>
+  <ul class="plain">
+    <li><b>Harness overhead is included.</b> Latency is measured end to end through the Codex app-server, which adds session and serialization cost a dedicated API path would not. It is the latency the agent actually experiences, but it is not pure model time.</li>
+    <li><b>Concurrency.</b> The Realtime run (4 parallel games) overlapped with the Standard run (8 parallel games). The latency-profile, fast-profile and slow-motion runs were scheduled after Standard finished.</li>
+    <li><b>Simulation choices.</b> The base is a planar differential drive, the lift is fixed, the waist motor is set to the G1's 88 N·m rating rather than the URDF's 30 N·m, and the two wide head cameras are an addition. The grippers, inertias and limits are Unitree's. Physical calibration against a real G1-D was not done.</li>
+    <li><b>Single model, single effort.</b> One model at reasoning effort low, under one prompt design (stateless turns with self-written notes). A persistent-thread design was tried only in the fast profile.</li>
+    <li><b>Scripted calibration is a reference, not an optimum.</b> A better reflex controller would push the latency curve right somewhat. It cannot move it by two orders of magnitude, because the stick reaches the floor in 0.56 s.</li>
+  </ul>
+</div></section>
+
+<section id="reproduce"><div class="wrap">
+  <div class="head"><span class="eyebrow">08 · Reproduce</span><h2>Commands</h2></div>
+<pre><span class="c"># tests and calibration (no model access needed)</span>
+.venv/bin/python -m pytest -q tests/test_ringsim.py
+.venv/bin/python -m ringsim.calibrate --episodes 100 --out outputs/ringsim/calibration.json
+
+<span class="c"># the three protocols (needs a Codex login with GPT-6.2-Astra)</span>
+.venv/bin/python -m ringsim.exam --mode privileged --episodes 100 --workers 6 --out outputs/ringsim/astra_privileged.jsonl
+.venv/bin/python -m ringsim.exam --mode standard   --episodes 100 --workers 8 --out outputs/ringsim/astra_standard.jsonl
+.venv/bin/python -m ringsim.exam --mode realtime   --episodes 100 --workers 4 --out outputs/ringsim/astra_realtime.jsonl
+
+<span class="c"># pushing realtime: payload floor, fast profile, slow motion</span>
+.venv/bin/python -m ringsim.latency_profile --n 20 --out outputs/ringsim/latency_profile.json
+.venv/bin/python -m ringsim.exam --mode realtime --profile fast --episodes 100 --out outputs/ringsim/astra_realtime_fast.jsonl
+.venv/bin/python -m ringsim.exam --mode realtime --slowdown 10 --episodes 30 --out outputs/ringsim/astra_realtime_slow10x.jsonl
+
+<span class="c"># verify a run reproduces from its applied commands, render a game</span>
+.venv/bin/python -m ringsim.replay outputs/ringsim/astra_standard.jsonl
+.venv/bin/python -m ringsim.replay outputs/ringsim/astra_standard.jsonl --seed 50000 --video game.mp4</pre>
+  <div class="prose" style="margin-top:24px"><p>In total the runs on this page made <b>2,305</b> Astra decisions and consumed about <b>20.2 M</b> tokens. Every runner checkpoints per episode and resumes. Raw per-episode records (commands, timings, notes, outcomes) are in <code>outputs/ringsim/</code>. Note: some runs were still in progress when this page was built.</p></div>
+</div></section>
+
+<section id="references"><div class="wrap">
+  <div class="head"><span class="eyebrow">References</span></div>
+  <ol class="src">
+    <li id="r1">Made for Arcade, Reaction Ring user manual: sticks, drop modes, difficulty intervals, machine dimensions.<a href="https://madeforarcade.com/manual/reaction-ring-user-manual-2/">madeforarcade.com/manual/reaction-ring-user-manual-2</a></li>
+    <li id="r2">Unitree Robotics, G1-D description (URDF, meshes), revision 157ff95.<a href="https://github.com/unitreerobotics/unitree_ros/tree/157ff950351e5f535e03c5d85a16b7d594b3dbcc/robots/g1_d_description">github.com/unitreerobotics/unitree_ros</a></li>
+    <li id="r3">MuJoCo 4.0.1 physics engine.<a href="https://mujoco.org">mujoco.org</a></li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap"><span>distill_frontier · Reaction Ring latency exam · built from outputs/ringsim</span><a href="../">← project home</a></div></footer>
+<script>
+const tip=document.getElementById('tip');
+function show(e,el){tip.innerHTML=el.getAttribute('data-tip');tip.style.opacity=1;
+  const r=el.getBoundingClientRect();const x=(e&&e.clientX)||r.left+r.width/2,y=(e&&e.clientY)||r.top;
+  tip.style.left=Math.min(x+14,innerWidth-310)+'px';tip.style.top=(y+14)+'px';}
+document.querySelectorAll('[data-tip]').forEach(el=>{
+  el.addEventListener('mousemove',e=>show(e,el));el.addEventListener('focus',()=>show(null,el));
+  el.addEventListener('mouseleave',()=>tip.style.opacity=0);el.addEventListener('blur',()=>tip.style.opacity=0);});
+</script>
+</body>
+</html>

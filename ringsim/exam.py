@@ -124,13 +124,13 @@ PRIV_SCHEMA = {"type": "object", "additionalProperties": False,
                               "notes": {"type": "string"}}}
 
 
-def sensor_instructions(mode):
+def sensor_instructions(mode, profile="full"):
     rules = STANDARD_RULES if mode == "standard" else REALTIME_RULES
     return "\n\n".join([
         "You control a real-time robot in a physics simulation. Reply with JSON only: your next "
         "command (action), advance_ms, and short notes (<= 400 characters) that will be shown "
         "back to you next turn (each turn you see only the current sensors, the previous image "
-        "and these notes).", ROBOT, GAME, SENSORS, rules])
+        "and these notes).", ROBOT, GAME, FAST_SENSORS if profile == "fast" else SENSORS, rules])
 
 
 def priv_instructions():
@@ -150,6 +150,21 @@ def _sensor_turn_inputs(obs, prev_rgb, held, notes):
              png_part(obs["rgb"]), png_part(depth_png(obs["depth"]))]
     parts.append(png_part(prev_rgb if prev_rgb is not None else obs["rgb"]))
     return parts
+
+
+def _fast_turn_inputs(obs, prev_rgb, held, notes):
+    """Lowest-latency payload: one downscaled RGB image and compact text."""
+    from PIL import Image
+
+    from .astra import png_part
+    small = np.asarray(Image.fromarray(obs["rgb"]).resize((320, 120)))
+    text = {"t": obs["t"], "pinch": obs["pinch"], "grip": obs["grip"], "your_notes": notes}
+    return [{"type": "text", "text": "Observation " + json.dumps(text)}, png_part(small)]
+
+
+FAST_SENSORS = """SENSORS each turn (fast profile): the game clock t, one head RGB image (two panels side by side,
+left half looks forward-left, right half forward-right, downscaled to 320x120), the measured
+pinch points and jaw openings, and the notes you left yourself."""
 
 
 def _clean_action(a):
@@ -187,8 +202,10 @@ def run_standard(seed, effort, log):
     return game, decisions
 
 
-def run_realtime(seed, effort, log):
-    """Simulator thread ticks on a 40 ms wall-clock grid; one decision outstanding at a time."""
+def run_realtime(seed, effort, log, slowdown=1.0, profile="full"):
+    """Simulator ticks on a wall-clock grid of 40 ms x slowdown; one decision outstanding at a
+    time. slowdown > 1 runs the world in slow motion (a time-dilation probe of reaction speed).
+    profile="fast": one small image, compact text, one reused thread (prompt caching)."""
     from .astra import Astra, AstraError
     from .game import Game, TICK
     game = Game(render=True)
@@ -197,13 +214,15 @@ def run_realtime(seed, effort, log):
     decisions = []
     state = {"busy": False, "notes": "", "prev_rgb": None}
     astra = Astra(effort=effort)
-    instr = sensor_instructions("realtime")
+    instr = sensor_instructions("realtime", profile)
+    make_inputs = _fast_turn_inputs if profile == "fast" else _sensor_turn_inputs
+    shared = {}
 
     def ask(obs, held, rec):
         try:
-            th = astra.new_thread(instr)
-            out, info = astra.ask(th, _sensor_turn_inputs(obs, state["prev_rgb"], held,
-                                                          state["notes"]), SENSOR_SCHEMA)
+            th = shared["thread"] if profile == "fast" else astra.new_thread(instr)
+            out, info = astra.ask(th, make_inputs(obs, state["prev_rgb"], held,
+                                                  state["notes"]), SENSOR_SCHEMA)
             rec.update(latency_s=info["latency_s"], usage=info["usage"])
             replies.put((rec, _clean_action(out["action"]), str(out.get("notes", ""))[:400]))
             state["prev_rgb"] = obs["rgb"]
@@ -217,7 +236,7 @@ def run_realtime(seed, effort, log):
             replies.put((rec, None, None))
 
     try:
-        astra.new_thread(instr)                 # warm the connection before the clock starts
+        shared["thread"] = astra.new_thread(instr)   # warm the connection before the clock starts
         overruns = 0
         t0 = time.monotonic()
         t_next = t0
@@ -244,7 +263,7 @@ def run_realtime(seed, effort, log):
                 threading.Thread(target=ask, args=(obs, copy.deepcopy(held), rec),
                                  daemon=True).start()
             game.step(action, ticks=1, observe=False)
-            t_next += TICK
+            t_next += TICK * slowdown
             slack = t_next - time.monotonic()
             if slack > 0:
                 time.sleep(slack)
@@ -338,16 +357,17 @@ def run_privileged(seed, effort, log):
 # ------------------------------------------------------------------------------------------------
 # runner
 # ------------------------------------------------------------------------------------------------
-def episode(mode, seed, effort):
+def episode(mode, seed, effort, slowdown=1.0, profile="full"):
     os.environ.setdefault("MUJOCO_GL", "egl")
     t0 = time.time()
-    rec = {"mode": mode, "seed": seed, "model": "gpt-6.2-astra", "effort": effort}
+    rec = {"mode": mode, "seed": seed, "model": "gpt-6.2-astra", "effort": effort,
+           "slowdown": slowdown, "profile": profile}
     try:
         if mode == "standard":
             game, decisions = run_standard(seed, effort, None)
             rec["decisions"] = decisions
         elif mode == "realtime":
-            game, decisions, overruns = run_realtime(seed, effort, None)
+            game, decisions, overruns = run_realtime(seed, effort, None, slowdown, profile)
             rec["decisions"], rec["tick_overruns"] = decisions, overruns
         else:
             game, turns, plan, submitted = run_privileged(seed, effort, None)
@@ -371,6 +391,10 @@ def main():
     ap.add_argument("--start", type=int, default=SEED0)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--effort", default="low")
+    ap.add_argument("--slowdown", type=float, default=1.0,
+                    help="realtime only: wall seconds per simulated second")
+    ap.add_argument("--profile", choices=("full", "fast"), default="full",
+                    help="realtime only: sensor payload")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     out = Path(args.out)
@@ -385,7 +409,7 @@ def main():
     print(f"{args.mode}: {len(done)} done, {len(todo)} to run", flush=True)
     ctx = mp.get_context("spawn")
     with ctx.Pool(args.workers, maxtasksperchild=1) as pool, out.open("a") as f:
-        for rec in pool.imap_unordered(_worker, [(args.mode, s, args.effort) for s in todo]):
+        for rec in pool.imap_unordered(_worker, [(args.mode, s, args.effort, args.slowdown, args.profile) for s in todo]):
             f.write(json.dumps(rec) + "\n")
             f.flush()
             status = rec.get("fatal", "").splitlines()[-1] if "fatal" in rec else \

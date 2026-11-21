@@ -13,3 +13,6 @@ outputs/logs/
 outputs/eval_episodes.jsonl
 outputs/eval_gallery.html
 outputs/eval_episodes_base.jsonl
+outputs/ringsim/*.mp4
+outputs/ringsim/*.log
+outputs/ringsim/summary.txt

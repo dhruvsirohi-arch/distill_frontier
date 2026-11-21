@@ -63,6 +63,11 @@ def summarise(recs):
                  latency_median_s=round(float(np.median(lat)), 2),
                  latency_p95_s=round(float(np.percentile(lat, 95)), 2),
                  latency_min_s=round(float(np.min(lat)), 2))
+    sim_lat = [d["t_applied"] - d["t_obs"] for r in ok for d in r.get("decisions", [])
+               if "t_applied" in d]
+    if sim_lat:
+        s["sim_latency_median_s"] = round(float(np.median(sim_lat)), 3)
+        s["sim_latency_min_s"] = round(float(np.min(sim_lat)), 3)
     errs = sum("error" in d for r in ok for d in r.get("decisions", r.get("turns", [])))
     s["decision_errors"] = errs
     if ok[0]["mode"] in ("standard", "realtime"):
@@ -86,6 +91,19 @@ def main():
     out = {"model": "gpt-6.2-astra", "seeds": "50000-50099"}
     for mode in ("privileged", "standard", "realtime"):
         out[mode] = summarise(load(d / f"astra_{mode}.jsonl"))
+    # realtime variants: astra_realtime_<tag>.jsonl (fast profile, slow-motion sweeps)
+    out["realtime_variants"] = {}
+    for f in sorted(d.glob("astra_realtime_*.jsonl")):
+        recs = load(f)
+        s = summarise(recs)
+        if s:
+            s["slowdown"] = recs[0].get("slowdown", 1.0)
+            s["profile"] = recs[0].get("profile", "full")
+            out["realtime_variants"][f.stem.replace("astra_realtime_", "")] = s
+    lp = d / "latency_profile.json"
+    if lp.exists():
+        out["latency_profile"] = {k: {kk: vv for kk, vv in v.items() if kk != "samples_s"}
+                                  for k, v in json.loads(lp.read_text()).items()}
     cal = d / "calibration.json"
     if cal.exists():
         out["calibration"] = {k: {kk: v[kk] for kk in ("caught", "drops", "catch_rate")}
@@ -93,8 +111,9 @@ def main():
     (d / "summary.json").write_text(json.dumps(out, indent=1))
     print("| Mode | Caught | Rate (95% CI) | Perfect games | Median decision |")
     print("|---|---:|---|---:|---:|")
-    for mode in ("privileged", "standard", "realtime"):
-        s = out[mode]
+    rows = [(m, out[m]) for m in ("privileged", "standard", "realtime")]
+    rows += [("realtime_" + k, v) for k, v in out["realtime_variants"].items()]
+    for mode, s in rows:
         if s:
             ci = s["catch_rate_ci95"]
             print(f"| {mode} | {s['caught']}/{s['drops']} | {s['catch_rate']:.1%} "

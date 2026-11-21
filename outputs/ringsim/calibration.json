@@ -1,0 +1,133 @@
+{
+ "seeds": [
+  50000,
+  50099
+ ],
+ "controllers": {
+  "oracle": {
+   "caught": 790,
+   "drops": 800,
+   "outcomes": {
+    "caught": 790,
+    "floor": 10
+   },
+   "catch_rate": 0.9875
+  },
+  "vision": {
+   "caught": 458,
+   "drops": 800,
+   "outcomes": {
+    "caught": 458,
+    "floor": 337,
+    "timeout": 4,
+    "trapped": 1
+   },
+   "catch_rate": 0.5725
+  },
+  "parked": {
+   "caught": 200,
+   "drops": 800,
+   "outcomes": {
+    "floor": 600,
+    "caught": 200
+   },
+   "catch_rate": 0.25
+  },
+  "parked_trap": {
+   "caught": 0,
+   "drops": 800,
+   "outcomes": {
+    "floor": 600,
+    "trapped": 200
+   },
+   "catch_rate": 0.0
+  },
+  "idle": {
+   "caught": 0,
+   "drops": 800,
+   "outcomes": {
+    "floor": 800
+   },
+   "catch_rate": 0.0
+  },
+  "event@0.0": {
+   "caught": 617,
+   "drops": 800,
+   "outcomes": {
+    "caught": 617,
+    "floor": 183
+   },
+   "catch_rate": 0.7712
+  },
+  "event@0.04": {
+   "caught": 691,
+   "drops": 800,
+   "outcomes": {
+    "caught": 691,
+    "floor": 109
+   },
+   "catch_rate": 0.8638
+  },
+  "event@0.08": {
+   "caught": 623,
+   "drops": 800,
+   "outcomes": {
+    "floor": 177,
+    "caught": 623
+   },
+   "catch_rate": 0.7788
+  },
+  "event@0.12": {
+   "caught": 187,
+   "drops": 800,
+   "outcomes": {
+    "floor": 613,
+    "caught": 187
+   },
+   "catch_rate": 0.2338
+  },
+  "event@0.16": {
+   "caught": 145,
+   "drops": 800,
+   "outcomes": {
+    "floor": 647,
+    "caught": 145,
+    "timeout": 8
+   },
+   "catch_rate": 0.1812
+  },
+  "event@0.24": {
+   "caught": 1,
+   "drops": 800,
+   "outcomes": {
+    "floor": 799,
+    "caught": 1
+   },
+   "catch_rate": 0.0013
+  },
+  "event@0.5": {
+   "caught": 0,
+   "drops": 800,
+   "outcomes": {
+    "floor": 800
+   },
+   "catch_rate": 0.0
+  },
+  "event@1.0": {
+   "caught": 0,
+   "drops": 800,
+   "outcomes": {
+    "floor": 800
+   },
+   "catch_rate": 0.0
+  },
+  "event@4.0": {
+   "caught": 0,
+   "drops": 800,
+   "outcomes": {
+    "floor": 800
+   },
+   "catch_rate": 0.0
+  }
+ }
+}
